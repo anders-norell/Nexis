@@ -16,6 +16,7 @@ Kopplingen till MACTA: om det fungerar blir kriteriet *Awareness* mätbart i st�
 | Vad | Var |
 | --- | --- |
 | Spec, hypoteser, trösklar och alla resultat | `claude/nexis_spec.md` i projektet (ögonblicksbild 7 okt). Levande version med arkitekturdiagram: Claude-dokumentet "Nexis PoC – Attention Schema Specification" |
+| **Kodförrådet (huvudkälla)** | [github.com/anders-norell/Nexis](https://github.com/anders-norell/Nexis), privat. Kod, resultat, tränade modeller, spec |
 | All källkod, läsbar | `nexis_source.md` |
 | Kod + tränade modeller + rådata | `nexis_v2.zip` |
 | Figur från Sprint 1 | `report/sprint1.png` i zip-filen |
