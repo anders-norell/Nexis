@@ -10,6 +10,7 @@ GuidedAgent    like ItemScan but only target-coloured cells, hot quadrant first.
 Scan and Guided keep track of covered cells in one of two ways:
   track="intended"  marks the window it chose (knows its commands, not where attention went)
   track="actual"    marks the window attention really covered (a perfect attention schema)
+  track="inferred"  no schema, but infers from the fovea whether capture happened
 Under capture the two differ; the gap is a first, hand-coded hint of what knowing your
 own attention is worth in this task.
 """
@@ -66,10 +67,39 @@ class ItemScanAgent:
         return score.reshape(env.B, -1).argmax(1)
 
     def observe(self, env, info):
-        r0, c0 = (info["actual"] if self.track == "actual" else info["intended"]).T
+        if self.track == "inferred":
+            r0, c0 = self._infer(env, info).T
+        else:
+            r0, c0 = (info["actual"] if self.track == "actual" else info["intended"]).T
         for b in np.nonzero(info["active"])[0]:
             w = env.w[b]
             self.covered[b, r0[b]:r0[b] + w, c0[b]:c0[b] + w] = True
+
+
+    def _infer(self, env, info):
+        """No schema: guess the actual window from what the fovea shows.
+
+        Attention went either where the agent aimed or to the salient distractor (both
+        visible in the periphery). Compare the fovea's occupancy and colour with what each
+        candidate window should show; pick the salient window only if it alone matches.
+        """
+        C = env.cfg.n_colors
+        per = env.periphery()
+        fov = env.last_window
+        guess = info["intended"].copy()
+        for b in np.nonzero(info["active"] & (env.sal_pos[:, 0] >= 0))[0]:
+            w, n = env.w[b], env.n[b]
+            sr0, sc0 = window_origin(env.sal_pos[b, 0], env.sal_pos[b, 1], w, n)
+            seen = fov[b, :w, :w, 1:2 + C]
+
+            def expect(r0, c0):
+                return per[b][..., np.r_[1, 3:3 + C]][r0:r0 + w, c0:c0 + w]
+
+            m_int = np.array_equal(seen, expect(*info["intended"][b]))
+            m_sal = np.array_equal(seen, expect(sr0, sc0))
+            if m_sal and not m_int:
+                guess[b] = sr0, sc0
+        return guess
 
 
 class GuidedAgent(ItemScanAgent):

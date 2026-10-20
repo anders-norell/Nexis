@@ -75,5 +75,14 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 
 - **Senast uppdaterad:** 21 okt 2026
 - **Sprint 0 (spec):** klar. Spec v2 godkänd i huvudsak av produktägaren.
-- **Nästa steg:** sprint 1, miljön. Startas i en ny tråd.
-- **Öppet:** inga blockerande beslut för sprint 1.
+- **Sprint 1 (miljö):** byggd och granskad, **väntar på produktägarens grindgodkännande.**
+  Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent),
+  `v2/test_env.py` (37 tester, alla gröna), `v2/check_env.py` → `v2/results/sprint1_env_check.*`.
+  Oberoende granskning: grinden uppfylld, inga blockerare.
+- **Nyckeltal sprint 1:** styrd agent hittar målet i 92 %, slumpagent 30 %. Under fångst
+  (fångst i alla episoder): vet bara avsikten 82 %, härleder från foveán 89 %, vet faktisk plats 96 %.
+- **Öppet före sprint 2–3 (beslut för produktägaren, se specens sprint 1-avsnitt):**
+  1. Får alla agenter sin föregående handling som insignal (efferenskopia)? Avgör hur mycket schemat kan tillföra.
+  2. Fångst går alltid till en känd iögonfallande plats, så en agent utan schema kan delvis härleda den. Göra fångsten mindre förutsägbar?
+  3. H5 är inte väldefinierad med fast schema 1a (formeln är aldrig fel eller fel per konstruktion). Kräver inlärt schema 1b eller en probe av agentens dolda tillstånd i MVP.
+- **Nästa steg:** efter godkännande, sprint 2 (kompetens) i ny tråd.

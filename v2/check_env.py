@@ -3,7 +3,12 @@
 A. Search slope: steps to find the target per added distractor, per cue level.
    Fixed n=8, w=1, generous budget (200), no capture, so every agent finishes.
 B. Default episodes (random parameters, cue level weak): success rate and return.
-C. Capture: guided agent that tracks its intended windows vs one that tracks actual ones.
+C. Capture: guided agent that tracks its intended windows, one that infers capture from
+   the fovea (no schema), and one that tracks the actual windows (perfect schema).
+
+Search slope is always reported with intercept and success rate: a random agent has a
+near-zero slope but needs ~60 steps, so slope alone misleads. Part A uses fixed analysis
+settings (n=8, w=1, budget 200, no capture) outside the training distribution.
 
 Writes results/sprint1_env_check.json and results/sprint1_env_check.png.
 """
@@ -46,8 +51,11 @@ def part_a():
                 means.append(float(r["steps"].mean()))
                 found.append(float(r["found"].mean()))
             s, sd = slope(all_k, all_s, rng)
-            res[f"{level}/{name}"] = dict(mean_steps=means, found=found, slope=s, slope_sd=sd)
-            print(f"A {level:6s} {name:9s} steps {np.round(means, 1)}  slope {s:.3f} ± {sd:.3f}")
+            icpt = float(np.polyfit(all_k, all_s, 1)[1])
+            res[f"{level}/{name}"] = dict(mean_steps=means, found=found, slope=s, slope_sd=sd,
+                                          intercept=icpt)
+            print(f"A {level:6s} {name:9s} steps {np.round(means, 1)}  slope {s:.3f} ± {sd:.3f}"
+                  f"  intercept {icpt:.1f}")
     return res
 
 
@@ -66,17 +74,22 @@ def part_b():
 
 
 def part_c():
+    """intended = knows its commands only; inferred = also reads the fovea (no schema);
+    actual = perfect attention schema. Run with a salient distractor in every episode and
+    with the default mix (half the episodes)."""
     res = {}
-    cfg = EnvConfig(cue_level="weak", p_salient=1.0)
-    for track in ("intended", "actual"):
-        env = SearchEnv(cfg, seed=300)
-        r = run(env, GuidedAgent(np.random.default_rng(2), track=track), N_EP)
-        f = r["found"]
-        se = float(np.sqrt(f.mean() * (1 - f.mean()) / len(f)))
-        res[track] = dict(found=float(f.mean()), se=se, steps=float(r["steps"].mean()),
-                          captures_per_ep=float(r["n_capture"].mean()))
-        print(f"C guided/{track:8s} found {f.mean():.3f} ± {se:.3f}  "
-              f"captures/episode {r['n_capture'].mean():.2f}")
+    for label, p_sal in (("all_salient", 1.0), ("default", EnvConfig().p_salient)):
+        cfg = EnvConfig(cue_level="weak", p_salient=p_sal)
+        res[label] = {}
+        for track in ("intended", "inferred", "actual"):
+            env = SearchEnv(cfg, seed=300)
+            r = run(env, GuidedAgent(np.random.default_rng(2), track=track), N_EP)
+            f = r["found"]
+            se = float(np.sqrt(f.mean() * (1 - f.mean()) / len(f)))
+            res[label][track] = dict(found=float(f.mean()), se=se, steps=float(r["steps"].mean()),
+                                     captures_per_ep=float(r["n_capture"].mean()))
+            print(f"C {label:11s} guided/{track:8s} found {f.mean():.3f} ± {se:.3f}  "
+                  f"captures/episode {r['n_capture'].mean():.2f}")
     return res
 
 

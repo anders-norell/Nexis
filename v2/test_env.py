@@ -16,11 +16,9 @@ def test_layout():
     env = SearchEnv(EnvConfig(), seed=1)
     env.reset(500)
     cfg = env.cfg
-    for b in range(500):
-        n = env.n[b]
-        occ = env.color[b] >= 0
-        assert not occ[n:, :].any() and not occ[:, n:].any()
-    check("objects only inside the episode's grid", True)
+    inside = all(not (env.color[b][env.n[b]:, :] >= 0).any() and not (env.color[b][:, env.n[b]:] >= 0).any()
+                 for b in range(500))
+    check("objects only inside the episode's grid", inside)
     check("exactly k+1 objects", all((env.color[b] >= 0).sum() == env.k[b] + 1 for b in range(500)))
     tr, tc = env.target.T
     b = np.arange(500)
@@ -88,7 +86,8 @@ def test_fovea_window():
                     ok_shape &= f[i, j, 1] == 0
     check("fovea is the actual w x w window, egocentric", ok_local)
     check("fovea shows colour and shape of covered cells", ok_shape)
-    check("fovea has no absolute coordinates (fixed W x W patch)", obs["fovea"].shape[1:3] == (cfg.W, cfg.W))
+    check("fovea is a fixed W x W patch (no coordinate channels; whether position can be "
+          "inferred from content is measured in check_env part C)", obs["fovea"].shape[1:3] == (cfg.W, cfg.W))
 
 
 def test_window_inside_grid():
@@ -153,9 +152,24 @@ def test_capture():
     # forced capture for H5
     env.reset(500)
     has = env.sal_pos[:, 0] >= 0
-    _, _, _, info = env.step(np.zeros(500, int), force_capture=np.ones(500, bool))
-    check("force_capture works where the salient one is outside the chosen window",
-          info["captured"][has & ~info["hit"]].mean() > 0.5)
+    a = np.zeros(500, int)
+    ir0, ic0 = window_origin(a // G, a % G, env.w, env.n)
+    sal_in = has & in_window(env.sal_pos[:, 0], env.sal_pos[:, 1], ir0, ic0, env.w)
+    _, _, _, info = env.step(a, force_capture=np.ones(500, bool))
+    check("force_capture=True captures exactly when a salient one is outside the chosen window",
+          np.array_equal(info["captured"], has & ~sal_in))
+    env.reset(500)
+    _, _, _, info = env.step(a, force_capture=np.zeros(500, bool))
+    check("force_capture=False never captures", not info["captured"].any())
+    # finished episodes are untouched by forced capture
+    env.reset(300)
+    a = env.target[:, 0] * G + env.target[:, 1]
+    env.step(a, force_capture=np.zeros(300, bool))   # all found
+    assert env.done.all()
+    v = env.visits.copy()
+    _, r, _, info = env.step(a, force_capture=np.ones(300, bool))
+    check("finished episodes: no capture, no reward, no visits",
+          not info["captured"].any() and (r == 0).all() and np.array_equal(v, env.visits))
 
 
 def test_reward_and_budget():
@@ -181,6 +195,18 @@ def test_reward_and_budget():
     check("finished episodes take no more steps", (env.steps <= env.budget).all())
 
 
+def test_clamp_and_k_limit():
+    cfg = EnvConfig(grid_sizes=(6, 9), p_salient=0.0)
+    env = SearchEnv(cfg, seed=10)
+    env.reset(200, overrides=dict(n=6, w=1))
+    G = cfg.G
+    _, _, _, info = env.step(np.full(200, G * G - 1))     # padded corner (8, 8)
+    check("out-of-grid action is clamped to the grid edge", (info["actual"] == 5).all())
+    env = SearchEnv(EnvConfig(grid_sizes=(6,), n_distractors=(40, 40)), seed=10)
+    env.reset(50)
+    check("k is limited to n*n - 1", (env.k == 35).all() and all((env.color[b] >= 0).sum() == 36 for b in range(50)))
+
+
 def test_reproducible():
     out = []
     for _ in range(2):
@@ -202,7 +228,7 @@ def test_agents_order():
 if __name__ == "__main__":
     for f in [test_layout, test_cue_levels, test_periphery_no_shape, test_fovea_window,
               test_window_inside_grid, test_params_vary, test_prior, test_capture,
-              test_reward_and_budget, test_reproducible, test_agents_order]:
+              test_reward_and_budget, test_clamp_and_k_limit, test_reproducible, test_agents_order]:
         f()
     print(f"\n{len(FAILS)} failed")
     raise SystemExit(1 if FAILS else 0)
