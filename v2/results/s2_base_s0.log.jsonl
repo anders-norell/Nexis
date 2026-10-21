@@ -138,3 +138,7 @@
 {"it": 2520, "episodes": 645120, "minutes": 31.71, "train_found": 0.8795, "train_ret": 0.8078, "entropy": 0.751, "vloss": 0.1404, "grad_norm": 0.479, "sl_loss": 0.0, "ent_coef": 0.00171}
 {"it": 2540, "episodes": 650240, "minutes": 31.94, "train_found": 0.8854, "train_ret": 0.8132, "entropy": 0.742, "vloss": 0.139, "grad_norm": 0.534, "sl_loss": 0.0, "ent_coef": 0.00164}
 {"it": 2560, "episodes": 655360, "minutes": 32.18, "train_found": 0.8852, "train_ret": 0.8154, "entropy": 0.723, "vloss": 0.1371, "grad_norm": 0.508, "sl_loss": 0.0, "ent_coef": 0.00158}
+{"it": 2580, "episodes": 660480, "minutes": 32.43, "train_found": 0.8777, "train_ret": 0.8055, "entropy": 0.723, "vloss": 0.1431, "grad_norm": 0.512, "sl_loss": 0.0, "ent_coef": 0.00151}
+{"it": 2600, "episodes": 665600, "minutes": 32.7, "train_found": 0.8734, "train_ret": 0.7975, "entropy": 0.774, "vloss": 0.1432, "grad_norm": 0.501, "sl_loss": 0.0, "ent_coef": 0.00145}
+{"it": 2600, "episodes": 665600, "eval": {"found": 0.885, "found_se": 0.007133547504573023, "ret": 0.81176}}
+{"it": 2620, "episodes": 670720, "minutes": 33.03, "train_found": 0.8893, "train_ret": 0.8183, "entropy": 0.755, "vloss": 0.1345, "grad_norm": 0.46, "sl_loss": 0.0, "ent_coef": 0.00138}
