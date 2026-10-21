@@ -68,21 +68,24 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 | 1. Miljö | Sökmiljö: rutnät, periferi (färg, ej form), spotlight med fast fönster, distraktorer, ledtrådsnivå "svag", fångstmekanism (spotlighten dras ibland till iögonfallande distraktor), slumpvisa episodparametrar. Enhetstester och slumpagent. | Miljön beter sig enligt spec |
 | 2. Kompetens | Baslinjeagent utan schema lär sig söka klart bättre än slumpagenten. | Kompetens visad |
 | 3. Pilot | Tid per körning, spridning mellan frön, kontroll att schemat behövs. Trösklar och körplan föreslås. | Trösklar godkända och låsta |
-| 4. MVP | Baslinje, Fast schema (1a), Blandat schema; 3 frön vardera. Ingrepp vid test: falskt schema (H2), lesion (H3), fångst (H5). | Resultat bedömda mot låsta kriterier |
-| 5. Utbyggnad | Zoom, inlärt schema (1b), skalning, övriga ledtrådsnivåer, 1c, fem frön. | Enligt resultat |
+| 4. MVP | Baslinje, Fast schema (1a), Inlärt schema (1b), Blandat schema; 3 frön vardera (12 körningar). H5 mäts på 1b. Ingrepp vid test: falskt schema (H2), lesion (H3), fångst (H5). | Resultat bedömda mot låsta kriterier |
+| 5. Utbyggnad | Zoom, skalning, övriga ledtrådsnivåer, 1c, fem frön. | Enligt resultat |
 
 ## Status
 
 - **Senast uppdaterad:** 21 okt 2026
 - **Sprint 0 (spec):** klar. Spec v2 godkänd i huvudsak av produktägaren.
-- **Sprint 1 (miljö):** byggd och granskad, **väntar på produktägarens grindgodkännande.**
-  Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent),
-  `v2/test_env.py` (37 tester, alla gröna), `v2/check_env.py` → `v2/results/sprint1_env_check.*`.
-  Oberoende granskning: grinden uppfylld, inga blockerare.
-- **Nyckeltal sprint 1:** styrd agent hittar målet i 92 %, slumpagent 30 %. Under fångst
-  (fångst i alla episoder): vet bara avsikten 82 %, härleder från foveán 89 %, vet faktisk plats 96 %.
-- **Öppet före sprint 2–3 (beslut för produktägaren, se specens sprint 1-avsnitt):**
-  1. Får alla agenter sin föregående handling som insignal (efferenskopia)? Avgör hur mycket schemat kan tillföra.
-  2. Fångst går alltid till en känd iögonfallande plats, så en agent utan schema kan delvis härleda den. Göra fångsten mindre förutsägbar?
-  3. H5 är inte väldefinierad med fast schema 1a (formeln är aldrig fel eller fel per konstruktion). Kräver inlärt schema 1b eller en probe av agentens dolda tillstånd i MVP.
-- **Nästa steg:** efter godkännande, sprint 2 (kompetens) i ny tråd.
+- **Sprint 1 (miljö):** **klar, grind 1 godkänd 21 okt 2026** (produktägaren delegerade bedömningen till Claude).
+  Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent; den styrda kan spåra
+  avsedd, härledd eller faktisk plats), `v2/test_env.py` (46 tester), `v2/check_env.py` → `v2/results/sprint1_env_check.*`.
+- **Produktägarens linje:** experimentet ska vara så biologiskt och evolutionärt realistiskt som möjligt, så
+  länge det är förenligt med experimentets komplexitet. Väg in det i designval.
+- **Beslut 21 okt:** (1) efferenskopia av föregående kommando till alla villkor (`obs["efference"]`);
+  (2) graderad fångst nerifrån: 0–3 iögonfallande distraktorer, brusig salience i periferin, fångstchans
+  ∝ salience; (3) inlärt schema 1b ingår i MVP, H5 mäts på 1b. 1c (utan facit) efter MVP. Zoom väntar
+  om den ökar komplexiteten för mycket.
+- **Nyckeltal sprint 1 (styrd referensagent, standardinställningar):** vet bara avsikten 79 %, härleder
+  fångst ur foveán 86 %, vet faktisk plats 93 %. Ett schema har alltså ca 7–8 procentenheter att tillföra
+  utöver härledning.
+- **Nästa steg:** sprint 2 (kompetens): RL-baslinjeagent utan schema (med efferenskopia) som söker klart
+  bättre än slumpagenten. Ny tråd. Bygg schemakanalen och 1b-huvudet in i arkitekturen redan nu, avstängda.
