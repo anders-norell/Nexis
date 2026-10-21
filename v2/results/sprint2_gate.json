@@ -1,0 +1,190 @@
+{
+ "criterion": {
+  "K1": "hit rate > random by > 2 SD in all seeds",
+  "K2": "hit rate >= 73% in all seeds",
+  "n_test": 4000,
+  "policy": "stochastic (sampled)"
+ },
+ "seeds": {
+  "0": {
+   "checkpoint": {
+    "it": 2000,
+    "episodes": 512000,
+    "eval_found": 0.893
+   },
+   "agent": {
+    "found": 0.8905,
+    "found_se": 0.0049373512635825295,
+    "ret": 0.818315,
+    "revisit_share": 0.15573087393744098,
+    "aim_repeat_share": 0.12945163620201122,
+    "first_on_target_colour": 0.94025,
+    "mean_steps": 4.49975,
+    "captures_per_ep": 1.20025
+   },
+   "random": {
+    "found": 0.284,
+    "found_se": 0.007129936886116173,
+    "ret": 0.11941000000000002,
+    "revisit_share": 0.2048804839372761,
+    "aim_repeat_share": 0.11141128795442533,
+    "first_on_target_colour": 0.161,
+    "mean_steps": 8.5135,
+    "captures_per_ep": 2.0
+   },
+   "greedy": {
+    "found": 0.88675,
+    "found_se": 0.005010599702131472,
+    "ret": 0.81514,
+    "revisit_share": 0.15999776148637304,
+    "aim_repeat_share": 0.13800436510157255,
+    "first_on_target_colour": 0.9635,
+    "mean_steps": 4.46725,
+    "captures_per_ep": 1.20675
+   },
+   "z_vs_random": 69.93314930498269,
+   "K1": true,
+   "K2": true,
+   "per_k": {
+    "4": {
+     "found": 1.0,
+     "mean_steps_found": 2.2555
+    },
+    "8": {
+     "found": 0.9995,
+     "mean_steps_found": 3.395697848924462
+    },
+    "12": {
+     "found": 0.999,
+     "mean_steps_found": 4.555555555555555
+    },
+    "16": {
+     "found": 0.998,
+     "mean_steps_found": 5.674849699398798
+    }
+   }
+  },
+  "1": {
+   "checkpoint": {
+    "it": 3400,
+    "episodes": 870400,
+    "eval_found": 0.9135
+   },
+   "agent": {
+    "found": 0.899,
+    "found_se": 0.004764425463788892,
+    "ret": 0.83039,
+    "revisit_share": 0.1561381221850098,
+    "aim_repeat_share": 0.13731377757246796,
+    "first_on_target_colour": 0.983,
+    "mean_steps": 4.3295,
+    "captures_per_ep": 1.158
+   },
+   "random": {
+    "found": 0.27675,
+    "found_se": 0.007073885733809954,
+    "ret": 0.10898,
+    "revisit_share": 0.2061106142350192,
+    "aim_repeat_share": 0.11162401546406624,
+    "first_on_target_colour": 0.1605,
+    "mean_steps": 8.66525,
+    "captures_per_ep": 2.0345
+   },
+   "greedy": {
+    "found": 0.9035,
+    "found_se": 0.004668719042735384,
+    "ret": 0.8352200000000001,
+    "revisit_share": 0.15686160972785176,
+    "aim_repeat_share": 0.14284887087434858,
+    "first_on_target_colour": 0.9895,
+    "mean_steps": 4.3175,
+    "captures_per_ep": 1.17025
+   },
+   "z_vs_random": 72.95909244062042,
+   "K1": true,
+   "K2": true,
+   "per_k": {
+    "4": {
+     "found": 1.0,
+     "mean_steps_found": 2.19
+    },
+    "8": {
+     "found": 1.0,
+     "mean_steps_found": 3.377
+    },
+    "12": {
+     "found": 1.0,
+     "mean_steps_found": 4.481
+    },
+    "16": {
+     "found": 0.999,
+     "mean_steps_found": 5.676176176176176
+    }
+   }
+  },
+  "2": {
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.8935
+   },
+   "agent": {
+    "found": 0.8855,
+    "found_se": 0.005034623868771132,
+    "ret": 0.81205,
+    "revisit_share": 0.1633391838525669,
+    "aim_repeat_share": 0.13646336112329968,
+    "first_on_target_colour": 0.919,
+    "mean_steps": 4.558,
+    "captures_per_ep": 1.228
+   },
+   "random": {
+    "found": 0.27625,
+    "found_se": 0.0070699352454601724,
+    "ret": 0.108375,
+    "revisit_share": 0.20951557093425605,
+    "aim_repeat_share": 0.11519607843137254,
+    "first_on_target_colour": 0.159,
+    "mean_steps": 8.67,
+    "captures_per_ep": 2.0695
+   },
+   "greedy": {
+    "found": 0.8905,
+    "found_se": 0.0049373512635825295,
+    "ret": 0.82057,
+    "revisit_share": 0.16269660360155003,
+    "aim_repeat_share": 0.1419534989742421,
+    "first_on_target_colour": 0.9525,
+    "mean_steps": 4.387,
+    "captures_per_ep": 1.184
+   },
+   "z_vs_random": 70.19520641646606,
+   "K1": true,
+   "K2": true,
+   "per_k": {
+    "4": {
+     "found": 0.9985,
+     "mean_steps_found": 2.3104656985478216
+    },
+    "8": {
+     "found": 0.998,
+     "mean_steps_found": 3.6162324649298596
+    },
+    "12": {
+     "found": 0.985,
+     "mean_steps_found": 4.683756345177665
+    },
+    "16": {
+     "found": 0.972,
+     "mean_steps_found": 5.858539094650205
+    }
+   }
+  }
+ },
+ "gate": {
+  "K1": true,
+  "K2": true,
+  "all_seeds": true,
+  "pass": true
+ }
+}
