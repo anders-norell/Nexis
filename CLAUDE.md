@@ -87,5 +87,8 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Nyckeltal sprint 1 (styrd referensagent, standardinställningar):** vet bara avsikten 79 %, härleder
   fångst ur foveán 86 %, vet faktisk plats 93 %. Ett schema har alltså ca 7–8 procentenheter att tillföra
   utöver härledning.
+- **H5 mätvillkor (spec, låses i sprint 3):** bara fångster där foveán utesluter avsedd plats; schemat avläses
+  steget efter fångsten; fångster som hittar målet utesluts; nollhypotes = idealisk betraktares gissning med
+  samma indata samt övriga iögonfallande platser, inte ren slump. Annars blir H5 sann per konstruktion.
 - **Nästa steg:** sprint 2 (kompetens): RL-baslinjeagent utan schema (med efferenskopia) som söker klart
   bättre än slumpagenten. Ny tråd. Bygg schemakanalen och 1b-huvudet in i arkitekturen redan nu, avstängda.

@@ -76,7 +76,7 @@ def part_b():
 def part_c():
     """intended = knows its commands only; inferred = also reads the fovea (no schema);
     actual = perfect attention schema. Run with a salient distractor in every episode and
-    with the default mix (half the episodes)."""
+    with the default mix (0-3 salient objects, 75% of episodes have one)."""
     res = {}
     for label, ns in (("all_salient", (1, 2, 3)), ("default", EnvConfig().n_salient)):
         cfg = EnvConfig(cue_level="weak", n_salient=ns)

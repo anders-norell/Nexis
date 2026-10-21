@@ -219,6 +219,13 @@ def test_efference():
     act = info["active"]
     check("efference copy = intended cell, also when captured",
           np.array_equal(cell[act], want[act]) and info["captured"].any())
+    env = SearchEnv(EnvConfig(n_salient=(0,)), seed=12)
+    env.reset(100)
+    a = env.target[:, 0] * G + env.target[:, 1]
+    obs, _, _, _ = env.step(a)                      # all found
+    e1 = obs["efference"].copy()
+    obs, _, _, info = env.step(np.zeros(100, int))
+    check("efference copy frozen after the episode ends", np.array_equal(e1, obs["efference"]))
     env = SearchEnv(EnvConfig(efference_copy=False), seed=12)
     env.reset(50)
     obs, _, _, _ = env.step(np.zeros(50, int))

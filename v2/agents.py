@@ -7,7 +7,7 @@ ItemScanAgent  visits occupied cells (seen in the periphery) in random order, sk
                it believes it has covered. Ignores colour: optimal-ish at cue level "none".
 GuidedAgent    like ItemScan but only target-coloured cells, hot quadrant first.
 
-Scan and Guided keep track of covered cells in one of two ways:
+Scan and Guided keep track of covered cells in one of three ways:
   track="intended"  marks the window it chose (knows its commands, not where attention went)
   track="actual"    marks the window attention really covered (a perfect attention schema)
   track="inferred"  no schema, but infers from the fovea whether capture happened

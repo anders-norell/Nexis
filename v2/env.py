@@ -208,7 +208,7 @@ class SearchEnv:
         Returns obs, reward, done, info. Finished episodes ignore actions.
         """
         cfg, G, B = self.cfg, self.cfg.G, self.B
-        action = np.asarray(action)
+        action = np.clip(np.asarray(action), 0, G * G - 1)
         ar, ac = np.divmod(action, G)
         ar = np.minimum(ar, self.n - 1)
         ac = np.minimum(ac, self.n - 1)
@@ -231,7 +231,7 @@ class SearchEnv:
         else:
             fc = np.asarray(force_capture, bool)
             q = self.sal_val * eligible
-            u = self.rng.random(B) * q.sum(1)
+            u = self.rng.random(B) * np.cumsum(q, 1)[:, -1]
             who = np.where(fc & (q.sum(1) > 0), (u[:, None] >= np.cumsum(q, 1)).sum(1), -1)
             who = np.minimum(who, M - 1)
         cap = who >= 0
