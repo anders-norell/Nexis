@@ -63,6 +63,166 @@
    "captures_per_ep": 1.4505
   }
  ],
+ "memoryless_guided_prior1.5": [
+  {
+   "found": 0.6945,
+   "found_se": 0.007283023925540819,
+   "ret": 0.5864000000000001,
+   "revisit_share": 0.36552176407902287,
+   "aim_repeat_share": 0.3357652266579228,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 6.0995,
+   "captures_per_ep": 1.43675
+  },
+  {
+   "found": 0.6975,
+   "found_se": 0.007262811955434342,
+   "ret": 0.59033,
+   "revisit_share": 0.360056142668428,
+   "aim_repeat_share": 0.33173712021136065,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 6.056,
+   "captures_per_ep": 1.43575
+  },
+  {
+   "found": 0.69125,
+   "found_se": 0.007304509523232892,
+   "ret": 0.5822999999999999,
+   "revisit_share": 0.3584198737527998,
+   "aim_repeat_share": 0.32983099165139484,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 6.13875,
+   "captures_per_ep": 1.41275
+  }
+ ],
+ "memoryless_guided_prior2": [
+  {
+   "found": 0.70475,
+   "found_se": 0.007212444757154123,
+   "ret": 0.59974,
+   "revisit_share": 0.36711305150917256,
+   "aim_repeat_share": 0.34100163721086435,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 5.95525,
+   "captures_per_ep": 1.41775
+  },
+  {
+   "found": 0.70725,
+   "found_se": 0.0071945715212929804,
+   "ret": 0.6027899999999999,
+   "revisit_share": 0.36090384047890056,
+   "aim_repeat_share": 0.33792841785759453,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 5.93025,
+   "captures_per_ep": 1.40925
+  },
+  {
+   "found": 0.7025,
+   "found_se": 0.007228308066207472,
+   "ret": 0.596865,
+   "revisit_share": 0.360362618540335,
+   "aim_repeat_share": 0.3346283995488156,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 5.98425,
+   "captures_per_ep": 1.38625
+  }
+ ],
+ "memoryless_guided_prior3": [
+  {
+   "found": 0.71725,
+   "found_se": 0.007120436038263387,
+   "ret": 0.6162099999999999,
+   "revisit_share": 0.37400875330415567,
+   "aim_repeat_share": 0.3575421415261949,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 5.76925,
+   "captures_per_ep": 1.36175
+  },
+  {
+   "found": 0.71475,
+   "found_se": 0.007139370376650872,
+   "ret": 0.6131,
+   "revisit_share": 0.3710811160464013,
+   "aim_repeat_share": 0.35706585018758896,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 5.79725,
+   "captures_per_ep": 1.3755
+  },
+  {
+   "found": 0.70925,
+   "found_se": 0.007180084217820847,
+   "ret": 0.6069749999999999,
+   "revisit_share": 0.36952601751674397,
+   "aim_repeat_share": 0.3535548686244204,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 5.823,
+   "captures_per_ep": 1.35775
+  }
+ ],
+ "memoryless_guided_prior5": [
+  {
+   "found": 0.71425,
+   "found_se": 0.007143124972657276,
+   "ret": 0.615205,
+   "revisit_share": 0.4002470660901791,
+   "aim_repeat_share": 0.39782052413306274,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 5.6665,
+   "captures_per_ep": 1.33075
+  },
+  {
+   "found": 0.7005,
+   "found_se": 0.007242232908433696,
+   "ret": 0.5992799999999999,
+   "revisit_share": 0.3994185541959559,
+   "aim_repeat_share": 0.40176169400329775,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 5.7615,
+   "captures_per_ep": 1.3635
+  },
+  {
+   "found": 0.69575,
+   "found_se": 0.007274646683860323,
+   "ret": 0.59455,
+   "revisit_share": 0.39920948616600793,
+   "aim_repeat_share": 0.4000347478608348,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 5.75575,
+   "captures_per_ep": 1.34425
+  }
+ ],
+ "item_scan": [
+  {
+   "found": 0.74575,
+   "found_se": 0.006884891747514989,
+   "ret": 0.6379150000000001,
+   "revisit_share": 0.18619144602851323,
+   "aim_repeat_share": 0.0004887983706720978,
+   "first_on_target_colour": 0.76775,
+   "mean_steps": 6.1375,
+   "captures_per_ep": 1.48725
+  },
+  {
+   "found": 0.72775,
+   "found_se": 0.007037931825117377,
+   "ret": 0.61705,
+   "revisit_share": 0.18989261905712346,
+   "aim_repeat_share": 0.0008382898886272006,
+   "first_on_target_colour": 0.77325,
+   "mean_steps": 6.26275,
+   "captures_per_ep": 1.55025
+  },
+  {
+   "found": 0.75075,
+   "found_se": 0.006839671730061318,
+   "ret": 0.642875,
+   "revisit_share": 0.18532834242005045,
+   "aim_repeat_share": 0.0008951094474733502,
+   "first_on_target_colour": 0.78,
+   "mean_steps": 6.1445,
+   "captures_per_ep": 1.481
+  }
+ ],
  "guided_intended": [
   {
    "found": 0.79575,
@@ -157,38 +317,6 @@
    "first_on_target_colour": 1.0,
    "mean_steps": 4.07,
    "captures_per_ep": 1.03975
-  }
- ],
- "item_scan": [
-  {
-   "found": 0.74575,
-   "found_se": 0.006884891747514989,
-   "ret": 0.6379150000000001,
-   "revisit_share": 0.18619144602851323,
-   "aim_repeat_share": 0.0004887983706720978,
-   "first_on_target_colour": 0.76775,
-   "mean_steps": 6.1375,
-   "captures_per_ep": 1.48725
-  },
-  {
-   "found": 0.72775,
-   "found_se": 0.007037931825117377,
-   "ret": 0.61705,
-   "revisit_share": 0.18989261905712346,
-   "aim_repeat_share": 0.0008382898886272006,
-   "first_on_target_colour": 0.77325,
-   "mean_steps": 6.26275,
-   "captures_per_ep": 1.55025
-  },
-  {
-   "found": 0.75075,
-   "found_se": 0.006839671730061318,
-   "ret": 0.642875,
-   "revisit_share": 0.18532834242005045,
-   "aim_repeat_share": 0.0008951094474733502,
-   "first_on_target_colour": 0.78,
-   "mean_steps": 6.1445,
-   "captures_per_ep": 1.481
   }
  ]
 }

@@ -22,7 +22,7 @@ Det nya är de två punkterna ovan.
 | Vad | Var |
 | --- | --- |
 | Gällande spec (levande, redigerbar) | https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW — "Nexis v2 – spec" |
-| Ögonblicksbild av specen | `docs/spec_v2.md` (21 okt 2026; det levande dokumentet gäller vid skillnad) |
+| Ögonblicksbild av specen | `docs/spec_v2.md` (22 okt 2026; det levande dokumentet gäller vid skillnad) |
 | v1: spec, kod och resultat | `docs/spec.md`, rotkatalogens `*.py`, `results/` — rör inte, det är ett avslutat försök |
 | v2: kod | `v2/` (skapas i sprint 1) |
 | v2: resultat | `v2/results/` |
@@ -45,8 +45,11 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 ## Teknisk miljö
 
 - Arbetsytan har 2 CPU-kärnor, Python 3, NumPy, Matplotlib.
-- **PyTorch går inte att installera** (paketkällan blockeras, kontrollerat 21 okt 2026). Återanvänd v1:s
-  egenbyggda autodiff (`autodiff.py`, testad mot finita differenser i `test_autodiff.py`).
+- **PyTorch går inte att installera** (paketkällan blockeras, kontrollerat 21 okt 2026). v2-agenten har
+  handskriven backprop i NumPy (`v2/agent_rl.py`, testad mot finita differenser). Träning: ca 18 000
+  episoder/min per kärna; kör frön parallellt med `OMP_NUM_THREADS=1`.
+- Stopp-kroken kräver att allt är pushat när ett svar avslutas. Under träning ändras loggarna hela tiden;
+  committa dem och fortsätt.
 - v1 tränades med övervakad förlust och mjuk attention. v2 kräver förstärkningsinlärning med hård
   spotlight (t.ex. REINFORCE med baslinje eller A2C). Det är långsammare och nyckfullare; räkna med
   att sprint 2 kan kräva flera försök.
@@ -73,22 +76,41 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 
 ## Status
 
-- **Senast uppdaterad:** 21 okt 2026
+- **Senast uppdaterad:** 22 okt 2026
 - **Sprint 0 (spec):** klar. Spec v2 godkänd i huvudsak av produktägaren.
 - **Sprint 1 (miljö):** **klar, grind 1 godkänd 21 okt 2026** (produktägaren delegerade bedömningen till Claude).
   Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent; den styrda kan spåra
   avsedd, härledd eller faktisk plats), `v2/test_env.py` (46 tester), `v2/check_env.py` → `v2/results/sprint1_env_check.*`.
+- **Sprint 2 (kompetens):** **grind 2 klarad på låst kriterium, väntar på produktägarens godkännande.**
+  - Grind (låst 21 okt före träning): K1 träffandel > slump med > 2 SD, K2 ≥ 73 % (bästa minneslösa
+    referens 71,4 %), alla tre frön, 4 000 testepisoder per frö, stokastisk policy.
+  - Resultat: 89,0 / 89,9 / 88,5 % (slump ≈ 28 %, z ≈ 70). Söklutning utan fångst 0,28 steg/distraktor.
+    En körning per frö (1 M episoder, ca 49 min, tre parallellt), inga kasserade försök.
+  - Oberoende granskning: godkänd med anmärkningar, inget läckage (`v2/results/sprint2_review.md`).
+  - Kod: `v2/agent_rl.py` (retinotop prioritetskarta: GRU per ruta med delade vikter, efferenskopia
+    remappar foveán till avsedda rutor; schemakanal 2 kanaler/ruta och 1b-huvud inbyggda men avstängda;
+    handskriven backprop, float32), `v2/train_rl.py` (A2C, GAE, återupptagbar), `v2/test_agent_rl.py`
+    (15 tester inkl. finita differenser), `v2/metrics.py`, `v2/references_sprint2.py`, `v2/eval_gate2.py`,
+    `v2/run_sprint2.sh`. Resultat: `v2/results/s2_base_s{0,1,2}.*`, `sprint2_gate.json`, `sprint2.png`.
+  - Schemavillkor är konfiguration: `train_rl.py --schema fixed|learned|shuffled --sl <vikt för 1b>`.
+    Öppen designpunkt för 1b: huvudet förutsäger förra stegets faktiska fönster och matas in med ett
+    stegs fördröjning; avgörs i sprint 3.
 - **Produktägarens linje:** experimentet ska vara så biologiskt och evolutionärt realistiskt som möjligt, så
   länge det är förenligt med experimentets komplexitet. Väg in det i designval.
 - **Beslut 21 okt:** (1) efferenskopia av föregående kommando till alla villkor (`obs["efference"]`);
   (2) graderad fångst nerifrån: 0–3 iögonfallande distraktorer, brusig salience i periferin, fångstchans
   ∝ salience; (3) inlärt schema 1b ingår i MVP, H5 mäts på 1b. 1c (utan facit) efter MVP. Zoom väntar
   om den ökar komplexiteten för mycket.
-- **Nyckeltal sprint 1 (styrd referensagent, standardinställningar):** vet bara avsikten 79 %, härleder
-  fångst ur foveán 86 %, vet faktisk plats 93 %. Ett schema har alltså ca 7–8 procentenheter att tillföra
-  utöver härledning.
+- **Beslut 22 okt:** ordningen efter MVP blir 1c för en ensam agent, sedan en social fas med flera agenter
+  som måste förutsäga varandras uppmärksamhet (produktägarens tes: självmodellen är nödvändig av
+  spelteoretiska skäl). Social fas startar först när 1c visat något. Skiss i specen. Fas 2 oförändrad.
+- **Varning inför sprint 3 (viktigast):** baslinjen utan schema når ca 89 %, perfekt schema-referens
+  93,5 %. Schemat har bara ca 4 procentenheter att tillföra — v1:s fälla. Piloten ska först träna 1a och
+  mäta vinst samt om kanalen läses (lesion, blandat schema). Under ca 3 punkter: flytta arbetspunkten
+  innan trösklar låses (bara fönster 1: gap ca 5; högre fångstrisk: gap ca 10 vid p_capture 0,6; eller en
+  fovea som avslöjar mindre). Det är en specändring som produktägaren beslutar. Agenten siktar aldrig på
+  iögonfallande objekt; H5:s nollmodell måste ta hänsyn till det.
 - **H5 mätvillkor (spec, låses i sprint 3):** bara fångster där foveán utesluter avsedd plats; schemat avläses
   steget efter fångsten; fångster som hittar målet utesluts; nollhypotes = idealisk betraktares gissning med
   samma indata samt övriga iögonfallande platser, inte ren slump. Annars blir H5 sann per konstruktion.
-- **Nästa steg:** sprint 2 (kompetens): RL-baslinjeagent utan schema (med efferenskopia) som söker klart
-  bättre än slumpagenten. Ny tråd. Bygg schemakanalen och 1b-huvudet in i arkitekturen redan nu, avstängda.
+- **Nästa steg:** produktägaren godkänner grind 2. Därefter sprint 3 (pilot), ny tråd.

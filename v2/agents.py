@@ -131,11 +131,15 @@ def run(env, agent, B, overrides=None, force_capture=None):
 
 
 class MemorylessGuidedAgent:
-    """Colour-guided but without memory: each step a uniform pick among occupied cells with the
-    target's colour (all valid cells if none). Brackets what memory adds (sprint 2 gate)."""
+    """Colour-guided but without memory: each step a random pick among occupied cells with the
+    target's colour (all valid cells if none). Brackets what memory adds (sprint 2 gate).
 
-    def __init__(self, rng):
+    prior_weight > 1 makes target-coloured cells in the hot quadrant that many times as likely
+    (prior_weight=1: uniform)."""
+
+    def __init__(self, rng, prior_weight=1.0):
         self.rng = rng
+        self.prior_weight = prior_weight
 
     def reset(self, env):
         pass
@@ -144,11 +148,15 @@ class MemorylessGuidedAgent:
         C = env.cfg.n_colors
         per = obs["periphery"]
         cand = (per[..., 1] > 0) & ((per[..., 3:3 + C] * obs["cue"][:, None, None, :C]).sum(-1) > 0)
-        cand = cand.reshape(env.B, -1)
-        none = ~cand.any(1)
-        cand[none] = obs["action_mask"][none] > 0
-        u = self.rng.random(cand.shape) * cand
-        return u.argmax(1)
+        G = env.cfg.G
+        rr, cc = np.meshgrid(np.arange(G), np.arange(G), indexing="ij")
+        h = ((env.n + 1) // 2)[:, None, None]
+        w = cand * (1.0 + (self.prior_weight - 1.0) * ((rr < h) & (cc < h)))
+        w = w.reshape(env.B, -1)
+        none = w.sum(1) == 0
+        w[none] = obs["action_mask"][none]
+        g = np.log(w + 1e-300) - np.log(-np.log(self.rng.random(w.shape)))
+        return g.argmax(1)
 
     def observe(self, env, info):
         pass
