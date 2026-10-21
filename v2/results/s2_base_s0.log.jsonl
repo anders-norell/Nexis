@@ -20,3 +20,4 @@
 {"it": 380, "episodes": 97280, "minutes": 5.35, "train_found": 0.8408, "train_ret": 0.7553, "entropy": 1.558, "vloss": 0.1573, "grad_norm": 0.357, "sl_loss": 0.0, "ent_coef": 0.00875}
 {"it": 400, "episodes": 102400, "minutes": 5.58, "train_found": 0.8344, "train_ret": 0.7485, "entropy": 1.532, "vloss": 0.1595, "grad_norm": 0.34, "sl_loss": 0.0, "ent_coef": 0.00869}
 {"it": 400, "episodes": 102400, "eval": {"found": 0.84, "found_se": 0.008197560612767676, "ret": 0.7539100000000001}}
+{"it": 420, "episodes": 107520, "minutes": 5.9, "train_found": 0.8318, "train_ret": 0.7445, "entropy": 1.526, "vloss": 0.1624, "grad_norm": 0.32, "sl_loss": 0.0, "ent_coef": 0.00862}
