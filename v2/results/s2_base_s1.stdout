@@ -1,0 +1,1 @@
+{'it': 20, 'episodes': 5120, 'minutes': 0.38, 'train_found': np.float64(0.2803), 'train_ret': np.float64(0.1103), 'entropy': np.float64(4.018), 'vloss': np.float64(0.1143), 'grad_norm': np.float64(0.034), 'sl_loss': np.float64(0.0), 'ent_coef': 0.00994}
