@@ -79,26 +79,33 @@ class ItemScanAgent:
     def _infer(self, env, info):
         """No schema: guess the actual window from what the fovea shows.
 
-        Attention went either where the agent aimed or to the salient distractor (both
-        visible in the periphery). Compare the fovea's occupancy and colour with what each
-        candidate window should show; pick the salient window only if it alone matches.
+        Attention went either where the agent aimed or to one of the salient objects.
+        Compare the fovea's occupancy and colour with what each candidate window should
+        show (from the periphery). Keep the intended window if it matches; otherwise take
+        the matching salient window with the highest sensed salience. Salient positions
+        are taken as known, so this is an optimistic no-schema baseline.
         """
         C = env.cfg.n_colors
         per = env.periphery()
+        feat = per[..., np.r_[1, 3:3 + C]]
         fov = env.last_window
         guess = info["intended"].copy()
-        for b in np.nonzero(info["active"] & (env.sal_pos[:, 0] >= 0))[0]:
+        has = (env.sal_pos[..., 0] >= 0).any(1)
+        for b in np.nonzero(info["active"] & has)[0]:
             w, n = env.w[b], env.n[b]
-            sr0, sc0 = window_origin(env.sal_pos[b, 0], env.sal_pos[b, 1], w, n)
             seen = fov[b, :w, :w, 1:2 + C]
-
-            def expect(r0, c0):
-                return per[b][..., np.r_[1, 3:3 + C]][r0:r0 + w, c0:c0 + w]
-
-            m_int = np.array_equal(seen, expect(*info["intended"][b]))
-            m_sal = np.array_equal(seen, expect(sr0, sc0))
-            if m_sal and not m_int:
-                guess[b] = sr0, sc0
+            r0, c0 = info["intended"][b]
+            if np.array_equal(seen, feat[b, r0:r0 + w, c0:c0 + w]):
+                continue
+            best, best_s = None, -np.inf
+            for (sr, sc) in env.sal_pos[b]:
+                if sr < 0:
+                    continue
+                wr, wc = window_origin(sr, sc, w, n)
+                if np.array_equal(seen, feat[b, wr:wr + w, wc:wc + w]) and per[b, sr, sc, 2] > best_s:
+                    best, best_s = (wr, wc), per[b, sr, sc, 2]
+            if best is not None:
+                guess[b] = best
         return guess
 
 
@@ -119,5 +126,5 @@ def run(env, agent, B, overrides=None, force_capture=None):
         agent.observe(env, info)
         n_cap += info["captured"]
     return dict(found=env.found.copy(), steps=env.steps.copy(), k=env.k.copy(), n=env.n.copy(),
-                w=env.w.copy(), budget=env.budget.copy(), salient=env.sal_pos[:, 0] >= 0,
+                w=env.w.copy(), budget=env.budget.copy(), salient=(env.sal_pos[..., 0] >= 0).any(1),
                 n_capture=n_cap)

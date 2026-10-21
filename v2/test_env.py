@@ -65,7 +65,7 @@ def test_periphery_no_shape():
 
 
 def test_fovea_window():
-    cfg = EnvConfig(p_salient=0.0)
+    cfg = EnvConfig(n_salient=(0,))
     env = SearchEnv(cfg, seed=5)
     env.reset(200)
     G = cfg.G
@@ -120,60 +120,113 @@ def test_prior():
 
 
 def test_capture():
-    cfg = EnvConfig(p_salient=1.0, p_capture=0.2)
+    cfg = EnvConfig(n_salient=(1, 2, 3))
     env = SearchEnv(cfg, seed=8)
     env.reset(3000)
-    has = env.sal_pos[:, 0] >= 0
-    check(f"salient distractor present when asked ({has.mean():.3f})", has.mean() > 0.97)
-    ok_excl = True
-    for b in np.nonzero(has)[0]:
-        r0, c0 = window_origin(env.sal_pos[b, 0], env.sal_pos[b, 1], env.w[b], env.n[b])
-        ok_excl &= not in_window(env.target[b, 0], env.target[b, 1], r0, c0, env.w[b])
-    check("capture window never contains the target", ok_excl)
-    # choose a cell far from the salient one so capture is possible
-    G = cfg.G
-    a = np.zeros(3000, int)
+    cnt = (env.sal_pos[..., 0] >= 0).sum(1)
+    check("1-3 salient distractors per episode when asked", set(cnt) == {1, 2, 3})
+    vals = env.sal_val[env.sal_pos[..., 0] >= 0]
+    check("salience is graded in [s_min, 1]", vals.min() >= cfg.s_min and vals.max() <= 1 and vals.std() > 0.1)
+    tgt = np.zeros(3000, bool)
     for b in range(3000):
-        n = env.n[b]
-        cand = [(r, c) for r in range(n) for c in range(n)
-                if abs(r - env.sal_pos[b, 0]) > 2 or abs(c - env.sal_pos[b, 1]) > 2]
-        r, c = cand[env.rng.integers(len(cand))]
-        a[b] = r * G + c
-    obs, rew, done, info = env.step(a)
-    rate = info["captured"][has].mean()
-    check(f"capture rate {rate:.3f}, want ~0.20", abs(rate - 0.2) < 0.03)
+        for (r, c) in env.sal_pos[b]:
+            tgt[b] |= r >= 0 and (r, c) == tuple(env.target[b])
+    check("salient objects are distractors, never the target", not tgt.any())
+    # noisy salience in the periphery, fresh each step
+    p1 = env.periphery()[..., 2]
+    env.step(np.zeros(3000, int))
+    p2 = env.periphery()[..., 2]
+    d = (p1 - env.salient)[env.valid]
+    check(f"periphery salience is noisy (SD {d.std():.3f}, want ~{cfg.sal_noise})", abs(d.std() - cfg.sal_noise) < 0.01)
+    check("salience noise is redrawn every step", not np.allclose(p1, p2))
+
+    # capture rate follows salience: one salient object, several fixed salience values
+    G = cfg.G
+    rates = []
+    for s in (0.4, 1.0):
+        env = SearchEnv(EnvConfig(n_salient=(1,), s_min=s), seed=9)
+        env.reset(6000)
+        env.sal_val[:, 0] = s
+        a = np.zeros(6000, int)
+        for b in range(6000):
+            n, (sr, sc) = env.n[b], env.sal_pos[b, 0]
+            cand = [(r, c) for r in range(n) for c in range(n) if abs(r - sr) > 2 or abs(c - sc) > 2]
+            r, c = cand[env.rng.integers(len(cand))]
+            a[b] = r * G + c
+        _, _, _, info = env.step(a)
+        rates.append(info["captured"].mean())
+    check(f"capture chance = p_capture * salience ({rates[0]:.3f} vs 0.10, {rates[1]:.3f} vs 0.25)",
+          abs(rates[0] - 0.10) < 0.015 and abs(rates[1] - 0.25) < 0.02)
+
+    # several salient objects: capturer chosen in proportion to salience, total capped
+    env = SearchEnv(EnvConfig(n_salient=(3,), p_capture=1.0), seed=10)
+    env.reset(8000)
+    env.sal_val[:] = [0.3, 0.6, 0.9]
+    a = np.zeros(8000, int)
+    _, _, _, info = env.step(a)
+    inside = in_window(env.sal_pos[..., 0], env.sal_pos[..., 1], 0, 0, env.w[:, None])
+    ok = ~inside.any(1)
+    rate = info["captured"][ok].mean()
+    check(f"total capture chance capped ({rate:.3f}, want {env.cfg.capture_cap})", abs(rate - env.cfg.capture_cap) < 0.02)
+    who = info["capturer"][ok & info["captured"]]
+    share = np.bincount(who, minlength=3) / len(who)
+    check(f"capturer drawn in proportion to salience ({np.round(share, 2)}, want [0.17 0.33 0.5])",
+          np.abs(share - np.array([1, 2, 3]) / 6).max() < 0.03)
+
     cap = info["captured"]
-    check("captured: actual window differs from intended", (info["actual"][cap] != info["intended"][cap]).any(1).all())
-    check("not captured: actual window equals intended", (info["actual"][~cap] == info["intended"][~cap]).all())
-    sr0, sc0 = window_origin(env.sal_pos[:, 0], env.sal_pos[:, 1], env.w, env.n)
-    check("captured: actual window is on the salient distractor",
+    sp = env.sal_pos[np.arange(8000), np.maximum(info["capturer"], 0)]
+    sr0, sc0 = window_origin(sp[:, 0], sp[:, 1], env.w, env.n)
+    check("captured: actual window is on the capturing object",
           ((info["actual"][cap, 0] == sr0[cap]) & (info["actual"][cap, 1] == sc0[cap])).all())
-    check("capture never finds the target", not info["hit"][cap].any())
+    check("not captured: actual window equals intended", (info["actual"][~cap] == info["intended"][~cap]).all())
+    ci = np.nonzero(cap)[0]
+    check("salient object inside the intended window never captures",
+          inside.any() and not inside[ci, info["capturer"][ci]].any())
+
     # forced capture for H5
-    env.reset(500)
-    has = env.sal_pos[:, 0] >= 0
-    a = np.zeros(500, int)
+    env = SearchEnv(EnvConfig(n_salient=(0, 1, 2)), seed=11)
+    env.reset(2000)
+    a = np.zeros(2000, int)
     ir0, ic0 = window_origin(a // G, a % G, env.w, env.n)
-    sal_in = has & in_window(env.sal_pos[:, 0], env.sal_pos[:, 1], ir0, ic0, env.w)
-    _, _, _, info = env.step(a, force_capture=np.ones(500, bool))
-    check("force_capture=True captures exactly when a salient one is outside the chosen window",
-          np.array_equal(info["captured"], has & ~sal_in))
-    env.reset(500)
-    _, _, _, info = env.step(a, force_capture=np.zeros(500, bool))
+    exists = env.sal_pos[..., 0] >= 0
+    elig = exists & ~in_window(env.sal_pos[..., 0], env.sal_pos[..., 1], ir0[:, None], ic0[:, None], env.w[:, None])
+    _, _, _, info = env.step(a, force_capture=np.ones(2000, bool))
+    check("force_capture=True captures exactly when an eligible salient object exists",
+          np.array_equal(info["captured"], elig.any(1)))
+    check("forced capturer is an eligible object", elig[np.nonzero(info["captured"])[0], info["capturer"][info["captured"]]].all())
+    env.reset(2000)
+    _, _, _, info = env.step(a, force_capture=np.zeros(2000, bool))
     check("force_capture=False never captures", not info["captured"].any())
-    # finished episodes are untouched by forced capture
     env.reset(300)
     a = env.target[:, 0] * G + env.target[:, 1]
     env.step(a, force_capture=np.zeros(300, bool))   # all found
-    assert env.done.all()
     v = env.visits.copy()
     _, r, _, info = env.step(a, force_capture=np.ones(300, bool))
     check("finished episodes: no capture, no reward, no visits",
           not info["captured"].any() and (r == 0).all() and np.array_equal(v, env.visits))
 
 
+def test_efference():
+    env = SearchEnv(EnvConfig(), seed=12)
+    obs = env.reset(500)
+    G = env.cfg.G
+    check("efference copy is zero at the first step", obs["efference"].sum() == 0)
+    a = env.rng.integers(0, G * G, 500)
+    obs, _, _, info = env.step(a, force_capture=np.ones(500, bool))
+    cell = obs["efference"].argmax(1)
+    ar, ac = np.divmod(a, G)
+    want = np.minimum(ar, env.n - 1) * G + np.minimum(ac, env.n - 1)
+    act = info["active"]
+    check("efference copy = intended cell, also when captured",
+          np.array_equal(cell[act], want[act]) and info["captured"].any())
+    env = SearchEnv(EnvConfig(efference_copy=False), seed=12)
+    env.reset(50)
+    obs, _, _, _ = env.step(np.zeros(50, int))
+    check("efference copy can be switched off", obs["efference"].sum() == 0)
+
+
 def test_reward_and_budget():
-    cfg = EnvConfig(p_salient=0.0)
+    cfg = EnvConfig(n_salient=(0,))
     env = SearchEnv(cfg, seed=9)
     env.reset(300)
     G = cfg.G
@@ -196,7 +249,7 @@ def test_reward_and_budget():
 
 
 def test_clamp_and_k_limit():
-    cfg = EnvConfig(grid_sizes=(6, 9), p_salient=0.0)
+    cfg = EnvConfig(grid_sizes=(6, 9), n_salient=(0,))
     env = SearchEnv(cfg, seed=10)
     env.reset(200, overrides=dict(n=6, w=1))
     G = cfg.G
@@ -228,7 +281,7 @@ def test_agents_order():
 if __name__ == "__main__":
     for f in [test_layout, test_cue_levels, test_periphery_no_shape, test_fovea_window,
               test_window_inside_grid, test_params_vary, test_prior, test_capture,
-              test_reward_and_budget, test_clamp_and_k_limit, test_reproducible, test_agents_order]:
+              test_efference, test_reward_and_budget, test_clamp_and_k_limit, test_reproducible, test_agents_order]:
         f()
     print(f"\n{len(FAILS)} failed")
     raise SystemExit(1 if FAILS else 0)

@@ -15,10 +15,19 @@ fovea      (B, W, W, 2+C+S)  egocentric patch of what the spotlight actually cov
 Action: a cell index (row * G + col) that the spotlight is centred on. The window has a
 fixed size per episode (no zoom in the MVP) and is shifted to stay inside the grid.
 
-Capture: in some episodes one distractor is salient (an onset). On each step, with
-probability p_capture, the spotlight lands on the salient distractor instead of where the
-agent chose. Intended and actual windows then differ (needed for H5). The capture window
-never contains the target.
+efference  (B, G*G)            copy of the agent's previous command (one-hot over cells; zero
+                              at the first step). Biological corollary discharge: the agent
+                              knows what it aimed at, not where attention landed. Given to all
+                              conditions (cfg.efference_copy).
+
+Capture (bottom-up, graded): 0-3 distractors per episode are salient, each with a salience
+s in [s_min, 1]. The periphery shows salience with fresh Gaussian noise every step, on every
+cell, so the agent senses salience but cannot read it exactly. On each step every salient
+object outside the intended window competes to pull the spotlight, with probability
+p_capture * s (total capped at capture_cap); the winner is drawn in proportion to salience.
+Which object captures, and when, is therefore not known in advance. Intended and actual
+windows then differ (needed for H5). A capture that happens to cover the target finds it,
+as it would in an animal.
 
 Reward: +1 when the actual window covers the target (episode ends), -step_cost per step
 otherwise. The episode also ends when the step budget is used up. Revisits are allowed but
@@ -43,8 +52,12 @@ class EnvConfig:
     cue_level: str = "weak"                   # "none" | "weak" | "strong"
     share_color: dict = field(default_factory=lambda: {"none": 0.75, "weak": 0.75, "strong": 0.25})
     prior_p: float = 0.4                      # chance target is put in the hot quadrant
-    p_salient: float = 0.5                    # chance an episode has a salient distractor
-    p_capture: float = 0.2                    # per-step capture chance when one exists
+    n_salient: tuple = (0, 1, 2, 3)           # salient distractors per episode, drawn uniformly
+    s_min: float = 0.3                        # salience drawn from U(s_min, 1)
+    sal_noise: float = 0.15                   # SD of the noise on the periphery salience channel
+    p_capture: float = 0.25                   # capture chance per step per unit salience
+    capture_cap: float = 0.6                  # max total capture chance per step
+    efference_copy: bool = True
     step_cost: float = 0.02
 
     @property
@@ -92,11 +105,13 @@ class SearchEnv:
         self.color = np.full((B, G, G), -1)
         self.shape = np.full((B, G, G), -1)
         self.valid = np.zeros((B, G, G), bool)
-        self.salient = np.zeros((B, G, G), bool)
+        self.salient = np.zeros((B, G, G))
         self.target = np.zeros((B, 2), int)
         self.target_color = rng.integers(0, cfg.n_colors, B)
         self.target_shape = rng.integers(0, cfg.n_shapes, B)
-        self.sal_pos = np.full((B, 2), -1)
+        M = max(1, max(cfg.n_salient))
+        self.sal_pos = np.full((B, M, 2), -1)
+        self.sal_val = np.zeros((B, M))
         p_share = cfg.share_color[cfg.cue_level]
 
         for b in range(B):
@@ -123,18 +138,13 @@ class SearchEnv:
                     col = rng.choice([x for x in range(cfg.n_colors) if x != self.target_color[b]])
                     shp = rng.integers(0, cfg.n_shapes)
                 self.color[b, r, c], self.shape[b, r, c] = col, shp
-            # salient distractor whose capture window excludes the target
-            if rng.random() < cfg.p_salient:
-                ok = []
-                for i in cells:
-                    r, c = divmod(int(i), n)
-                    r0, c0 = window_origin(r, c, w, n)
-                    if not in_window(tr, tc, r0, c0, w):
-                        ok.append((r, c))
-                if ok:
-                    r, c = ok[rng.integers(len(ok))]
-                    self.salient[b, r, c] = True
-                    self.sal_pos[b] = r, c
+            # salient distractors (bottom-up onsets), graded salience
+            m = min(int(rng.choice(cfg.n_salient)), k)
+            for j, i in enumerate(rng.choice(cells, m, replace=False)):
+                r, c = divmod(int(i), n)
+                self.sal_pos[b, j] = r, c
+                self.sal_val[b, j] = rng.uniform(cfg.s_min, 1.0)
+                self.salient[b, r, c] = self.sal_val[b, j]
 
         self.t = 0
         self.steps = np.zeros(B, int)
@@ -143,7 +153,12 @@ class SearchEnv:
         self.visits = np.zeros((B, G, G), int)          # actual coverage counts
         self.last_actual = np.full((B, 2), -1)          # actual window origin, last step
         self.last_window = np.zeros((B, cfg.W, cfg.W, 2 + cfg.n_colors + cfg.n_shapes))
+        self.last_intended = np.zeros((B, G * G))
+        self._new_sal_noise()
         return self.observe()
+
+    def _new_sal_noise(self):
+        self.sal_obs = (self.salient + self.rng.normal(0, self.cfg.sal_noise, self.salient.shape)) * self.valid
 
     # -------------------------------------------------------------- observe
     def periphery(self):
@@ -155,7 +170,7 @@ class SearchEnv:
         if cfg.cue_level == "none":
             col[:] = 0.0
         return np.concatenate(
-            [self.valid[..., None], occ[..., None], self.salient[..., None], col], -1
+            [self.valid[..., None], occ[..., None], self.sal_obs[..., None], col], -1
         ).astype(float)
 
     def cue(self):
@@ -166,8 +181,9 @@ class SearchEnv:
         return out
 
     def observe(self):
+        eff = self.last_intended.copy() if self.cfg.efference_copy else np.zeros_like(self.last_intended)
         return dict(cue=self.cue(), periphery=self.periphery(), fovea=self.last_window.copy(),
-                    action_mask=self.valid.reshape(self.B, -1).copy())
+                    efference=eff, action_mask=self.valid.reshape(self.B, -1).copy())
 
     def _fovea(self, b, r0, c0, w):
         cfg = self.cfg
@@ -187,7 +203,8 @@ class SearchEnv:
         """action: (B,) cell indices on the padded G x G grid.
 
         force_capture: optional (B,) bool to force (True) or forbid (False) capture,
-        for the H5 test. None = random capture.
+        for the H5 test. Forced capture picks among eligible salient objects in proportion
+        to salience. None = random capture.
         Returns obs, reward, done, info. Finished episodes ignore actions.
         """
         cfg, G, B = self.cfg, self.cfg.G, self.B
@@ -197,14 +214,30 @@ class SearchEnv:
         ac = np.minimum(ac, self.n - 1)
         ir0, ic0 = window_origin(ar, ac, self.w, self.n)
 
-        has_sal = self.sal_pos[:, 0] >= 0
-        sal_in_intended = has_sal & in_window(self.sal_pos[:, 0], self.sal_pos[:, 1], ir0, ic0, self.w)
+        # bottom-up capture: salient objects outside the intended window compete
+        M = self.sal_pos.shape[1]
+        exists = self.sal_pos[..., 0] >= 0                                  # (B, M)
+        inside = in_window(self.sal_pos[..., 0], self.sal_pos[..., 1],
+                           ir0[:, None], ic0[:, None], self.w[:, None])
+        eligible = exists & ~inside & ~self.done[:, None]
+        p = cfg.p_capture * self.sal_val * eligible
+        tot = p.sum(1)
+        scale = np.where(tot > cfg.capture_cap, cfg.capture_cap / np.maximum(tot, 1e-12), 1.0)
+        p = p * scale[:, None]
         if force_capture is None:
-            cap = has_sal & ~sal_in_intended & (self.rng.random(B) < cfg.p_capture)
+            u = self.rng.random(B)
+            cum = np.cumsum(p, 1)
+            who = np.where(u < cum[:, -1], (u[:, None] >= cum).sum(1), -1)
         else:
-            cap = has_sal & ~sal_in_intended & np.asarray(force_capture, bool)
-        cap &= ~self.done
-        sr0, sc0 = window_origin(self.sal_pos[:, 0], self.sal_pos[:, 1], self.w, self.n)
+            fc = np.asarray(force_capture, bool)
+            q = self.sal_val * eligible
+            u = self.rng.random(B) * q.sum(1)
+            who = np.where(fc & (q.sum(1) > 0), (u[:, None] >= np.cumsum(q, 1)).sum(1), -1)
+            who = np.minimum(who, M - 1)
+        cap = who >= 0
+        wi = np.maximum(who, 0)
+        spos = self.sal_pos[np.arange(B), wi]
+        sr0, sc0 = window_origin(spos[:, 0], spos[:, 1], self.w, self.n)
         r0 = np.where(cap, sr0, ir0)
         c0 = np.where(cap, sc0, ic0)
 
@@ -217,11 +250,15 @@ class SearchEnv:
             self.visits[b, r0[b]:r0[b] + w, c0[b]:c0[b] + w] += 1
             self.last_window[b] = self._fovea(b, r0[b], c0[b], w)
         self.last_actual = np.where(active[:, None], np.stack([r0, c0], 1), self.last_actual)
+        onehot = np.zeros((B, G * G))
+        onehot[np.arange(B), ar * G + ac] = 1.0
+        self.last_intended = np.where(active[:, None], onehot, self.last_intended)
+        self._new_sal_noise()
 
         self.steps += active
         self.found |= hit
         self.done |= hit | (self.steps >= self.budget)
         self.t += 1
         info = dict(intended=np.stack([ir0, ic0], 1), actual=np.stack([r0, c0], 1),
-                    captured=cap, hit=hit, active=active)
+                    captured=cap, capturer=who, hit=hit, active=active)
         return self.observe(), reward, self.done.copy(), info

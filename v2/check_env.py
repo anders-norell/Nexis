@@ -39,7 +39,7 @@ def slope(ks, steps, rng, n_boot=1000):
 def part_a():
     res, rng = {}, np.random.default_rng(0)
     for level in ("none", "weak", "strong"):
-        cfg = EnvConfig(cue_level=level, p_salient=0.0)
+        cfg = EnvConfig(cue_level=level, n_salient=(0,))
         for name, cls in AGENTS.items():
             all_k, all_s, means, found = [], [], [], []
             for k in KS:
@@ -78,8 +78,8 @@ def part_c():
     actual = perfect attention schema. Run with a salient distractor in every episode and
     with the default mix (half the episodes)."""
     res = {}
-    for label, p_sal in (("all_salient", 1.0), ("default", EnvConfig().p_salient)):
-        cfg = EnvConfig(cue_level="weak", p_salient=p_sal)
+    for label, ns in (("all_salient", (1, 2, 3)), ("default", EnvConfig().n_salient)):
+        cfg = EnvConfig(cue_level="weak", n_salient=ns)
         res[label] = {}
         for track in ("intended", "inferred", "actual"):
             env = SearchEnv(cfg, seed=300)
