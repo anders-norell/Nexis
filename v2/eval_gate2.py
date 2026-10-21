@@ -112,20 +112,28 @@ def plot(res):
     for key, lab in lines:
         v = 100 * np.mean([x["found"] for x in refs[key]])
         ax[0].axhline(v, ls=":", lw=1, color="gray")
-        ax[0].text(0, v + 0.5, f"{lab} {v:.0f} %", fontsize=7, color="gray")
+        ax[0].text(1.0, v + 0.6, f"{lab} {v:.0f} %", fontsize=7, color="gray", ha="right")
     ax[0].axhline(100 * K2_THRESHOLD, color="crimson", lw=1)
     ax[0].text(0, 100 * K2_THRESHOLD - 2.5, "K2 73 %", fontsize=8, color="crimson")
     ax[0].set_xlabel("träningsepisoder (miljoner)"); ax[0].set_ylabel("hittar målet, valideringsepisoder (%)")
-    ax[0].set_title("Inlärning, baslinje utan schema"); ax[0].legend(fontsize=8, loc="lower right")
+    ax[0].set_title("Inlärning, baslinje utan schema"); ax[0].legend(fontsize=8, loc="center right")
     ks = (4, 8, 12, 16)
     for s, v in res["seeds"].items():
-        ax[1].plot(ks, [100 * v["per_k"][k]["found"] for k in ks], marker="o", label=f"frö {s}")
+        ax[1].plot(ks, [v["per_k"].get(k, v["per_k"].get(str(k)))["mean_steps_found"] for k in ks], marker="o", label=f"frö {s}")
+    s1 = json.load(open(os.path.join(RES, "sprint1_env_check.json")))["A_search_slope"]
+    for key, lab, st in [("weak/item_scan", "avsökning (ref.)", "--"), ("weak/guided", "färgstyrd (ref.)", ":")]:
+        ax[1].plot(ks, s1[key]["mean_steps"], color="gray", ls=st, label=lab)
+    ax[1].set_ylim(0, None)
     ax[1].set_xlabel("antal distraktorer (8×8, fönster 1, ingen fångst)")
-    ax[1].set_ylabel("hittar målet inom budget (%)"); ax[1].set_title("Sökprofil")
+    ax[1].set_ylabel("steg till målet (när det hittas)")
+    ax[1].set_title("Söklutning (hittar målet i 97–100 %)")
     ax[1].legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(os.path.join(RES, "sprint2.png"), dpi=130)
 
 
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] == ["--plot-only"]:
+        plot(json.load(open(os.path.join(RES, "sprint2_gate.json")), ))
+    else:
+        main()
