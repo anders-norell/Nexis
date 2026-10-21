@@ -128,3 +128,27 @@ def run(env, agent, B, overrides=None, force_capture=None):
     return dict(found=env.found.copy(), steps=env.steps.copy(), k=env.k.copy(), n=env.n.copy(),
                 w=env.w.copy(), budget=env.budget.copy(), salient=(env.sal_pos[..., 0] >= 0).any(1),
                 n_capture=n_cap)
+
+
+class MemorylessGuidedAgent:
+    """Colour-guided but without memory: each step a uniform pick among occupied cells with the
+    target's colour (all valid cells if none). Brackets what memory adds (sprint 2 gate)."""
+
+    def __init__(self, rng):
+        self.rng = rng
+
+    def reset(self, env):
+        pass
+
+    def act(self, env, obs):
+        C = env.cfg.n_colors
+        per = obs["periphery"]
+        cand = (per[..., 1] > 0) & ((per[..., 3:3 + C] * obs["cue"][:, None, None, :C]).sum(-1) > 0)
+        cand = cand.reshape(env.B, -1)
+        none = ~cand.any(1)
+        cand[none] = obs["action_mask"][none] > 0
+        u = self.rng.random(cand.shape) * cand
+        return u.argmax(1)
+
+    def observe(self, env, info):
+        pass

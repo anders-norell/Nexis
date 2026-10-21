@@ -1,0 +1,194 @@
+{
+ "random": [
+  {
+   "found": 0.28825,
+   "found_se": 0.007161737524860849,
+   "ret": 0.12203,
+   "revisit_share": 0.21118120766345902,
+   "aim_repeat_share": 0.11471930691630083,
+   "first_on_target_colour": 0.15975,
+   "mean_steps": 8.59925,
+   "captures_per_ep": 2.056
+  },
+  {
+   "found": 0.2815,
+   "found_se": 0.0071108675631036755,
+   "ret": 0.11365499999999999,
+   "revisit_share": 0.21265312004611617,
+   "aim_repeat_share": 0.11575154921458423,
+   "first_on_target_colour": 0.172,
+   "mean_steps": 8.67375,
+   "captures_per_ep": 2.07275
+  },
+  {
+   "found": 0.281,
+   "found_se": 0.007107021176273504,
+   "ret": 0.11319499999999999,
+   "revisit_share": 0.21202248810725097,
+   "aim_repeat_share": 0.11676517226466772,
+   "first_on_target_colour": 0.1645,
+   "mean_steps": 8.67125,
+   "captures_per_ep": 2.0535
+  }
+ ],
+ "memoryless_guided": [
+  {
+   "found": 0.66225,
+   "found_se": 0.0074778830142627935,
+   "ret": 0.5482100000000001,
+   "revisit_share": 0.3730211729583219,
+   "aim_repeat_share": 0.34096712102761517,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 6.36425,
+   "captures_per_ep": 1.4915
+  },
+  {
+   "found": 0.6645,
+   "found_se": 0.0074655835337902425,
+   "ret": 0.5515800000000001,
+   "revisit_share": 0.37057285476586643,
+   "aim_repeat_share": 0.3405831550590286,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 6.3105,
+   "captures_per_ep": 1.48175
+  },
+  {
+   "found": 0.6655,
+   "found_se": 0.0074600561324965915,
+   "ret": 0.55085,
+   "revisit_share": 0.3644107533604251,
+   "aim_repeat_share": 0.33440137542982185,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 6.398,
+   "captures_per_ep": 1.4505
+  }
+ ],
+ "guided_intended": [
+  {
+   "found": 0.79575,
+   "found_se": 0.006374400707125338,
+   "ret": 0.717885,
+   "revisit_share": 0.18660695244188527,
+   "aim_repeat_share": 0.0021326508850501172,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 4.689,
+   "captures_per_ep": 1.2405
+  },
+  {
+   "found": 0.789,
+   "found_se": 0.006451337070716427,
+   "ret": 0.7101900000000001,
+   "revisit_share": 0.18907918384607253,
+   "aim_repeat_share": 0.0027487049370969446,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 4.7295,
+   "captures_per_ep": 1.26675
+  },
+  {
+   "found": 0.799,
+   "found_se": 0.006336383037664311,
+   "ret": 0.7205900000000001,
+   "revisit_share": 0.18709609068757282,
+   "aim_repeat_share": 0.002118868524208073,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 4.7195,
+   "captures_per_ep": 1.25075
+  }
+ ],
+ "guided_inferred": [
+  {
+   "found": 0.863,
+   "found_se": 0.0054367039647198,
+   "ret": 0.792725,
+   "revisit_share": 0.16513394642143142,
+   "aim_repeat_share": 0.1288627406180385,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 4.37675,
+   "captures_per_ep": 1.13625
+  },
+  {
+   "found": 0.85075,
+   "found_se": 0.00563414672998494,
+   "ret": 0.77898,
+   "revisit_share": 0.1690600889789942,
+   "aim_repeat_share": 0.13070901616264008,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 4.43925,
+   "captures_per_ep": 1.16675
+  },
+  {
+   "found": 0.868,
+   "found_se": 0.005352008968602352,
+   "ret": 0.7983800000000001,
+   "revisit_share": 0.16331340538054726,
+   "aim_repeat_share": 0.12790296619912622,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 4.349,
+   "captures_per_ep": 1.12775
+  }
+ ],
+ "guided_actual": [
+  {
+   "found": 0.935,
+   "found_se": 0.0038979161099233525,
+   "ret": 0.8722000000000001,
+   "revisit_share": 0.13067484662576687,
+   "aim_repeat_share": 0.24588957055214725,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 4.075,
+   "captures_per_ep": 1.05525
+  },
+  {
+   "found": 0.93525,
+   "found_se": 0.0038909329697387495,
+   "ret": 0.8726700000000001,
+   "revisit_share": 0.13397305775973428,
+   "aim_repeat_share": 0.24863135879928647,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 4.06425,
+   "captures_per_ep": 1.06775
+  },
+  {
+   "found": 0.93475,
+   "found_se": 0.0039048827607240655,
+   "ret": 0.8720450000000001,
+   "revisit_share": 0.1277027027027027,
+   "aim_repeat_share": 0.2428132678132678,
+   "first_on_target_colour": 1.0,
+   "mean_steps": 4.07,
+   "captures_per_ep": 1.03975
+  }
+ ],
+ "item_scan": [
+  {
+   "found": 0.74575,
+   "found_se": 0.006884891747514989,
+   "ret": 0.6379150000000001,
+   "revisit_share": 0.18619144602851323,
+   "aim_repeat_share": 0.0004887983706720978,
+   "first_on_target_colour": 0.76775,
+   "mean_steps": 6.1375,
+   "captures_per_ep": 1.48725
+  },
+  {
+   "found": 0.72775,
+   "found_se": 0.007037931825117377,
+   "ret": 0.61705,
+   "revisit_share": 0.18989261905712346,
+   "aim_repeat_share": 0.0008382898886272006,
+   "first_on_target_colour": 0.77325,
+   "mean_steps": 6.26275,
+   "captures_per_ep": 1.55025
+  },
+  {
+   "found": 0.75075,
+   "found_se": 0.006839671730061318,
+   "ret": 0.642875,
+   "revisit_share": 0.18532834242005045,
+   "aim_repeat_share": 0.0008951094474733502,
+   "first_on_target_colour": 0.78,
+   "mean_steps": 6.1445,
+   "captures_per_ep": 1.481
+  }
+ ]
+}
