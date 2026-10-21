@@ -71,3 +71,5 @@
 {"it": 1300, "episodes": 332800, "minutes": 16.76, "train_found": 0.8732, "train_ret": 0.7988, "entropy": 1.061, "vloss": 0.1442, "grad_norm": 0.387, "sl_loss": 0.0, "ent_coef": 0.00572}
 {"it": 1320, "episodes": 337920, "minutes": 16.99, "train_found": 0.8721, "train_ret": 0.7961, "entropy": 1.145, "vloss": 0.1443, "grad_norm": 0.318, "sl_loss": 0.0, "ent_coef": 0.00566}
 {"it": 1340, "episodes": 343040, "minutes": 17.24, "train_found": 0.8705, "train_ret": 0.7946, "entropy": 1.176, "vloss": 0.1444, "grad_norm": 0.301, "sl_loss": 0.0, "ent_coef": 0.00559}
+{"it": 1360, "episodes": 348160, "minutes": 17.48, "train_found": 0.8721, "train_ret": 0.796, "entropy": 1.076, "vloss": 0.1432, "grad_norm": 0.368, "sl_loss": 0.0, "ent_coef": 0.00553}
+{"it": 1380, "episodes": 353280, "minutes": 17.71, "train_found": 0.8814, "train_ret": 0.8074, "entropy": 1.015, "vloss": 0.139, "grad_norm": 0.397, "sl_loss": 0.0, "ent_coef": 0.00546}
