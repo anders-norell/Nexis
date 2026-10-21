@@ -8,3 +8,5 @@
 {'it': 160, 'episodes': 40960, 'minutes': 2.59, 'train_found': np.float64(0.777), 'train_ret': np.float64(0.6778), 'entropy': np.float64(2.21), 'vloss': np.float64(0.1765), 'grad_norm': np.float64(0.29), 'sl_loss': np.float64(0.0), 'ent_coef': 0.00948}
 {'it': 180, 'episodes': 46080, 'minutes': 2.87, 'train_found': np.float64(0.7984), 'train_ret': np.float64(0.7025), 'entropy': np.float64(2.05), 'vloss': np.float64(0.1702), 'grad_norm': np.float64(0.351), 'sl_loss': np.float64(0.0), 'ent_coef': 0.00941}
 {'it': 200, 'episodes': 51200, 'minutes': 3.14, 'train_found': np.float64(0.8148), 'train_ret': np.float64(0.7224), 'entropy': np.float64(1.96), 'vloss': np.float64(0.1668), 'grad_norm': np.float64(0.349), 'sl_loss': np.float64(0.0), 'ent_coef': 0.00935}
+EVAL {'it': 200, 'episodes': 51200, 'eval': {'found': 0.818, 'found_se': 0.008627745939699429, 'ret': 0.7268399999999999}}
+{'it': 220, 'episodes': 56320, 'minutes': 3.5, 'train_found': np.float64(0.8158), 'train_ret': np.float64(0.7239), 'entropy': np.float64(1.919), 'vloss': np.float64(0.1666), 'grad_norm': np.float64(0.393), 'sl_loss': np.float64(0.0), 'ent_coef': 0.00928}
