@@ -73,3 +73,10 @@
 {"it": 1340, "episodes": 343040, "minutes": 17.24, "train_found": 0.8705, "train_ret": 0.7946, "entropy": 1.176, "vloss": 0.1444, "grad_norm": 0.301, "sl_loss": 0.0, "ent_coef": 0.00559}
 {"it": 1360, "episodes": 348160, "minutes": 17.48, "train_found": 0.8721, "train_ret": 0.796, "entropy": 1.076, "vloss": 0.1432, "grad_norm": 0.368, "sl_loss": 0.0, "ent_coef": 0.00553}
 {"it": 1380, "episodes": 353280, "minutes": 17.71, "train_found": 0.8814, "train_ret": 0.8074, "entropy": 1.015, "vloss": 0.139, "grad_norm": 0.397, "sl_loss": 0.0, "ent_coef": 0.00546}
+{"it": 1400, "episodes": 358400, "minutes": 17.96, "train_found": 0.8744, "train_ret": 0.7981, "entropy": 1.039, "vloss": 0.1411, "grad_norm": 0.365, "sl_loss": 0.0, "ent_coef": 0.0054}
+{"it": 1400, "episodes": 358400, "eval": {"found": 0.8745, "found_se": 0.007407757757918383, "ret": 0.79848}}
+{"it": 1420, "episodes": 363520, "minutes": 18.28, "train_found": 0.8723, "train_ret": 0.7975, "entropy": 1.001, "vloss": 0.1427, "grad_norm": 0.349, "sl_loss": 0.0, "ent_coef": 0.00533}
+{"it": 1440, "episodes": 368640, "minutes": 18.52, "train_found": 0.8797, "train_ret": 0.8054, "entropy": 0.978, "vloss": 0.1393, "grad_norm": 0.411, "sl_loss": 0.0, "ent_coef": 0.00526}
+{"it": 1460, "episodes": 373760, "minutes": 18.76, "train_found": 0.8736, "train_ret": 0.7977, "entropy": 0.96, "vloss": 0.1432, "grad_norm": 0.448, "sl_loss": 0.0, "ent_coef": 0.0052}
+{"it": 1480, "episodes": 378880, "minutes": 18.99, "train_found": 0.8801, "train_ret": 0.8058, "entropy": 0.992, "vloss": 0.1404, "grad_norm": 0.407, "sl_loss": 0.0, "ent_coef": 0.00513}
+{"it": 1500, "episodes": 384000, "minutes": 19.22, "train_found": 0.8826, "train_ret": 0.8091, "entropy": 0.962, "vloss": 0.1388, "grad_norm": 0.375, "sl_loss": 0.0, "ent_coef": 0.00507}
