@@ -12,3 +12,10 @@
 03:52 start results/p3_r1.0_c0.25_w12_shuffled_s2
 03:52 done results/p3_r1.0_c0.25_w12_fixed_s2 rc 0
 03:52 start results/p3_r1.0_c0.25_w12_off_s3
+04:01 done results/p3_r1.0_c0.25_w12_shuffled_s2 rc 0
+04:01 start results/p3_r1.0_c0.25_w12_fixed_s3
+04:02 done results/p3_r1.0_c0.25_w12_off_s3 rc 0
+04:02 start results/p3_r1.0_c0.25_w12_shuffled_s3
+04:08 done results/p3_r1.0_c0.25_w12_fixed_s3 rc 0
+04:10 done results/p3_r1.0_c0.25_w12_shuffled_s3 rc 0
+1b variants done
