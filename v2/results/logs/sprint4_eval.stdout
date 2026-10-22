@@ -6,3 +6,10 @@ s4_fixed_s11 found 0.9443
 s4_fixed_s12 found 0.9513
 s4_shuffled_s10 found 0.8870
 s4_shuffled_s11 found 0.8842
+s4_shuffled_s12 found 0.8852
+F passed
+H1 NOT passed
+H2 passed
+H3a passed
+H3b passed
+H3 passed
