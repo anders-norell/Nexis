@@ -81,3 +81,6 @@ EVAL {'it': 1400, 'episodes': 358400, 'eval': {'found': 0.8425, 'found_se': 0.00
 {'it': 1480, 'episodes': 378880, 'minutes': 7.15, 'train_found': np.float64(0.8352), 'train_ret': np.float64(0.7486), 'entropy': np.float64(0.901), 'vloss': np.float64(0.161), 'grad_norm': np.float64(0.48), 'sl_loss': np.float64(0.0), 'ent_coef': 0.001}
 {'it': 1500, 'episodes': 384000, 'minutes': 7.24, 'train_found': np.float64(0.8441), 'train_ret': np.float64(0.7586), 'entropy': np.float64(0.917), 'vloss': np.float64(0.1552), 'grad_norm': np.float64(0.433), 'sl_loss': np.float64(0.0), 'ent_coef': 0.001}
 {'it': 1520, 'episodes': 389120, 'minutes': 7.33, 'train_found': np.float64(0.8324), 'train_ret': np.float64(0.7454), 'entropy': np.float64(0.942), 'vloss': np.float64(0.1609), 'grad_norm': np.float64(0.522), 'sl_loss': np.float64(0.0), 'ent_coef': 0.001}
+{'it': 1540, 'episodes': 394240, 'minutes': 7.41, 'train_found': np.float64(0.8299), 'train_ret': np.float64(0.743), 'entropy': np.float64(0.913), 'vloss': np.float64(0.1632), 'grad_norm': np.float64(0.438), 'sl_loss': np.float64(0.0), 'ent_coef': 0.001}
+{'it': 1560, 'episodes': 399360, 'minutes': 7.51, 'train_found': np.float64(0.8273), 'train_ret': np.float64(0.7398), 'entropy': np.float64(0.933), 'vloss': np.float64(0.1625), 'grad_norm': np.float64(0.351), 'sl_loss': np.float64(0.0), 'ent_coef': 0.001}
+done 1563 400128

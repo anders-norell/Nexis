@@ -1,3 +1,6 @@
 __pycache__/
 *.log
 __pycache__/
+v2/results/p3_*.log.jsonl
+v2/results/p3_*.stdout
+v2/results/p3_*.ckpt.npz
