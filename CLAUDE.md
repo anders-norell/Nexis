@@ -23,7 +23,7 @@ Det nya är de två punkterna ovan.
 | --- | --- |
 | Gällande spec (levande, redigerbar) | https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW — "Nexis v2 – spec" |
 | Ordlista (begrepp i vardagsspråk) | https://claude.ai/artifact/2syuVpzf2GcAfaP9DgSgjC — "Nexis – ordlista" |
-| Ögonblicksbild av specen | `docs/spec_v2.md` (22 okt 2026; det levande dokumentet gäller vid skillnad) |
+| Ögonblicksbild av specen | `docs/spec_v2.md` (uppdateras vid varje grind; det levande dokumentet gäller vid skillnad) |
 | v1: spec, kod och resultat | `docs/spec.md`, rotkatalogens `*.py`, `results/` — rör inte, det är ett avslutat försök |
 | v2: kod | `v2/` (skapas i sprint 1) |
 | v2: resultat | `v2/results/` |
@@ -167,5 +167,5 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Sprint 4-plan skriven i specen 22 okt, väntar på godkännande. Inget kört.** Steg: (1) fröbank + H2-ingrepp
   + testskript, H2-kod prövas aldrig på pilotens agenter; (2) 9 körningar, frön 10–12, 1M ep; (3) bedömning;
   (4) granskning, grind 4. Förregistrerat: körning < 73 % träff görs om en gång med frö + 1000.
-- `docs/spec_v2.md` är en äldre ögonblicksbild (före sprint 3-resultaten); det levande dokumentet gäller.
+- `docs/spec_v2.md` uppdaterad 22 okt 22:35 (rev 262). Exportera specen dit vid varje grind.
 - **Nästa steg:** vänta på produktägarens godkännande av sprint 4-planen.
