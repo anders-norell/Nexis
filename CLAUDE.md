@@ -81,7 +81,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Sprint 1 (miljö):** **klar, grind 1 godkänd 21 okt 2026** (produktägaren delegerade bedömningen till Claude).
   Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent; den styrda kan spåra
   avsedd, härledd eller faktisk plats), `v2/test_env.py` (46 tester), `v2/check_env.py` → `v2/results/sprint1_env_check.*`.
-- **Sprint 2 (kompetens):** **grind 2 klarad på låst kriterium, väntar på produktägarens godkännande.**
+- **Sprint 2 (kompetens):** **klar, grind 2 godkänd av produktägaren 22 okt 2026.**
   - Grind (låst 21 okt före träning): K1 träffandel > slump med > 2 SD, K2 ≥ 73 % (bästa minneslösa
     referens 71,4 %), alla tre frön, 4 000 testepisoder per frö, stokastisk policy.
   - Resultat: 89,0 / 89,9 / 88,5 % (slump ≈ 28 %, z ≈ 70). Söklutning utan fångst 0,28 steg/distraktor.
@@ -113,4 +113,13 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **H5 mätvillkor (spec, låses i sprint 3):** bara fångster där foveán utesluter avsedd plats; schemat avläses
   steget efter fångsten; fångster som hittar målet utesluts; nollhypotes = idealisk betraktares gissning med
   samma indata samt övriga iögonfallande platser, inte ren slump. Annars blir H5 sann per konstruktion.
-- **Nästa steg:** produktägaren godkänner grind 2. Därefter sprint 3 (pilot), ny tråd.
+- **Inriktning 22 okt (produktägaren):** begreppsbildning ska ingå i det som driver fram ett schema (förslag:
+  diskreta symboler i schemakanalen i 1c och den sociala fasen, matade tillbaka som inre tal). Grundmotiv:
+  en fullständig funktionalism som inte alienerar oss från oss själva och världen. Se specen.
+- **Styrning (överenskommet 22 okt):** produktägaren tycker att Claude styr mycket. Därför: före varje sprint
+  skriver Claude planen i klartext i specen (vad, varför, vad som händer om svaret blir nej) och väntar på
+  produktägarens godkännande innan något körs. Skilj tydligt på produktägarens beslut och tekniska val.
+- **Nästa steg: sprint 3 (pilot).** Börja med att skriva sprint 3-planen i klartext i specen och få den
+  godkänd. Öppet beslut i specen: tillägget H6 (schemats vinst växer när foveán avslöjar mindre; piloten
+  varierar foveáns tydlighet och fångstrisk, tränar Baslinje och Fast schema 1a i varje läge, väljer
+  arbetspunkt där 1a ger tydlig vinst innan trösklar låses; ingen vinst ens med tvetydig fovea = omtag).
