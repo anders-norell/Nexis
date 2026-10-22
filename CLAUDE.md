@@ -164,8 +164,10 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Grind 3 godkänd 22 okt 22:30** ("Jag följer dina rekommendationer"): alternativ A, H1 med rättat mått,
   H3 = H3a + H3b (ingen slumpvis avstängning under träning). **Trösklarna är låsta** (specens tröskeltabell,
   signifikanskriterium, H2 i detalj, fröbank, H3). Ändringar före körning kräver produktägarens godkännande.
-- **Sprint 4-plan skriven i specen 22 okt, väntar på godkännande. Inget kört.** Steg: (1) fröbank + H2-ingrepp
+- **Sprint 4-plan godkänd av produktägaren 22 okt 22:44** (bockad + "svar: Y" i specen). **Inget kört ännu.** Steg: (1) fröbank + H2-ingrepp
   + testskript, H2-kod prövas aldrig på pilotens agenter; (2) 9 körningar, frön 10–12, 1M ep; (3) bedömning;
   (4) granskning, grind 4. Förregistrerat: körning < 73 % träff görs om en gång med frö + 1000.
 - `docs/spec_v2.md` uppdaterad 22 okt 22:35 (rev 262). Exportera specen dit vid varje grind.
-- **Nästa steg:** vänta på produktägarens godkännande av sprint 4-planen.
+- **Nästa steg (ny tråd för sprint 4):** genomför sprint 4-planen i specen, steg 1 först (fröbank, H2-ingrepp,
+  testskript, pusha), sedan träning i bakgrunden, bedömning mot låsta kriterier, oberoende granskning, grind 4.
+  Ändra inga låsta kriterier. Stöter H2 eller fröbanken på hinder: skriv ändring + skäl i specen och vänta.
