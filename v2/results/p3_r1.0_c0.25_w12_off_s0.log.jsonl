@@ -1,1 +1,4 @@
 {"it": 20, "episodes": 5120, "minutes": 0.12, "train_found": 0.2754, "train_ret": 0.1072, "entropy": 4.014, "vloss": 0.1129, "grad_norm": 0.042, "sl_loss": 0.0, "ent_coef": 0.00985}
+{"it": 40, "episodes": 10240, "minutes": 0.25, "train_found": 0.293, "train_ret": 0.1264, "entropy": 4.014, "vloss": 0.1195, "grad_norm": 0.053, "sl_loss": 0.0, "ent_coef": 0.0097}
+{"it": 60, "episodes": 15360, "minutes": 0.37, "train_found": 0.3479, "train_ret": 0.1855, "entropy": 3.971, "vloss": 0.1378, "grad_norm": 0.091, "sl_loss": 0.0, "ent_coef": 0.00955}
+{"it": 80, "episodes": 20480, "minutes": 0.49, "train_found": 0.4766, "train_ret": 0.3311, "entropy": 3.65, "vloss": 0.1739, "grad_norm": 0.155, "sl_loss": 0.0, "ent_coef": 0.00939}
