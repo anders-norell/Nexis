@@ -119,7 +119,14 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Styrning (överenskommet 22 okt):** produktägaren tycker att Claude styr mycket. Därför: före varje sprint
   skriver Claude planen i klartext i specen (vad, varför, vad som händer om svaret blir nej) och väntar på
   produktägarens godkännande innan något körs. Skilj tydligt på produktägarens beslut och tekniska val.
-- **Nästa steg: sprint 3 (pilot).** Börja med att skriva sprint 3-planen i klartext i specen och få den
-  godkänd. Öppet beslut i specen: tillägget H6 (schemats vinst växer när foveán avslöjar mindre; piloten
-  varierar foveáns tydlighet och fångstrisk, tränar Baslinje och Fast schema 1a i varje läge, väljer
-  arbetspunkt där 1a ger tydlig vinst innan trösklar låses; ingen vinst ens med tvetydig fovea = omtag).
+- **Sprint 3 (pilot): plan skriven i specen 22 okt 2026, väntar på produktägarens godkännande. Inget kört.**
+  Avsnittet "Sprint 3: pilot – plan" i specen: fem frågor (vinst ≥ 3 p för 1a vid någon tillåten
+  arbetspunkt, kanalen läses, spridning, H5 mätbar, tid), steg 1–5, förregistrerad regel för val av
+  arbetspunkt (närmast standard: mest avslöjande fovea, lägst fångstrisk, båda fönstren), H6-alternativ
+  A–D (Claude rekommenderar A: variera foveán, H6 beskrivande, helt blind fovea utesluten eftersom H5 då
+  blir omätbar), fem beslutspunkter för produktägaren och Claudes tekniska val.
+  Kärninsikt: en träff avslutar episoden, så foveáns innehåll duger bara till att lokalisera spotlighten
+  mot periferins karta. Foveán läcker alltså schemats information.
+- **Nästa steg:** läs produktägarens svar under "Beslut för produktägaren" i sprint 3-avsnittet. Vid
+  godkännande: steg 1 (fovea-reglage `reveal` i `EnvConfig` med tester, idealisk betraktare för H5,
+  lesion/Blandat-mätning), sedan rutnätet i bakgrunden (400 000 episoder per körning).
