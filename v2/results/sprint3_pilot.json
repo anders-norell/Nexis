@@ -279,6 +279,392 @@
     "found_se": 0.006728553893668386,
     "mean_steps": 5.66775
    }
+  },
+  "p3_r1.0_c0.25_w12_fixed_s0": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "fixed",
+   "seed": 0,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.9515
+   },
+   "intact": {
+    "found": 0.94725,
+    "found_se": 0.003534382460204328,
+    "mean_steps": 4.1075
+   },
+   "lesion": {
+    "found": 0.505,
+    "found_se": 0.007905298855830814,
+    "mean_steps": 6.6685
+   },
+   "profile": {
+    "found": 0.94425,
+    "revisit_share": 0.11031589338598223,
+    "aim_repeat_share": 0.21791707798617965,
+    "slope": 0.2714,
+    "steps_per_k": {
+     "4": 2.26,
+     "8": 3.3575,
+     "12": 4.4365,
+     "16": 5.519
+    }
+   },
+   "no_capture": {
+    "found": 0.98925,
+    "found_se": 0.001630524263848901,
+    "mean_steps": 3.508
+   },
+   "lesion_window": {
+    "found": 0.9465,
+    "found_se": 0.0035580103288214327,
+    "mean_steps": 4.12825
+   },
+   "lesion_covered": {
+    "found": 0.804,
+    "found_se": 0.006276623296008771,
+    "mean_steps": 4.818
+   },
+   "profile_lesion": {
+    "found": 0.48375,
+    "revisit_share": 0.6338877106819958,
+    "aim_repeat_share": 0.7274249358187298,
+    "slope": 0.3344724873336661,
+    "steps_per_k": {
+     "4": 1.6386861313868613,
+     "8": 2.650526315789474,
+     "12": 4.099330357142857,
+     "16": 5.615384615384615
+    }
+   }
+  },
+  "p3_r1.0_c0.25_w12_fixed_s1": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "fixed",
+   "seed": 1,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.947
+   },
+   "intact": {
+    "found": 0.949,
+    "found_se": 0.0034784694910261894,
+    "mean_steps": 4.069
+   },
+   "lesion": {
+    "found": 0.47625,
+    "found_se": 0.007896770502870144,
+    "mean_steps": 6.89925
+   },
+   "profile": {
+    "found": 0.9495,
+    "revisit_share": 0.10959920831271648,
+    "aim_repeat_share": 0.2159203364670955,
+    "slope": 0.27635,
+    "steps_per_k": {
+     "4": 2.2335,
+     "8": 3.3825,
+     "12": 4.4765,
+     "16": 5.5535
+    }
+   },
+   "no_capture": {
+    "found": 0.98775,
+    "found_se": 0.001739248221215132,
+    "mean_steps": 3.515
+   },
+   "lesion_window": {
+    "found": 0.9445,
+    "found_se": 0.003620074239570233,
+    "mean_steps": 4.05775
+   },
+   "lesion_covered": {
+    "found": 0.8235,
+    "found_se": 0.006028012732236057,
+    "mean_steps": 4.69475
+   },
+   "profile_lesion": {
+    "found": 0.4785,
+    "revisit_share": 0.6457735999709651,
+    "aim_repeat_share": 0.7385039741588938,
+    "slope": 0.26658302355294144,
+    "steps_per_k": {
+     "4": 1.572610294117647,
+     "8": 2.8756698821007505,
+     "12": 4.031505250875146,
+     "16": 4.741772151898735
+    }
+   }
+  },
+  "p3_r1.0_c0.25_w12_fixed_s2": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "fixed",
+   "seed": 2,
+   "checkpoint": {
+    "it": 1200,
+    "episodes": 307200,
+    "eval_found": 0.953
+   },
+   "intact": {
+    "found": 0.94975,
+    "found_se": 0.0034541618918342547,
+    "mean_steps": 4.16025
+   },
+   "lesion": {
+    "found": 0.512,
+    "found_se": 0.007903416982546221,
+    "mean_steps": 6.82525
+   },
+   "profile": {
+    "found": 0.94825,
+    "revisit_share": 0.10726113087207163,
+    "aim_repeat_share": 0.2207776278670428,
+    "slope": 0.2637010192596299,
+    "steps_per_k": {
+     "4": 2.306153076538269,
+     "8": 3.4475,
+     "12": 4.492,
+     "16": 5.474
+    }
+   },
+   "no_capture": {
+    "found": 0.9885,
+    "found_se": 0.0016858047039915386,
+    "mean_steps": 3.53975
+   },
+   "lesion_window": {
+    "found": 0.947,
+    "found_se": 0.0035422803389906898,
+    "mean_steps": 4.10525
+   },
+   "lesion_covered": {
+    "found": 0.77575,
+    "found_se": 0.00659473156201221,
+    "mean_steps": 5.074
+   },
+   "profile_lesion": {
+    "found": 0.52175,
+    "revisit_share": 0.6083931611279698,
+    "aim_repeat_share": 0.7037969062245578,
+    "slope": 0.3841563962391109,
+    "steps_per_k": {
+     "4": 1.9277879341864717,
+     "8": 3.5374149659863945,
+     "12": 5.162059103908485,
+     "16": 6.508325171400588
+    }
+   }
+  },
+  "p3_r1.0_c0.25_w12_learned_s1": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "learned",
+   "seed": 1,
+   "checkpoint": {
+    "it": 1000,
+    "episodes": 256000,
+    "eval_found": 0.8415
+   },
+   "intact": {
+    "found": 0.828,
+    "found_se": 0.005966908747416873,
+    "mean_steps": 5.15175
+   },
+   "lesion": {
+    "found": 0.8275,
+    "found_se": 0.005973770794062994,
+    "mean_steps": 5.04325
+   },
+   "profile": {
+    "found": 0.839,
+    "revisit_share": 0.16097205346294047,
+    "aim_repeat_share": 0.10221142162818955,
+    "slope": 0.38431039789789795,
+    "steps_per_k": {
+     "4": 2.528028028028028,
+     "8": 4.045,
+     "12": 5.5935,
+     "16": 7.136
+    }
+   },
+   "no_capture": {
+    "found": 0.953,
+    "found_se": 0.003346303931205293,
+    "mean_steps": 4.25675
+   },
+   "profile_lesion": {
+    "found": 0.82225,
+    "revisit_share": 0.19137608518394167,
+    "aim_repeat_share": 0.1523334452491726,
+    "slope": 0.3119585721098027,
+    "steps_per_k": {
+     "4": 2.5379587732528908,
+     "8": 3.9496591504981646,
+     "12": 5.145680406549972,
+     "16": 6.2987326493663245
+    }
+   },
+   "h5_check": {
+    "n_events": 4502,
+    "n_with_other_salient": 3734,
+    "episodes": 4000
+   }
+  },
+  "p3_r1.0_c0.25_w12_off_s0": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "off",
+   "seed": 0,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.884
+   },
+   "intact": {
+    "found": 0.875,
+    "found_se": 0.005229125165837973,
+    "mean_steps": 4.6235
+   },
+   "profile": {
+    "found": 0.87825,
+    "revisit_share": 0.16278444241217924,
+    "aim_repeat_share": 0.1341115713594061,
+    "slope": 0.3052630742572735,
+    "steps_per_k": {
+     "4": 2.3275,
+     "8": 3.5555555555555554,
+     "12": 4.765178123432012,
+     "16": 5.994466800804829
+    }
+   },
+   "no_capture": {
+    "found": 0.98075,
+    "found_se": 0.002172523734047571,
+    "mean_steps": 3.7375
+   }
+  },
+  "p3_r1.0_c0.25_w12_off_s1": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "off",
+   "seed": 1,
+   "checkpoint": {
+    "it": 1000,
+    "episodes": 256000,
+    "eval_found": 0.8855
+   },
+   "intact": {
+    "found": 0.86725,
+    "found_se": 0.005364872726822139,
+    "mean_steps": 4.824
+   },
+   "profile": {
+    "found": 0.882,
+    "revisit_share": 0.15843334762108874,
+    "aim_repeat_share": 0.12312473210458637,
+    "slope": 0.3139141422893644,
+    "steps_per_k": {
+     "4": 2.3661830915457727,
+     "8": 3.603405107661492,
+     "12": 4.784677015523285,
+     "16": 6.1579476861167
+    }
+   },
+   "no_capture": {
+    "found": 0.97975,
+    "found_se": 0.002227102237213191,
+    "mean_steps": 3.75625
+   }
+  },
+  "p3_r1.0_c0.25_w12_off_s2": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "off",
+   "seed": 2,
+   "checkpoint": {
+    "it": 800,
+    "episodes": 204800,
+    "eval_found": 0.889
+   },
+   "intact": {
+    "found": 0.87125,
+    "found_se": 0.005295598113055786,
+    "mean_steps": 4.7915
+   },
+   "profile": {
+    "found": 0.87125,
+    "revisit_share": 0.15818908122503328,
+    "aim_repeat_share": 0.12564580559254326,
+    "slope": 0.29058318998007854,
+    "steps_per_k": {
+     "4": 2.412206103051526,
+     "8": 3.7037037037037037,
+     "12": 4.774387193596798,
+     "16": 5.9297541394882085
+    }
+   },
+   "no_capture": {
+    "found": 0.98725,
+    "found_se": 0.0017739389434250547,
+    "mean_steps": 3.728
+   }
+  },
+  "p3_r1.0_c0.25_w12_shuffled_s1": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "shuffled",
+   "seed": 1,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.885
+   },
+   "intact": {
+    "found": 0.87425,
+    "found_se": 0.0052425408319821416,
+    "mean_steps": 4.64225
+   },
+   "lesion": {
+    "found": 0.87175,
+    "found_se": 0.005286821765011565,
+    "mean_steps": 4.535
+   },
+   "profile": {
+    "found": 0.885,
+    "revisit_share": 0.17156054107555263,
+    "aim_repeat_share": 0.14687121961948751,
+    "slope": 0.30971375391728523,
+    "steps_per_k": {
+     "4": 2.3229689067201607,
+     "8": 3.5348484848484847,
+     "12": 4.756565656565656,
+     "16": 6.045246568378241
+    }
+   },
+   "no_capture": {
+    "found": 0.97125,
+    "found_se": 0.0026421315968361606,
+    "mean_steps": 3.776
+   },
+   "lesion_window": {
+    "found": 0.87775,
+    "found_se": 0.005179404828259709,
+    "mean_steps": 4.5815
+   },
+   "lesion_covered": {
+    "found": 0.87325,
+    "found_se": 0.0052603335802019245,
+    "mean_steps": 4.705
+   },
+   "profile_lesion": {
+    "found": 0.888,
+    "revisit_share": 0.1715683579792205,
+    "aim_repeat_share": 0.14699576713759552,
+    "slope": 0.3096870622504747,
+    "steps_per_k": {
+     "4": 2.3211239337681886,
+     "8": 3.536634663971703,
+     "12": 4.757453259221829,
+     "16": 6.043345232024477
+    }
+   }
   }
  },
  "table": [
@@ -361,6 +747,30 @@
    "gain_1a": 0.07225000000000004,
    "gain_1a_se": 0.006311545719948483,
    "lesion_cost_1a": 0.44225000000000003
+  },
+  {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "seed": 1,
+   "base": 0.86725,
+   "fixed": 0.949,
+   "fixed_lesion": 0.47625,
+   "shuffled": 0.87425,
+   "shuffled_lesion": 0.87175,
+   "learned": 0.828,
+   "learned_lesion": 0.8275,
+   "gain_1a": 0.08174999999999999,
+   "gain_1a_se": 0.006393872799407258,
+   "lesion_cost_1a": 0.47274999999999995
+  },
+  {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "seed": 2,
+   "base": 0.87125,
+   "fixed": 0.94975,
+   "fixed_lesion": 0.512,
+   "gain_1a": 0.07850000000000001,
+   "gain_1a_se": 0.00632254646088109,
+   "lesion_cost_1a": 0.43775
   },
   {
    "point": "reveal=1.0|p_capture=0.5|windows=1,2",
