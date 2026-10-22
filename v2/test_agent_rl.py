@@ -268,10 +268,10 @@ def test_module_gradient():
         for _ in range(3):
             i = tuple(rng.integers(0, s) for s in v.shape) if v.ndim else ()
             o = v[i]
-            v[i] = o + 1e-6; lp, _ = L()
-            v[i] = o - 1e-6; lm, _ = L()
+            v[i] = o + 1e-5; lp, _ = L()
+            v[i] = o - 1e-5; lm, _ = L()
             v[i] = o
-            num = (lp - lm) / 2e-6
+            num = (lp - lm) / 2e-5
             worst = max(worst, abs(num - g[k][i]) / max(1e-8, abs(num) + abs(g[k][i])))
     check("module gradients match finite differences", worst < 1e-4, f"worst rel err {worst:.2e}")
 

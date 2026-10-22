@@ -1,0 +1,8 @@
+{
+ "note": "1b variants, standard working point, 400k episodes, 4000 test episodes (seed 900000+s). Evaluated 22 Oct 2026 with pilot_eval.test; values copied from the evaluation printouts. Reviewer re-evaluation agreed within ~1.6 points. module_correct_no_capture: share of steps without capture where the module's most probable cell lies in last step's actual window (2000 episodes, env seed 960000+s).",
+ "learned_sl1.0_s1": {"intact": 0.828, "lesion": 0.8275, "h5_events": 4502, "h5_events_with_other_salient": 3734},
+ "learned_sl0.3_s1": {"intact": 0.852, "lesion": 0.84525},
+ "learned_sl0.1_s1": {"intact": 0.8895, "lesion": 0.86825},
+ "module_s1": {"intact": 0.88425, "lesion": 0.86575, "covered_map_zeroed": 0.88425, "module_correct_no_capture": 0.999, "h5_events": 4096},
+ "module_s2": {"intact": 0.88775, "lesion": 0.8645, "covered_map_zeroed": 0.88775, "module_correct_no_capture": 1.0, "h5_events": 4246}
+}
