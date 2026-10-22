@@ -12,7 +12,7 @@ import os
 import time
 import numpy as np
 from env import EnvConfig, SearchEnv
-from agent_rl import PriorityMapAgent, schema_input
+from agent_rl import PriorityMapAgent, schema_input, make_agent
 
 
 class Adam:
@@ -43,8 +43,28 @@ def rollout(agent, env, B, rng, greedy=False, keep=True, sl_weight=0.0, override
     recs, t = [], 0
     ret = np.zeros(B)
     prev_actual = None
+    module = getattr(agent, "module", None)
+    if module is not None:
+        hm = module.init_state(B)
+        union = np.zeros((B, G, G))
+    mrecs = []
     while not env.done.all():
         idx = np.nonzero(~env.done)[0]                       # only running episodes are computed
+        if module is not None:                               # separate schema module (1b-module)
+            xm, mm = module.features(env, obs, t, None)
+            hms, _, _, slm, mcache = module.step(xm[idx], mm[idx], hm[idx])
+            hm[idx] = hms
+            cur = np.zeros((B, G * G))
+            if t > 0:
+                cur[idx] = np.exp(slm)
+            cur = cur.reshape(B, G, G)
+            union = np.maximum(union, cur)
+            if agent.schema_mode == "module":
+                schema = np.stack([cur, union], -1)
+            if keep and t > 0:
+                mrecs.append(dict(idx=idx, cache=mcache, slogp=slm, sl_target=prev_actual[idx]))
+            elif keep:
+                mrecs.append(dict(idx=idx, cache=mcache, slogp=slm, sl_target=None))
         x, m = agent.features(env, obs, t, schema)
         hs, logp, Vs, slogp, cache = agent.step(x[idx], m[idx], h[idx])
         h[idx] = hs
@@ -70,8 +90,39 @@ def rollout(agent, env, B, rng, greedy=False, keep=True, sl_weight=0.0, override
         pred = np.zeros((B, G * G)); pred[idx] = np.exp(slogp)
         schema, visited = schema_input(agent.schema_mode, env, info, visited, pred, donor)
         t += 1
-    stats = dict(found=env.found.copy(), steps=env.steps.copy(), ret=ret)
+    stats = dict(found=env.found.copy(), steps=env.steps.copy(), ret=ret, mrecs=mrecs)
     return recs, stats
+
+
+def module_grads(module, mrecs, sl_coef):
+    """Supervised BPTT for the schema module: cross-entropy of its 1b head against the window the
+    spotlight actually covered last step. Policy and value outputs of the module are unused."""
+    grads = module.zero_grads()
+    if not mrecs:
+        return grads, 0.0
+    G2, d = module.cfg.G ** 2, module.d
+    Bfull = max(int(r["idx"].max()) for r in mrecs) + 1
+    dh = np.zeros((Bfull, G2, d), module.dtype)
+    n_tot = sum(int((r["sl_target"].sum(1) > 0).sum()) for r in mrecs if r["sl_target"] is not None)
+    n_tot = max(n_tot, 1)
+    loss = 0.0
+    for rc in reversed(mrecs):
+        idx = rc["idx"]
+        nb = len(idx)
+        dslog = np.zeros((nb, G2))
+        if rc["sl_target"] is not None:
+            tgt = rc["sl_target"]
+            z = tgt.sum(1, keepdims=True)
+            ok = z[:, 0] > 0
+            q = np.where(z > 0, tgt / np.maximum(z, 1e-12), 0.0)
+            sp = np.exp(rc["slogp"])
+            dslog = sl_coef * (sp - q) * ok[:, None] / n_tot
+            loss += -(q * np.where(q > 0, rc["slogp"], 0)).sum(1)[ok].sum()
+        zero = np.zeros((nb, G2), module.dtype)
+        dhs = module.step_backward(rc["cache"], zero, np.zeros(nb, module.dtype), dslog.astype(module.dtype), dh[idx], grads)
+        dh = np.zeros_like(dh)
+        dh[idx] = dhs
+    return grads, loss / n_tot
 
 
 def a2c_grads(agent, recs, gamma, lam, ent_coef, vf_coef, sl_coef):
@@ -180,8 +231,10 @@ def main():
     args = ap.parse_args()
 
     cfg = env_config(args)
-    agent = PriorityMapAgent(cfg, d=args.d, dh=args.dh, seed=args.seed, schema_mode=args.schema)
+    agent = make_agent(cfg, d=args.d, dh=args.dh, seed=args.seed, schema_mode=args.schema)
     opt = Adam(agent.p, args.lr)
+    mod = getattr(agent, "module", None)
+    mopt = Adam(mod.p, args.lr) if mod is not None else None
     env = SearchEnv(cfg, seed=10_000 + args.seed)
     rng = np.random.default_rng(20_000 + args.seed)
     ckpt = args.out + ".ckpt.npz"
@@ -191,6 +244,10 @@ def main():
         z = np.load(ckpt)
         for k in agent.p:
             opt.m[k], opt.v[k] = z[f"am_{k}"], z[f"av_{k}"]
+        if mod is not None:
+            for k in mod.p:
+                mopt.m[k], mopt.v[k] = z[f"qm_{k}"], z[f"qv_{k}"]
+            mopt.t = int(meta["opt_t"])
         opt.t = int(meta["opt_t"]); it = int(meta["it"]); episodes = int(meta["episodes"])
         best = float(meta["best"])
         env = SearchEnv(cfg, seed=10_000 + args.seed + 7919 * it)
@@ -198,7 +255,11 @@ def main():
         print(f"resumed at it {it}, {episodes} episodes", flush=True)
 
     def save_ckpt():
-        np.savez(ckpt, **{f"p_{k}": v for k, v in agent.p.items()},
+        mx = {}
+        if mod is not None:
+            mx = {**{f"q_{k}": v for k, v in mod.p.items()}, **{f"qm_{k}": v for k, v in mopt.m.items()},
+                  **{f"qv_{k}": v for k, v in mopt.v.items()}}
+        np.savez(ckpt, **mx, **{f"p_{k}": v for k, v in agent.p.items()},
                  **{f"am_{k}": v for k, v in opt.m.items()}, **{f"av_{k}": v for k, v in opt.v.items()},
                  m_opt_t=opt.t, m_it=it, m_episodes=episodes, m_best=best,
                  m_args=json.dumps(vars(args)))
@@ -214,6 +275,14 @@ def main():
             for k in grads:
                 grads[k] *= args.clip / info["grad_norm"]
         opt.step(agent.p, grads)
+        if mod is not None:
+            mg, ml = module_grads(mod, st["mrecs"], 1.0)
+            mn = np.sqrt(sum((g ** 2).sum() for g in mg.values()))
+            if mn > args.clip:
+                for k in mg:
+                    mg[k] *= args.clip / mn
+            mopt.step(mod.p, mg)
+            info["sl_loss"] = ml
         it += 1
         episodes += args.batch
         acc.append((st["found"].mean(), st["ret"].mean(), info["entropy"], info["vloss"],

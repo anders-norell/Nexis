@@ -219,11 +219,70 @@ def test_a2c_full_gradient():
           f"worst rel err {worst:.2e}")
 
 
+def test_module():
+    """Sprint 3: separate schema module (1b-module)."""
+    from agent_rl import make_agent
+    from train_rl import module_grads, Adam
+    cfg = EnvConfig()
+    ag = make_agent(cfg, d=8, dh=8, seed=1, schema_mode="module")
+    recs, st = rollout(ag, SearchEnv(cfg, seed=3), 64, np.random.default_rng(0))
+    check("module records one entry per step", len(st["mrecs"]) == len(recs))
+    check("module has no target at the first step", st["mrecs"][0]["sl_target"] is None)
+    sch = recs[1]["cache"][0][..., -2:]                        # policy schema input at step 1
+    check("module schema reaches the policy from step 1 (one unit of mass per episode)",
+          np.allclose(sch[..., 0].sum(1), 1.0, atol=1e-3))
+    pol_before = {k: v.copy() for k, v in ag.p.items()}
+    opt = Adam(ag.module.p, 3e-3)
+    losses = []
+    for _ in range(30):
+        _, st = rollout(ag, SearchEnv(cfg, seed=3), 64, np.random.default_rng(0))
+        g, loss = module_grads(ag.module, st["mrecs"], 1.0)
+        opt.step(ag.module.p, g)
+        losses.append(loss)
+    check(f"module loss falls with training ({losses[0]:.2f} -> {losses[-1]:.2f})", losses[-1] < losses[0] - 0.1)
+    check("module training leaves the policy unchanged", all(np.array_equal(pol_before[k], ag.p[k]) for k in ag.p))
+    import tempfile, os
+    path = os.path.join(tempfile.mkdtemp(), "m.npz")
+    ag.save(path)
+    ag2 = make_agent(cfg, d=8, dh=8, seed=7, schema_mode="module")
+    ag2.load(path)
+    check("save/load keeps the module", all(np.array_equal(ag.module.p[k], ag2.module.p[k]) for k in ag.module.p))
+
+
+def test_module_gradient():
+    """Module BPTT gradient against finite differences (policy ignores the schema here, so the
+    trajectories do not depend on the module and the loss is a smooth function of its weights)."""
+    from agent_rl import make_agent
+    from train_rl import module_grads
+    cfg = EnvConfig()
+    ag = make_agent(cfg, d=5, dh=6, seed=2, schema_mode="off")
+    ag.module = PriorityMapAgent(cfg, d=5, dh=6, seed=4, dtype=np.float64)
+
+    def L():
+        _, st = rollout(ag, SearchEnv(cfg, seed=9), 16, np.random.default_rng(1))
+        g, l = module_grads(ag.module, st["mrecs"], 1.0)
+        return l, g
+    _, g = L()
+    rng, worst = np.random.default_rng(0), 0.0
+    for k, v in ag.module.p.items():
+        for _ in range(3):
+            i = tuple(rng.integers(0, s) for s in v.shape) if v.ndim else ()
+            o = v[i]
+            v[i] = o + 1e-6; lp, _ = L()
+            v[i] = o - 1e-6; lm, _ = L()
+            v[i] = o
+            num = (lp - lm) / 2e-6
+            worst = max(worst, abs(num - g[k][i]) / max(1e-8, abs(num) + abs(g[k][i])))
+    check("module gradients match finite differences", worst < 1e-4, f"worst rel err {worst:.2e}")
+
+
 if __name__ == "__main__":
     test_a2c_full_gradient()
     test_gradients()
     test_masking_and_remap()
     test_schema_off_and_modes()
     test_a2c_direction()
+    test_module()
+    test_module_gradient()
     print("\nALL PASS" if not FAILS else f"\n{len(FAILS)} FAILED: {FAILS}")
     raise SystemExit(1 if FAILS else 0)

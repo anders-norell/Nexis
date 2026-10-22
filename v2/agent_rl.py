@@ -31,7 +31,7 @@ differences in test_agent_rl.py.
 import numpy as np
 from env import window_origin
 
-SCHEMA_MODES = ("off", "fixed", "learned", "shuffled")
+SCHEMA_MODES = ("off", "fixed", "learned", "shuffled", "module")
 
 
 def sigmoid(x):
@@ -175,14 +175,32 @@ class PriorityMapAgent:
 
     # ---------------------------------------------------------- persistence
     def save(self, path, **meta):
-        np.savez(path, **{f"p_{k}": v for k, v in self.p.items()},
+        mod = getattr(self, "module", None)
+        extra = {f"q_{k}": v for k, v in mod.p.items()} if mod is not None else {}
+        np.savez(path, **{f"p_{k}": v for k, v in self.p.items()}, **extra,
                  **{f"m_{k}": np.asarray(v) for k, v in meta.items()})
 
     def load(self, path):
         z = np.load(path)
         for k in self.p:
             self.p[k] = z[f"p_{k}"]
+        mod = getattr(self, "module", None)
+        if mod is not None:
+            for k in mod.p:
+                mod.p[k] = z[f"q_{k}"]
         return {k[2:]: z[k] for k in z.files if k.startswith("m_")}
+
+
+def make_agent(cfg, d=16, dh=32, seed=0, schema_mode="off"):
+    """Policy agent; for schema mode 'module' (1b as a separate schema module, sprint 3) it carries
+    a second network of the same kind whose only trained output is the 1b head. The module sees
+    the same observation as the policy (no schema), predicts where the spotlight actually was last
+    step, and its prediction (plus its running union) is the policy's schema channel at the same
+    step, with the same timing as the fixed schema 1a. No gradient flows between the two."""
+    ag = PriorityMapAgent(cfg, d=d, dh=dh, seed=seed, schema_mode=schema_mode)
+    if schema_mode == "module":
+        ag.module = PriorityMapAgent(cfg, d=d, dh=dh, seed=10_000 + seed, schema_mode="off")
+    return ag
 
 
 def schema_input(mode, env, info, visited, learned_pred=None, donor=None):
@@ -193,7 +211,7 @@ def schema_input(mode, env, info, visited, learned_pred=None, donor=None):
     shuffled  the fixed schema of another episode in the batch, same size (Blandat)
     Returns (schema, visited).
     """
-    if mode == "off":
+    if mode in ("off", "module"):                       # module schema is built in the rollout
         return None, visited
     G = env.cfg.G
     B = env.B

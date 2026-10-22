@@ -665,6 +665,215 @@
      "16": 6.043345232024477
     }
    }
+  },
+  "p3_r1.0_c0.25_w12_fixed_s3": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "fixed",
+   "seed": 3,
+   "checkpoint": {
+    "it": 1200,
+    "episodes": 307200,
+    "eval_found": 0.946
+   },
+   "intact": {
+    "found": 0.9415,
+    "found_se": 0.003710719269899031,
+    "mean_steps": 4.1795
+   },
+   "lesion": {
+    "found": 0.57925,
+    "found_se": 0.0078057580909864244,
+    "mean_steps": 6.342
+   },
+   "profile": {
+    "found": 0.9475,
+    "revisit_share": 0.11329715061058344,
+    "aim_repeat_share": 0.21068212655729615,
+    "slope": 0.2763375,
+    "steps_per_k": {
+     "4": 2.239,
+     "8": 3.3825,
+     "12": 4.515,
+     "16": 5.546
+    }
+   },
+   "no_capture": {
+    "found": 0.98525,
+    "found_se": 0.0019060717129740952,
+    "mean_steps": 3.5355
+   },
+   "lesion_window": {
+    "found": 0.94225,
+    "found_se": 0.0036883240604643195,
+    "mean_steps": 4.148
+   },
+   "lesion_covered": {
+    "found": 0.82975,
+    "found_se": 0.005942746366369677,
+    "mean_steps": 4.657
+   },
+   "profile_lesion": {
+    "found": 0.59375,
+    "revisit_share": 0.5536093631007255,
+    "aim_repeat_share": 0.6362980480179566,
+    "slope": 0.3566856574093107,
+    "steps_per_k": {
+     "4": 1.9106317411402156,
+     "8": 3.4044298605414274,
+     "12": 4.752144082332761,
+     "16": 6.2172024326672455
+    }
+   }
+  },
+  "p3_r1.0_c0.25_w12_off_s3": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "off",
+   "seed": 3,
+   "checkpoint": {
+    "it": 1000,
+    "episodes": 256000,
+    "eval_found": 0.868
+   },
+   "intact": {
+    "found": 0.864,
+    "found_se": 0.005419963099505382,
+    "mean_steps": 4.6665
+   },
+   "profile": {
+    "found": 0.87725,
+    "revisit_share": 0.17044356137901406,
+    "aim_repeat_share": 0.13457201159918375,
+    "slope": 0.3276315197488735,
+    "steps_per_k": {
+     "4": 2.328492739108663,
+     "8": 3.6680040120361084,
+     "12": 4.948136958710977,
+     "16": 6.27020202020202
+    }
+   },
+   "no_capture": {
+    "found": 0.9685,
+    "found_se": 0.0027616910580294824,
+    "mean_steps": 3.8325
+   }
+  },
+  "p3_r1.0_c0.25_w12_shuffled_s2": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "shuffled",
+   "seed": 2,
+   "checkpoint": {
+    "it": 1200,
+    "episodes": 307200,
+    "eval_found": 0.8815
+   },
+   "intact": {
+    "found": 0.8835,
+    "found_se": 0.0050726657193235205,
+    "mean_steps": 4.55575
+   },
+   "lesion": {
+    "found": 0.8705,
+    "found_se": 0.005308713356360465,
+    "mean_steps": 4.67075
+   },
+   "profile": {
+    "found": 0.875,
+    "revisit_share": 0.16489853653228878,
+    "aim_repeat_share": 0.13470431423752788,
+    "slope": 0.27742629743624697,
+    "steps_per_k": {
+     "4": 2.359038557836755,
+     "8": 3.5775775775775776,
+     "12": 4.669338677354709,
+     "16": 5.694135490394338
+    }
+   },
+   "no_capture": {
+    "found": 0.9815,
+    "found_se": 0.0021305955740121116,
+    "mean_steps": 3.65975
+   },
+   "lesion_window": {
+    "found": 0.88075,
+    "found_se": 0.005124193534108563,
+    "mean_steps": 4.64825
+   },
+   "lesion_covered": {
+    "found": 0.878,
+    "found_se": 0.005174842992787317,
+    "mean_steps": 4.62675
+   },
+   "profile_lesion": {
+    "found": 0.878,
+    "revisit_share": 0.16306120230459833,
+    "aim_repeat_share": 0.1334927709533645,
+    "slope": 0.27783452176854784,
+    "steps_per_k": {
+     "4": 2.358037055583375,
+     "8": 3.569069069069069,
+     "12": 4.667167167167167,
+     "16": 5.696464646464647
+    }
+   }
+  },
+  "p3_r1.0_c0.25_w12_shuffled_s3": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "shuffled",
+   "seed": 3,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.868
+   },
+   "intact": {
+    "found": 0.8635,
+    "found_se": 0.005428345742489144,
+    "mean_steps": 4.69275
+   },
+   "lesion": {
+    "found": 0.877,
+    "found_se": 0.0051930482377886686,
+    "mean_steps": 4.52725
+   },
+   "profile": {
+    "found": 0.89125,
+    "revisit_share": 0.1632664437012263,
+    "aim_repeat_share": 0.1306577480490524,
+    "slope": 0.30837829429592983,
+    "steps_per_k": {
+     "4": 2.273410115172759,
+     "8": 3.521021021021021,
+     "12": 4.707977922729554,
+     "16": 5.989468405215647
+    }
+   },
+   "no_capture": {
+    "found": 0.978,
+    "found_se": 0.0023192671256239547,
+    "mean_steps": 3.65175
+   },
+   "lesion_window": {
+    "found": 0.879,
+    "found_se": 0.005156524992667059,
+    "mean_steps": 4.5625
+   },
+   "lesion_covered": {
+    "found": 0.86425,
+    "found_se": 0.005415762584807424,
+    "mean_steps": 4.591
+   },
+   "profile_lesion": {
+    "found": 0.8925,
+    "revisit_share": 0.16188455956235345,
+    "aim_repeat_share": 0.13062409288824384,
+    "slope": 0.30612992187785304,
+    "steps_per_k": {
+     "4": 2.269904857285929,
+     "8": 3.516016016016016,
+     "12": 4.712493728048169,
+     "16": 5.9528112449799195
+    }
+   }
   }
  },
  "table": [
@@ -768,9 +977,23 @@
    "base": 0.87125,
    "fixed": 0.94975,
    "fixed_lesion": 0.512,
+   "shuffled": 0.8835,
+   "shuffled_lesion": 0.8705,
    "gain_1a": 0.07850000000000001,
    "gain_1a_se": 0.00632254646088109,
    "lesion_cost_1a": 0.43775
+  },
+  {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "seed": 3,
+   "base": 0.864,
+   "fixed": 0.9415,
+   "fixed_lesion": 0.57925,
+   "shuffled": 0.8635,
+   "shuffled_lesion": 0.877,
+   "gain_1a": 0.07750000000000001,
+   "gain_1a_se": 0.006568518668619279,
+   "lesion_cost_1a": 0.36224999999999996
   },
   {
    "point": "reveal=1.0|p_capture=0.5|windows=1,2",
