@@ -35,7 +35,8 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Sprintar med grindar.** Varje sprint avslutas med att produktägaren godkänner resultatet mot specen
   innan nästa påbörjas. Påbörja aldrig nästa sprint utan godkännande.
 - **Trösklar låses före körning** (i sprint 3, efter piloten) och ändras aldrig efter att resultat setts.
-  Signifikanskriterium: skillnad > 2 SD och samma riktning i alla frön.
+  Signifikanskriterium: skillnad > 2 standardfel (SE för skillnaden, över testepisoderna inom fröet) och
+  samma riktning i alla frön. (Rättat 22 okt från "2 SD"; beräkningarna har alltid gjorts med SE.)
 - **Alla resultat rapporteras**, även misslyckanden. Ett godkänt resultat visar att mekanismen beter sig
   som AST förutsäger, inget om upplevelse.
 - **Oberoende granskning:** vid varje grind granskar en separat agent kod och resultat mot specen.
@@ -82,7 +83,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent; den styrda kan spåra
   avsedd, härledd eller faktisk plats), `v2/test_env.py` (46 tester), `v2/check_env.py` → `v2/results/sprint1_env_check.*`.
 - **Sprint 2 (kompetens):** **klar, grind 2 godkänd av produktägaren 22 okt 2026.**
-  - Grind (låst 21 okt före träning): K1 träffandel > slump med > 2 SD, K2 ≥ 73 % (bästa minneslösa
+  - Grind (låst 21 okt före träning): K1 träffandel > slump med > 2 SE, K2 ≥ 73 % (bästa minneslösa
     referens 71,4 %), alla tre frön, 4 000 testepisoder per frö, stokastisk policy.
   - Resultat: 89,0 / 89,9 / 88,5 % (slump ≈ 28 %, z ≈ 70). Söklutning utan fångst 0,28 steg/distraktor.
     En körning per frö (1 M episoder, ca 49 min, tre parallellt), inga kasserade försök.
@@ -150,5 +151,13 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Granskning klar:** godkänd med anmärkningar (`v2/results/sprint3_review.md`). Att göra i sprint 4 innan
   körning: bank med ett frö per testepisod (parning gäller nu bara första omgången om 500), precisera H2
   (lögnens varaktighet, 2×2-regel, för få målfärgsrutor, Blandat som kontroll). 1b-siffror i `sprint3_1b.json`.
-- **Nästa steg:** produktägarens svar under "Beslut för produktägaren vid grind 3" i specen (A/B/C, H1,
-  trösklar). Lås trösklarna först efter hans godkännande. Starta inte sprint 4 utan godkännande.
+- **Grind 3, produktägarens villkor (22 okt kväll), införda i specen:** (1) H2 och fröbanken preciserade
+  före låsning (H2: lögn i kartan "täckt hittills" inför fjärde kommandot, varar resten av episoden,
+  (a) falskt obesökt / (b) falskt besökt ≤ 3 målfärgsrutor, ej målet; "siktar dit" = avsett fönster
+  överlappar; mått = antal av 3 följande kommandon, med minus utan ingrepp, parat; godkänt > 2 SE åt
+  förutsagt håll i alla tre frön för (a) och (b), och 1a:s effekt > Blandats med > 2 SE. Fröbank: 4 000
+  episoder, frö 2 000 000 + i, separata strömmar för miljö och agentens val). (2) H3 omformulerad:
+  H3a = lesion under hela träningen = Baslinjen vs 1a; H3b = akut lesion vid test; båda krävs.
+  (3) "2 SD" rättat till standardfel. Produktägaren har en ordlista över begreppen i en annan tråd.
+- **Nästa steg:** produktägaren bekräftar alternativ A och H1 (rättat mått). Lås då trösklarna, skriv
+  sprint 4-planen i specen och vänta på godkännande innan något körs.
