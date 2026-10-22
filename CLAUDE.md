@@ -127,6 +127,13 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   blir omätbar), fem beslutspunkter för produktägaren och Claudes tekniska val.
   Kärninsikt: en träff avslutar episoden, så foveáns innehåll duger bara till att lokalisera spotlighten
   mot periferins karta. Foveán läcker alltså schemats information.
-- **Nästa steg:** läs produktägarens svar under "Beslut för produktägaren" i sprint 3-avsnittet. Vid
-  godkännande: steg 1 (fovea-reglage `reveal` i `EnvConfig` med tester, idealisk betraktare för H5,
-  lesion/Blandat-mätning), sedan rutnätet i bakgrunden (400 000 episoder per körning).
+- **Beslut 22 okt (produktägaren):** planen godkänd i alla fem punkter, H6 = alternativ A. Claude får välja
+  väg mot "lyckat utfall" = giltigt och informativt experiment (inte bekräftade hypoteser). Regeln för
+  arbetspunkt oförändrad.
+- **Steg 1 klart 22 okt:** `EnvConfig.reveal` (maskerad blick: fönsterflaggor kvar, occupied 0,5; reveal=1
+  bitidentiskt med sprint 2), `train_rl.py --reveal --p-capture --windows` (args sparas i checkpoints),
+  `h5.py` + `test_h5.py` (idealisk betraktare, H5-händelser; slumpagent: 97 % av fångsterna utesluter
+  avsedd plats), `pilot_eval.py` (intakt/lesion per körning → `results/sprint3_pilot.json`).
+- **Steg 2 pågår:** `python3 v2/run_sprint3_grid.py` (9 punkter × {off, fixed}, frö 0, 400k ep, två åt
+  gången, återupptagbar: starta bara om). Logg `v2/results/p3_grid.stdout`. Sedan `python3 v2/pilot_eval.py`
+  och tillämpa regeln för arbetspunkt (specen), skriv valet i specen innan steg 4.
