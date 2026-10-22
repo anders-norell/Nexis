@@ -18,3 +18,19 @@
 02:53 start results/p3_r0.5_c0.5_w12_fixed_s0
 03:01 done results/p3_r0.5_c0.5_w12_fixed_s0 rc 0
 03:01 start results/p3_r0.25_c0.25_w12_off_s0
+03:01 done results/p3_r0.5_c0.5_w12_off_s0 rc 0
+03:01 start results/p3_r0.25_c0.25_w12_fixed_s0
+03:08 done results/p3_r0.25_c0.25_w12_off_s0 rc 0
+03:08 done results/p3_r0.25_c0.25_w12_fixed_s0 rc 0
+03:08 start results/p3_r0.25_c0.5_w12_off_s0
+03:08 start results/p3_r0.25_c0.5_w12_fixed_s0
+03:15 done results/p3_r0.25_c0.5_w12_fixed_s0 rc 0
+03:15 start results/p3_r0.0_c0.25_w12_off_s0
+03:15 done results/p3_r0.25_c0.5_w12_off_s0 rc 0
+03:15 start results/p3_r0.0_c0.25_w12_fixed_s0
+03:22 done results/p3_r0.0_c0.25_w12_off_s0 rc 0
+03:22 start results/p3_r0.0_c0.5_w12_off_s0
+03:22 done results/p3_r0.0_c0.25_w12_fixed_s0 rc 0
+03:22 start results/p3_r0.0_c0.5_w12_fixed_s0
+03:29 done results/p3_r0.0_c0.5_w12_fixed_s0 rc 0
+03:29 done results/p3_r0.0_c0.5_w12_off_s0 rc 0

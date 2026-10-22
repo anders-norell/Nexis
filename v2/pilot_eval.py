@@ -37,17 +37,34 @@ def load_run(path):
     return ag, args, {k: (v.tolist() if hasattr(v, "tolist") else v) for k, v in meta.items() if k != "args"}
 
 
-def test(ag, seed, mode=None, n=N_TEST, B=500):
-    saved = ag.schema_mode
+def test(ag, seed, mode=None, n=N_TEST, B=500, zero_channel=None):
+    """zero_channel: 0 zeroes the 'window last step' channel, 1 the 'covered so far' map
+    (partial lesions, to see which part of the schema the agent relies on)."""
+    import train_rl
+    import agent_rl
+    saved, saved_fn = ag.schema_mode, train_rl.schema_input
     if mode is not None:
         ag.schema_mode = mode
+    if zero_channel is not None:
+        def part(*a, **k):
+            s, v = agent_rl.schema_input(*a, **k)
+            if s is not None:
+                s = s.copy(); s[..., zero_channel] = 0.0
+            return s, v
+        train_rl.schema_input = part
+    try:
+        return _test(ag, seed, n, B)
+    finally:
+        ag.schema_mode, train_rl.schema_input = saved, saved_fn
+
+
+def _test(ag, seed, n, B):
     env = SearchEnv(ag.cfg, seed=900_000 + seed)
     rng = np.random.default_rng(900_000 + seed)
     found, steps, caps = [], [], []
     for _ in range(n // B):
         _, st = rollout(ag, env, B, rng, keep=False)
         found.append(st["found"]); steps.append(st["steps"])
-    ag.schema_mode = saved
     f = np.concatenate(found)
     return dict(found=float(f.mean()), found_se=float(f.std() / np.sqrt(len(f))),
                 mean_steps=float(np.concatenate(steps).mean()))
@@ -117,6 +134,13 @@ def main():
             r["lesion"] = test(ag, args["seed"], mode="off")
         if r["point"] == "reveal=1.0|p_capture=0.25|windows=1,2":   # chosen working point: spread of H1/H3 measures
             r["profile"] = search_profile(ag, args["seed"])
+            cfg0 = ag.cfg                               # same agent, environment without capture
+            ag.cfg = EnvConfig(n_salient=(0,), reveal=cfg0.reveal, p_capture=cfg0.p_capture, windows=cfg0.windows)
+            r["no_capture"] = test(ag, args["seed"])
+            ag.cfg = cfg0
+            if args["schema"] in ("fixed", "shuffled"):
+                r["lesion_window"] = test(ag, args["seed"], zero_channel=0)
+                r["lesion_covered"] = test(ag, args["seed"], zero_channel=1)
             if args["schema"] != "off":
                 r["profile_lesion"] = search_profile(ag, args["seed"], mode="off")
         if args["schema"] == "learned":                 # H5 measurability check (not the H5 test)
