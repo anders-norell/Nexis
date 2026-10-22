@@ -1,1 +1,2 @@
 {"it": 20, "episodes": 5120, "minutes": 0.12, "train_found": 0.2395, "train_ret": 0.0655, "entropy": 4.018, "vloss": 0.0992, "grad_norm": 0.036, "sl_loss": 0.0, "ent_coef": 0.00985}
+{"it": 40, "episodes": 10240, "minutes": 0.25, "train_found": 0.2684, "train_ret": 0.0972, "entropy": 4.013, "vloss": 0.1087, "grad_norm": 0.052, "sl_loss": 0.0, "ent_coef": 0.0097}

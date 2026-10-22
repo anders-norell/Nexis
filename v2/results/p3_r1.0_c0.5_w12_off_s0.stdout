@@ -1,1 +1,2 @@
 {'it': 20, 'episodes': 5120, 'minutes': 0.12, 'train_found': np.float64(0.2395), 'train_ret': np.float64(0.0655), 'entropy': np.float64(4.018), 'vloss': np.float64(0.0992), 'grad_norm': np.float64(0.036), 'sl_loss': np.float64(0.0), 'ent_coef': 0.00985}
+{'it': 40, 'episodes': 10240, 'minutes': 0.25, 'train_found': np.float64(0.2684), 'train_ret': np.float64(0.0972), 'entropy': np.float64(4.013), 'vloss': np.float64(0.1087), 'grad_norm': np.float64(0.052), 'sl_loss': np.float64(0.0), 'ent_coef': 0.0097}
