@@ -167,6 +167,12 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Sprint 4-plan godkänd av produktägaren 22 okt 22:44** (bockad + "svar: Y" i specen). **Inget kört ännu.** Steg: (1) fröbank + H2-ingrepp
   + testskript, H2-kod prövas aldrig på pilotens agenter; (2) 9 körningar, frön 10–12, 1M ep; (3) bedömning;
   (4) granskning, grind 4. Förregistrerat: körning < 73 % träff görs om en gång med frö + 1000.
+- **Sprint 4 pågår (startad 22 okt 22:45).** Steg 1 klart och pushat 22:54 (commit 4b550d4): `v2/bank.py`
+  (fröbank 2 000 000 + i, strömmar env/agent + h2 för H2:s val; H2 (a)/(b)/(c); Blandat-kontroll med
+  givare = nästa episod i blocket om 500), `v2/test_bank.py` (13 tester, bara otränade agenter),
+  `v2/eval_mvp.py` (låsta kriterier, oparat SE utom H2), `v2/run_sprint4.sh` (återupptagbar; kör om
+  med `sh run_sprint4.sh` om bakgrundskommandot dött). `env.py` fick två slumpkrokar, bitidentiskt.
+  Träning startad 22:54, ca 37 min per körning, två åt gången. Tekniska val står i specen under steg 1.
 - `docs/spec_v2.md` uppdaterad 22 okt 22:35 (rev 262). Exportera specen dit vid varje grind.
 - **Nästa steg (ny tråd för sprint 4):** genomför sprint 4-planen i specen, steg 1 först (fröbank, H2-ingrepp,
   testskript, pusha), sedan träning i bakgrunden, bedömning mot låsta kriterier, oberoende granskning, grind 4.
