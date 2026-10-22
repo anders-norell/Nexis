@@ -138,7 +138,8 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   - Arbetspunkt = standardinställningarna (regeln). 1a +7,2–8,2 p över baslinjen i frö 0–3, lesion 48–58 %.
   - H6 utan stöd: vinsten oberoende av foveán (blind fovea lika bra för baslinjen). Min foveá-förklaring var fel.
   - Agenten använder bara kartan "täckt hittills" i schemat (nollad → ~80 %), inte "fönstret förra steget".
-  - H1 föreslås mätt med fångst (`v2/slope_capture.py`): baslinje 0,48–0,52, 1a 0,37–0,39 steg/distraktor.
+  - H1: lutning över alla episoder speglar bara träffandelen (granskaren). Rättat mått = steg bara i
+    hittade episoder, med fångst; frö 1: 1a 0,35, baslinje 0,38, Blandat 0,36 → H1 får troligen inte stöd.
   - 1b (delat huvud, vikt 1/0,3/0,1, samt separat schemamodul `--schema module`) ger ingen vinst. Trolig
     orsak: foveán remappas till *avsedda* rutor, fångst svår att upptäcka → H5 riskerar att följa av
     arkitekturen. H5-utfallet ej inspekterat (bara antal händelser).
@@ -146,5 +147,8 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
     1M episoder, frön 10–12; H5 egen sprint med matchningsinformation till schemamodulen. B och C i specen.
   - H2 riktas mot kartan "täckt hittills" (falskt obesökt / falskt besökt vid steg 3). H2-kod ej skriven än.
   - Live-loggar ignoreras av git; `v2/sync_logs.sh` kopierar färdiga körningar till `v2/results/logs/`.
-- **Nästa steg:** oberoende granskning (`v2/results/sprint3_review.md`), sedan produktägarens beslut vid
-  grind 3 (A/B/C och trösklarna). Lås trösklarna först efter hans godkännande.
+- **Granskning klar:** godkänd med anmärkningar (`v2/results/sprint3_review.md`). Att göra i sprint 4 innan
+  körning: bank med ett frö per testepisod (parning gäller nu bara första omgången om 500), precisera H2
+  (lögnens varaktighet, 2×2-regel, för få målfärgsrutor, Blandat som kontroll). 1b-siffror i `sprint3_1b.json`.
+- **Nästa steg:** produktägarens svar under "Beslut för produktägaren vid grind 3" i specen (A/B/C, H1,
+  trösklar). Lås trösklarna först efter hans godkännande. Starta inte sprint 4 utan godkännande.
