@@ -12,3 +12,7 @@
 02:46 start results/p3_r0.5_c0.25_w12_off_s0
 02:47 done results/p3_r1.0_c0.25_w1_off_s0 rc 0
 02:47 start results/p3_r0.5_c0.25_w12_fixed_s0
+02:53 done results/p3_r0.5_c0.25_w12_off_s0 rc 0
+02:53 done results/p3_r0.5_c0.25_w12_fixed_s0 rc 0
+02:53 start results/p3_r0.5_c0.5_w12_off_s0
+02:53 start results/p3_r0.5_c0.5_w12_fixed_s0
