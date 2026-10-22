@@ -8,3 +8,7 @@ for f in p3_*.final.npz; do
 done
 cp -p p3_grid.stdout p3_confirm.stdout logs/ 2>/dev/null
 true
+# best checkpoints are ignored while a run trains (they appear mid-run); add them once finished
+cd ..
+for f in results/p3_*.final.npz; do git add -f "${f%.final.npz}.best.npz" 2>/dev/null; done
+true
