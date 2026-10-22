@@ -134,6 +134,17 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   bitidentiskt med sprint 2), `train_rl.py --reveal --p-capture --windows` (args sparas i checkpoints),
   `h5.py` + `test_h5.py` (idealisk betraktare, H5-händelser; slumpagent: 97 % av fångsterna utesluter
   avsedd plats), `pilot_eval.py` (intakt/lesion per körning → `results/sprint3_pilot.json`).
-- **Steg 2 pågår:** `python3 v2/run_sprint3_grid.py` (9 punkter × {off, fixed}, frö 0, 400k ep, två åt
-  gången, återupptagbar: starta bara om). Logg `v2/results/p3_grid.stdout`. Sedan `python3 v2/pilot_eval.py`
-  och tillämpa regeln för arbetspunkt (specen), skriv valet i specen innan steg 4.
+- **Steg 2–5 klara 22 okt (natten, produktägaren sov).** Allt står i specens sprint 3-avsnitt.
+  - Arbetspunkt = standardinställningarna (regeln). 1a +7,2–8,2 p över baslinjen i frö 0–3, lesion 48–58 %.
+  - H6 utan stöd: vinsten oberoende av foveán (blind fovea lika bra för baslinjen). Min foveá-förklaring var fel.
+  - Agenten använder bara kartan "täckt hittills" i schemat (nollad → ~80 %), inte "fönstret förra steget".
+  - H1 föreslås mätt med fångst (`v2/slope_capture.py`): baslinje 0,48–0,52, 1a 0,37–0,39 steg/distraktor.
+  - 1b (delat huvud, vikt 1/0,3/0,1, samt separat schemamodul `--schema module`) ger ingen vinst. Trolig
+    orsak: foveán remappas till *avsedda* rutor, fångst svår att upptäcka → H5 riskerar att följa av
+    arkitekturen. H5-utfallet ej inspekterat (bara antal händelser).
+  - Förslag (väntar på produktägaren vid grind 3): alternativ A = MVP med Baslinje/1a/Blandat, F+H1+H2+H3,
+    1M episoder, frön 10–12; H5 egen sprint med matchningsinformation till schemamodulen. B och C i specen.
+  - H2 riktas mot kartan "täckt hittills" (falskt obesökt / falskt besökt vid steg 3). H2-kod ej skriven än.
+  - Live-loggar ignoreras av git; `v2/sync_logs.sh` kopierar färdiga körningar till `v2/results/logs/`.
+- **Nästa steg:** oberoende granskning (`v2/results/sprint3_review.md`), sedan produktägarens beslut vid
+  grind 3 (A/B/C och trösklarna). Lås trösklarna först efter hans godkännande.
