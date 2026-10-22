@@ -22,6 +22,7 @@ Det nya är de två punkterna ovan.
 | Vad | Var |
 | --- | --- |
 | Gällande spec (levande, redigerbar) | https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW — "Nexis v2 – spec" |
+| Ordlista (begrepp i vardagsspråk) | https://claude.ai/artifact/2syuVpzf2GcAfaP9DgSgjC — "Nexis – ordlista" |
 | Ögonblicksbild av specen | `docs/spec_v2.md` (22 okt 2026; det levande dokumentet gäller vid skillnad) |
 | v1: spec, kod och resultat | `docs/spec.md`, rotkatalogens `*.py`, `results/` — rör inte, det är ett avslutat försök |
 | v2: kod | `v2/` (skapas i sprint 1) |
@@ -158,6 +159,6 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   förutsagt håll i alla tre frön för (a) och (b), och 1a:s effekt > Blandats med > 2 SE. Fröbank: 4 000
   episoder, frö 2 000 000 + i, separata strömmar för miljö och agentens val). (2) H3 omformulerad:
   H3a = lesion under hela träningen = Baslinjen vs 1a; H3b = akut lesion vid test; båda krävs.
-  (3) "2 SD" rättat till standardfel. Produktägaren har en ordlista över begreppen i en annan tråd.
+  (3) "2 SD" rättat till standardfel. Ordlistan (se tabellen överst) uppdaterad på tre punkter.
 - **Nästa steg:** produktägaren bekräftar alternativ A och H1 (rättat mått). Lås då trösklarna, skriv
   sprint 4-planen i specen och vänta på godkännande innan något körs.
