@@ -1,2 +1,14 @@
 03:30 start results/p3_r1.0_c0.25_w12_learned_s1
 03:30 start results/p3_r1.0_c0.25_w12_off_s1
+03:38 done results/p3_r1.0_c0.25_w12_off_s1 rc 0
+03:38 start results/p3_r1.0_c0.25_w12_fixed_s1
+03:38 done results/p3_r1.0_c0.25_w12_learned_s1 rc 0
+03:38 start results/p3_r1.0_c0.25_w12_shuffled_s1
+03:45 done results/p3_r1.0_c0.25_w12_fixed_s1 rc 0
+03:45 start results/p3_r1.0_c0.25_w12_off_s2
+03:46 done results/p3_r1.0_c0.25_w12_shuffled_s1 rc 0
+03:46 start results/p3_r1.0_c0.25_w12_fixed_s2
+03:52 done results/p3_r1.0_c0.25_w12_off_s2 rc 0
+03:52 start results/p3_r1.0_c0.25_w12_shuffled_s2
+03:52 done results/p3_r1.0_c0.25_w12_fixed_s2 rc 0
+03:52 start results/p3_r1.0_c0.25_w12_off_s3
