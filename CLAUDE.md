@@ -79,7 +79,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 
 ## Status
 
-- **Senast uppdaterad:** 22 okt 2026
+- **Senast uppdaterad:** 23 okt 2026
 - **Sprint 0 (spec):** klar. Spec v2 godkänd i huvudsak av produktägaren.
 - **Sprint 1 (miljö):** **klar, grind 1 godkänd 21 okt 2026** (produktägaren delegerade bedömningen till Claude).
   Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent; den styrda kan spåra
@@ -172,8 +172,19 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   givare = nästa episod i blocket om 500), `v2/test_bank.py` (13 tester, bara otränade agenter),
   `v2/eval_mvp.py` (låsta kriterier, oparat SE utom H2), `v2/run_sprint4.sh` (återupptagbar; kör om
   med `sh run_sprint4.sh` om bakgrundskommandot dött). `env.py` fick två slumpkrokar, bitidentiskt.
-  Träning startad 22:54, ca 37 min per körning, två åt gången. Tekniska val står i specen under steg 1.
-- `docs/spec_v2.md` uppdaterad 22 okt 22:35 (rev 262). Exportera specen dit vid varje grind.
-- **Nästa steg (ny tråd för sprint 4):** genomför sprint 4-planen i specen, steg 1 först (fröbank, H2-ingrepp,
-  testskript, pusha), sedan träning i bakgrunden, bedömning mot låsta kriterier, oberoende granskning, grind 4.
-  Ändra inga låsta kriterier. Stöter H2 eller fröbanken på hinder: skriv ändring + skäl i specen och vänta.
+  Tekniska val står i specen under steg 1.
+- **Sprint 4 klar 23 okt ca 01:30, grind 4 väntar på produktägaren. Inget nytt får köras före beslut.**
+  - Nio körningar (frö 10–12, 1 M ep, 22–24 min styck), ingen < 73 %, ingen omkörning.
+    Resultat `v2/results/sprint4_mvp.json`: **F klarat** (1a +6–7,5 p mot Baslinje och Blandat, ≥ 9,6 SE),
+    **H1 ej klarat**, **H2 klarat** ((a) +0,07–0,22, (b) −0,81–0,84 kommandon av 3; 1a ≫ Blandat),
+    **H3a och H3b klarade**. (c) falskt fönster (redovisas): 1a −0,07.
+  - Granskning: godkänd med anmärkningar (`v2/results/sprint4_review.md`). Stor anmärkning: Blandat-kontrollen
+    i H2 (a) var nästan tom (rutorna = egen täckning, sällan markerade i givarens karta). Tilläggsanalys
+    (`v2/supp_h2a.py`, `bank.run_bank(a_cells="shown")`, `sprint4_supp_h2a.json`): med verklig lögn reagerar
+    Blandat ±0,02–0,05, 1a fortfarande > 10 SE större. Andra: (a) större på slutcheckpoints; (b) delvis
+    mekaniskt (−0,29 per kommando); `eval_mvp.py` cachar per körningsnamn.
+  - Grind 4-frågor i specen: godkänna resultatet; sprint 5 (H5) som nästa steg, plan först.
+- `docs/spec_v2.md` uppdaterad 23 okt vid grind 4 (rev 279). Exportera specen dit vid varje grind.
+- **Nästa steg:** vänta på produktägarens beslut vid grind 4 (specen, "Grind 4: dina beslut"). Vid ja till
+  sprint 5 (H5): skriv planen i klartext i specen (vad, varför, vad som händer vid nej), vänta på godkännande,
+  sedan egen pilot för 1b med lokal matchningsinformation innan H5:s tröskel låses. Rör inte sprint 4:s låsta utfall.

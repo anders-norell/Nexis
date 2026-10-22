@@ -119,17 +119,22 @@ def _window_mask(G, r0, c0, w):
     return m
 
 
-def run_bank(agent, seeds, mode=None, intervention=None, overrides=None, block=BLOCK, record=False):
+def run_bank(agent, seeds, mode=None, intervention=None, overrides=None, block=BLOCK, record=False,
+             a_cells="own"):
     """Run the bank episodes `seeds` with the agent's stochastic policy, in blocks.
 
     mode          schema mode to use ('off' = no schema / lesion; default the agent's own)
     intervention  None, 'a', 'b' or 'c' (H2), applied in every eligible episode
+    a_cells       'own' (locked definition): (a) cells = the agent's own coverage in steps 1-3.
+                  'shown' (supplementary analysis after gate-4 review, not a criterion): (a) cells =
+                  the cells the received map shows as covered after step 3. Identical to 'own' for 1a;
+                  for Blandat it is the donor's coverage, so the lie actually changes its input.
     Returns per-episode arrays (length len(seeds)), see _run_block.
     """
     out = []
     for s in range(0, len(seeds), block):
         out.append(_run_block(agent, seeds[s:s + block], mode or agent.schema_mode, intervention,
-                              overrides, record))
+                              overrides, record, a_cells))
     res = {}
     for k in out[0]:
         if isinstance(out[0][k], np.ndarray):
@@ -143,7 +148,7 @@ H2_T = 3          # the lie is in the schema before the 4th command (t = 3, coun
 H2_SPAN = 3       # commands counted: t = 3, 4, 5
 
 
-def _run_block(agent, seeds, mode, intervention, overrides, record):
+def _run_block(agent, seeds, mode, intervention, overrides, record, a_cells="own"):
     assert mode in ("off", "fixed", "shuffled"), mode
     cfg = agent.cfg
     G = cfg.G
@@ -191,7 +196,7 @@ def _run_block(agent, seeds, mode, intervention, overrides, record):
                 pick = g.permutation(len(cand))[:3] if len(cand) else []
                 for j in pick:
                     Bm[b, cand[j][0], cand[j][1]] = True
-                A[b] = vis[b] > 0
+                A[b] = (vis[b] if a_cells == "own" else vis[src[b]]) > 0
                 # (c): a window of the same size, not overlapping the true last window
                 n, w = env.n[b], env.w[b]
                 r0, c0 = env.last_actual[b]

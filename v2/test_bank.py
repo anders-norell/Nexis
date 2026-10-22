@@ -213,6 +213,14 @@ def test_schema_matches_training_rule():
             assert np.array_equal(sch, tr[s + 1]["schema"]), (mode, s)
 
 
+def test_a_cells_shown_equals_own_for_1a():
+    ag = agent("fixed")
+    r1 = run_bank(ag, SEEDS, intervention="a", block=30)
+    r2 = run_bank(ag, SEEDS, intervention="a", block=30, a_cells="shown")
+    for k in ("found", "steps", "aim_a", "elig_a"):
+        assert np.array_equal(r1[k], r2[k])
+
+
 def test_lesion_mode_has_no_schema():
     ag = agent("fixed")
     r = run_bank(ag, SEEDS[:20], mode="off", record=True, block=20)

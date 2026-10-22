@@ -1,4 +1,4 @@
-<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 22 okt 2026 22:35, rev 262. Vid skillnad gäller det levande dokumentet. -->
+<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 vid grind 4, rev 279. Vid skillnad gäller det levande dokumentet. -->
 
 # Nexis v2 – spec
 
@@ -6,7 +6,7 @@ Oct 20, 2026 · @Anders Norell
 
 ## Läge just nu
 
-Vi är i fas 1, agentexperimentet. Sprint 3, piloten, är klar och grind 3 godkänd, så trösklarna är låsta. Planen för sprint 4, MVP, väntar på ditt godkännande. Fas 2, GPT-2-proben, körs bara om fas 1 visar effekt.
+Vi är i fas 1, agentexperimentet. Sprint 3, piloten, är klar och grind 3 godkänd, så trösklarna är låsta. Sprint 4, MVP, är klar och väntar på ditt beslut vid grind 4: F, H2 och H3 klaras, H1 klaras inte, och granskningen godkänner med anmärkningar. Fas 2, GPT-2-proben, körs bara om fas 1 visar effekt.
 
 Begreppen förklaras i [Nexis – ordlista](https://claude.ai/artifact/2syuVpzf2GcAfaP9DgSgjC).
 
@@ -16,7 +16,7 @@ Begreppen förklaras i [Nexis – ordlista](https://claude.ai/artifact/2syuVpzf2
 | 1 | Miljön | Klar, grind 1 godkänd 21 okt |
 | 2 | Kompetens: baslinjeagent utan schema | Klar, grind 2 godkänd 22 okt |
 | 3 | Pilot: arbetspunkt, spridning, trösklar | Klar, grind 3 godkänd 22 okt, trösklar låsta |
-| 4 | MVP: Baslinje, 1a och Blandat; F, H1, H2, H3 | Plan väntar på ditt godkännande |
+| 4 | MVP: Baslinje, 1a och Blandat; F, H1, H2, H3 | Klar 23 okt: F, H2, H3 klarade, H1 ej. Grind 4 väntar på dig |
 | 5 | H5: schemamodul med lokal matchning, egen pilot | Ej påbörjad |
 | 6 | Utbyggnad, sedan 1c och social fas | Ej påbörjad |
 
@@ -525,7 +525,7 @@ Hur grinden läses: F måste klaras. Därefter bedöms H1, H2 och H3 var för si
 
 ## Sprint 4: MVP
 
-### Plan (väntar på produktägarens godkännande)
+### Plan (godkänd 22 okt 22:44)
 
 MVP ska svara på projektets huvudfråga i fas 1: styr schemat agentens uppmärksamhet så att en lögn i schemat flyttar den (H2)? Det prövas mot de låsta kriterierna F, H1, H2 och H3 med nya frön, så att inget resultat från piloten räknas. Inget körs förrän du har godkänt planen.
 
@@ -555,7 +555,121 @@ MVP ska svara på projektets huvudfråga i fas 1: styr schemat agentens uppmärk
 
 **Beslut för produktägaren** (skriv svar: under punkten, eller svara i chatten)
 
-- [ ] Godkänner du sprint 4-planen?
+- [x] Godkänner du sprint 4-planen?
+- [ ] svar: Y
+
+**Beslut 22 okt 2026 kl. 22:44 (produktägaren, i specen och i chatten):** sprint 4-planen är godkänd. Följ den steg för steg. Inga låsta kriterier ändras. Om H2 eller fröbanken visar sig omöjliga att genomföra som de står skrivs ändringen här och väntar på godkännande. H2-koden får inte prövas på pilotens agenter.
+
+### Steg 1: fröbank, H2-ingrepp och testskript (klart 22 okt 22:55)
+
+Fröbanken och H2 gick att genomföra som de står. Ingen ändring av låsta kriterier behövdes. Allt pushades innan träningen startade (commit 4b550d4).
+
+- **Fröbank** (`v2/bank.py`): testepisod i har frö 2 000 000 + i, i = 0 till 3 999. Ur fröet skapas separata slumpströmmar för miljön och för agentens val. Varje episod i en batch drar ur sina egna strömmar, så en episod förlöper likadant oavsett vilka andra episoder som körs samtidigt.
+- **H2-ingreppen** (`v2/bank.py`): (a) falskt obesökt, (b) falskt besökt och det redovisade (c) falskt "fönster förra steget", enligt H2 i detalj. Måttet räknas per episod, med ingrepp minus utan ingrepp, parat på samma bankepisod.
+- **Bedömningsskript** (`v2/eval_mvp.py`): F, H1, H2, H3a och H3b enligt de låsta definitionerna, samt regeln om omkörning under 73 %.
+- **Tester** (`v2/test_bank.py`, 13 tester, alla godkända): samma episod ger identiskt förlopp; förloppen med och utan ingrepp är lika till och med steg 3, med samma utvalda rutor; ingreppet ändrar exakt de rutor specen anger och inga andra; lögnen består resten av episoden och ny täckning registreras; episoder som tagit slut efter tre steg räknas inte; schemat byggs exakt som i träningen. Miljön är bitidentisk med tidigare version, och de gamla testerna (miljö, agent, H5) går igenom.
+- H2-koden är bara prövad med enhetstester på otränade agenter. Den har inte körts på pilotens agenter.
+
+**Tekniska val (Claudes, gjorda före träning, kräver inte beslut):**
+
+- Valet av rutor i H2 (b) och läget för det falska fönstret i (c) dras ur en tredje ström från samma episodfrö. Annars skulle valet flytta miljöns eller agentens slumptal, och förloppen med och utan ingrepp skulle skilja sig efter steg 3 av andra skäl än lögnen.
+- Blandat schema som kontroll i H2: samma lögn läggs i det schema agenten får, med rutorna valda ur agentens egen episod som för 1a. Givaren av schemat är nästa episod i samma block om 500, så ingen episod får sitt eget schema.
+- Standardfel för skillnader mellan villkor räknas oparat, roten ur summan av de två kvadrerade standardfelen, som i piloten och vid grind 2. Det är det försiktigare valet. H2 räknas parat, som specen anger. Standardfel för andelen återbesök och för H1-lutningen tas fram med bootstrap över episoder (1 000 omdragningar).
+- H1-banken: 2 000 episoder per antal distraktorer (4, 8, 12, 16), frö 3 000 000 + 10 000 × k + i. 8×8, fönster 1, fångst påslagen, stegbudget avrundat uppåt 1,2 × (k + 1) som i piloten.
+- Träning: entropin trappas ned över 700 000 episoder, som i sprint 2:s körningar på 1 000 000 episoder.
+- Under 73 % räknas på fröbanken med agentens stokastiska policy.
+
+### Steg 2–4: träning, bedömning och granskning
+
+**Resultat (23 okt 01:00): F, H2 och H3 klaras i alla tre frön med stor marginal. H1 klaras inte.** Alla nio körningar nådde 1 000 000 episoder. Ingen låg under 73 %, så ingen gjordes om. Siffrorna finns i `v2/results/sprint4_mvp.json`.
+
+Träningen gick 22:54–00:51, 22–24 minuter per körning, två åt gången. Bästa checkpoint valdes på valideringsepisoder och hamnade mellan iteration 1 200 och 3 800 (av ca 3 900). Därefter testades varje körning på fröbankens 4 000 episoder.
+
+**Bedömning mot de låsta kriterierna** (skillnad, i parentes antal standardfel)
+
+| Kriterium | Frö 10 | Frö 11 | Frö 12 | Utfall |
+| --- | --- | --- | --- | --- |
+| F: träff, 1a − Baslinje (procentenheter) | +7,5 (12,0) | +6,2 (9,9) | +6,9 (11,3) | Klarat |
+| F: träff, 1a − Blandat | +6,4 (10,6) | +6,0 (9,6) | +6,6 (10,9) | Klarat |
+| H1: söklutning, 1a − Baslinje (steg per distraktor) | −0,021 (1,6) | −0,001 (0,1) | −0,003 (0,2) | Ej klarat |
+| H1: söklutning, 1a − Blandat | −0,010 (0,8) | +0,006 (0,4) | +0,001 (0,0) | Ej klarat |
+| H2 (a): 1a, kommandon mot falskt obesökta rutor, med − utan lögn | +0,22 (19,4) | +0,15 (16,7) | +0,07 (10,5) | Klarat |
+| H2 (a): 1a:s effekt − Blandats | +0,22 (19,1) | +0,14 (16,0) | +0,07 (10,7) | Klarat |
+| H2 (b): 1a, kommandon mot falskt besökta rutor, med − utan lögn | −0,81 (35,2) | −0,83 (38,3) | −0,84 (38,6) | Klarat |
+| H2 (b): 1a:s effekt − Blandats | −0,74 (30,7) | −0,62 (25,9) | −0,91 (39,9) | Klarat |
+| H3a: träff, Baslinje − 1a (procentenheter) | −7,5 (12,0) | −6,2 (9,9) | −6,9 (11,3) | Klarat |
+| H3a: återbesök, Baslinje − 1a (procentenheter) | +5,7 (10,2) | +5,4 (9,6) | +5,5 (9,5) | Klarat |
+| H3b: träff, akut lesion − intakt 1a | −50,2 (58,6) | −34,6 (40,4) | −46,7 (54,2) | Klarat |
+| H3b: återbesök, akut lesion − intakt 1a | +56,4 (118) | +41,8 (80,0) | +52,6 (104) | Klarat |
+
+Enligt grindregeln är F klarat, så H1, H2 och H3 bedöms var för sig. H3 kräver både H3a och H3b, och båda klaras.
+
+**Träffandel och återbesök på fröbanken** (andel av alla steg där spotlighten bara täckte redan täckta rutor)
+
+| Villkor | Träff frö 10 / 11 / 12 | Återbesök frö 10 / 11 / 12 |
+| --- | --- | --- |
+| Baslinje | 87,7 / 88,2 / 88,2 % | 16,2 / 16,2 / 16,0 % |
+| Fast schema 1a | 95,1 / 94,4 / 95,1 % | 10,5 / 10,8 / 10,5 % |
+| Blandat schema | 88,7 / 88,4 / 88,5 % | 16,6 / 15,9 / 15,8 % |
+| 1a, schemat nollat vid test | 44,9 / 59,8 / 48,5 % | 66,9 / 52,6 / 63,2 % |
+| Blandat, schemat nollat vid test | 88,7 / 88,5 / 88,4 % | 16,5 / 15,7 / 15,7 % |
+
+Den akut lesionerade 1a-agenten är 28–43 procentenheter sämre än Baslinjen. Det redovisas men är inget kriterium: agenten har byggt sin sökstrategi kring schemat. Blandat-agenten påverkas inte alls av lesionen, den har lärt sig att inte använda kanalen.
+
+**H2 i detalj:** antal av de tre följande kommandona som siktar mot de manipulerade rutorna, medel per episod
+
+| Ingrepp | Villkor | Episoder frö 10 / 11 / 12 | Utan lögn | Med lögn |
+| --- | --- | --- | --- | --- |
+| (a) falskt obesökt | 1a | 1 775 / 1 887 / 1 834 | 0,17 / 0,19 / 0,20 | 0,39 / 0,34 / 0,27 |
+| (a) falskt obesökt | Blandat | 1 933 / 1 935 / 1 934 | 0,33 / 0,32 / 0,32 | 0,33 / 0,32 / 0,31 |
+| (b) falskt besökt | 1a | 1 735 / 1 848 / 1 797 | 0,95 / 0,97 / 1,00 | 0,14 / 0,15 / 0,17 |
+| (b) falskt besökt | Blandat | 1 886 / 1 894 / 1 887 | 1,04 / 1,07 / 1,07 | 0,97 / 0,86 / 1,14 |
+| (c) falskt fönster, redovisas | 1a | 1 775 / 1 887 / 1 834 | 0,20 / 0,20 / 0,19 | 0,12 / 0,13 / 0,11 |
+| (c) falskt fönster, redovisas | Blandat | 1 933 / 1 935 / 1 934 | 0,20 / 0,20 / 0,20 | 0,20 / 0,22 / 0,19 |
+
+Episoderna är de som pågick efter tre steg, ungefär hälften av banken. I (b) faller ca 40 per frö bort eftersom det inte fanns någon otäckt ruta i målets färg. Med lögnen (a) sjunker 1a:s träffandel till 92,5–93,3 %. Med lögnen (b) stiger den till 98,2–98,3 %, eftersom de falskt markerade rutorna enligt specen aldrig är målet.
+
+**Min tolkning (Claudes, inte ett beslut):**
+
+- **H2 får tydligt stöd.** En lögn i schemat flyttar agentens verkliga spotlight åt det håll AST förutsäger. Falskt besökta rutor undviks nästan helt: 0,15 kommandon mot ca 0,97 utan lögn. Agenten litar alltså på schemat framför sitt eget minne av var den siktade, trots att det minnet finns i efferenskopian och i dess tillstånd.
+- **Effekten är asymmetrisk.** Falskt obesökta rutor drar bara måttligt (+0,07 till +0,22), och spridningen mellan frön är stor. En trolig förklaring är att agenten också minns var den siktat och därför sällan går tillbaka, oavsett vad schemat säger. Schemat avgör mest vad som ska hoppas över.
+- **Blandat-kontrollen fungerar, men inte perfekt.** Blandat-agenten reagerar knappt på (a) och (c), högst 0,015 kommandon. På (b) reagerar den svagt och åt olika håll i olika frön (−0,07, −0,21, +0,07). Ett mönster av ettor just på rutor i målets färg förekommer aldrig i dess träning, så det kan ändra beteendet utan att agenten läser kanalen som en beskrivning av sig själv. 1a:s effekt är i varje frö minst fyra gånger större.
+- **(c) är ett oväntat fynd.** 1a siktar mer sällan mot ett falskt "fönster förra steget". I piloten gjorde det ingen skillnad att nolla den kanalen, så agenten läser den men behöver den inte. Det är inget kriterium.
+- **H1 får inte stöd,** som piloten förutsade. Bland hittade mål söker 1a inte flackare än Baslinjen eller Blandat. Schemats vinst ligger i färre missar och återbesök, inte i en flackare söklutning.
+- Ett godkänt H2 visar att mekanismen beter sig som AST förutsäger. Det säger inget om upplevelse.
+
+### Oberoende granskning
+
+**Oberoende granskning (23 okt 01:20): godkänd med anmärkningar. Ingen anmärkning ändrar utfallet för något kriterium.** Hela rapporten: `v2/results/sprint4_review.md`.
+
+- **Bekräftat:** fröbanken och H2 är implementerade som de låsta definitionerna anger, utan informationsläckor. Granskaren skrev en egen version av bankepisoden och H2-måttet och fick exakt samma siffror. Förloppen med och utan lögn var identiska till och med steg 3 även hos tränade agenter. Bedömningen tillämpar rätt riktning och kräver alla tre frön. Alla nio körningar nådde 1 000 192 episoder med de redovisade inställningarna, ingen startades om eller kasserades. Ingen H2-kod har körts på pilotens agenter.
+- **Stor anmärkning, tolkning: Blandat-kontrollen för H2 (a) var nästan tom.** Rutorna i (a) är agentens egna täckta rutor. I det schema Blandat-agenten får, från en annan episod, är de sällan markerade, så lögnen ändrade i genomsnitt 0,76 rutor mot 6,1 för 1a. Det är en följd av mitt tekniska val. Jämförelsen med Blandat i (a) var därför nästan automatisk. Kontrollen i (b) är rättvis, 2,6 mot 2,8 ändrade rutor.
+- **Liten: (a) beror på vilken checkpoint som används.** På slutcheckpointerna är effekten i (a) ungefär dubbelt så stor i frö 11 och 12 (+0,30 och +0,19). (b) ändras knappt.
+- **Liten: en del av effekten i (b) är mekanisk.** Lögnen hjälper agenten att hitta målet, så episoderna blir kortare och färre kommandon räknas. Räknat per kommando är effekten fortfarande stor: −0,29 ± 0,008.
+- **Liten, process:** H2-siffrorna för åtta körningar fanns innan den nionde var klar. Inget ändrades efteråt.
+- **Liten, kod:** `eval_mvp.py` återanvänder sparade resultat om en checkpoint skulle bytas ut. Bör få en kontroll.
+- **Tolkningsnoter:** inget utfall ändras med parat i stället för oparat standardfel. Halvan om återbesök i H3 gäller delvis per konstruktion, eftersom återbesök är just vad kartan registrerar. Att Blandat reagerar på (b) utan att använda kanalen visar att en reaktion på kanalen inte i sig bevisar en modell.
+
+**Tilläggsanalys efter granskningen (inte ett kriterium, de låsta utfallen gäller oförändrade).** H2 (a) för Blandat gjordes om med de rutor som schemat agenten faktiskt får visar som täckta efter steg 3. Lögnen tar då bort verkliga markeringar ur dess indata. För 1a är det identiskt med den låsta analysen. Skript: `v2/supp_h2a.py`, resultat: `v2/results/sprint4_supp_h2a.json`.
+
+| Frö | Blandat, med − utan lögn | 1a:s effekt − Blandats |
+| --- | --- | --- |
+| 10 | +0,018 (4,6 SE) | +0,20 (16,8 SE) |
+| 11 | +0,045 (9,2 SE) | +0,10 (10,1 SE) |
+| 12 | −0,019 (5,4 SE) | +0,09 (11,9 SE) |
+
+Med en verklig lögn reagerar Blandat svagt och åt olika håll. 1a:s effekt är fortfarande större med mer än 10 standardfel i varje frö. Slutsatsen om H2 (a) står sig alltså även mot den skarpare kontrollen. (a) bör ändå beskrivas som en delvis effekt: agenten följer nästan alltid ett falskt "redan tittat här", men bara delvis ett falskt "inte tittat här".
+
+### Grind 4: dina beslut
+
+**Sammanfattning:** F, H2, H3a och H3b är klarade och H1 är inte klarat, enligt de låsta kriterierna. Granskningen godkänner med anmärkningar som gäller tolkning, inte utfall.
+
+**Beslut för produktägaren vid grind 4** (skriv svar: under respektive punkt)
+
+- [ ] Godkänner du resultatet av sprint 4 enligt de låsta kriterierna?
+- [ ] Nästa steg enligt sprintplanen är sprint 5, H5: schemamodul med lokal matchningsinformation och en egen pilot innan H5:s tröskel låses. Jag skriver planen i specen och väntar på ditt godkännande innan något körs. Går det bra?
+
+**Tekniska val (Claudes) som rör grinden:** jag föreslår ingen omkörning. De låsta utfallen gäller med de checkpoints som valdes på validering, även om slutcheckpointerna ger större effekt i (a). Tilläggsanalysen ovan redovisas bredvid, inte i stället.
 
 ## Efter MVP: 1c, social fas och begreppsbildning
 
