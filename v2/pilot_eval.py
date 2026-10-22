@@ -53,6 +53,50 @@ def test(ag, seed, mode=None, n=N_TEST, B=500):
                 mean_steps=float(np.concatenate(steps).mean()))
 
 
+class SchemaAdapter:
+    """Drives a trained agent (any schema mode) through metrics.run_metrics."""
+
+    def __init__(self, agent, rng, mode=None):
+        self.ag, self.rng, self.mode = agent, rng, mode or agent.schema_mode
+
+    def reset(self, env):
+        G = env.cfg.G
+        self.h = self.ag.init_state(env.B)
+        self.t, self.schema, self.visited = 0, None, np.zeros((env.B, G, G))
+        self.donor = self.rng.permutation(env.B)
+
+    def act(self, env, obs):
+        x, m = self.ag.features(env, obs, self.t, self.schema)
+        self.h, logp, V, slogp, _ = self.ag.step(x, m, self.h)
+        self.pred = np.exp(slogp)
+        self.t += 1
+        return (logp - np.log(-np.log(self.rng.random(logp.shape)))).argmax(1)
+
+    def observe(self, env, info):
+        from agent_rl import schema_input
+        self.schema, self.visited = schema_input(self.mode, env, info, self.visited, self.pred, self.donor)
+
+
+def search_profile(ag, seed, mode=None):
+    """H1/H3 measures in the standard environment: revisit share and hit rate (4 000 episodes),
+    and the search slope on 8 x 8, window 1, no capture, k = 4..16 (as in sprint 2)."""
+    from metrics import run_metrics, summarise
+    cfg0 = ag.cfg
+    m = run_metrics(SearchEnv(cfg0, seed=900_000 + seed), SchemaAdapter(ag, np.random.default_rng(seed), mode), N_TEST)
+    s = summarise(m)
+    steps = {}
+    ag.cfg = EnvConfig(n_salient=(0,), reveal=cfg0.reveal, p_capture=cfg0.p_capture, windows=cfg0.windows)
+    for k in (4, 8, 12, 16):
+        mk = run_metrics(SearchEnv(ag.cfg, seed=700_000 + 10 * seed + k), SchemaAdapter(ag, np.random.default_rng(k), mode),
+                         2000, overrides=dict(n=8, w=1, k=k, budget=int(np.ceil(1.2 * (k + 1)))))
+        steps[k] = float(mk["steps"][mk["found"]].mean())
+    ag.cfg = cfg0
+    ks = np.array(sorted(steps))
+    slope = float(np.polyfit(ks, [steps[k] for k in ks], 1)[0])
+    return dict(found=s["found"], revisit_share=s["revisit_share"], aim_repeat_share=s["aim_repeat_share"],
+                slope=slope, steps_per_k=steps)
+
+
 def point_key(args):
     return f"reveal={args['reveal']}|p_capture={args['p_capture']}|windows={args['windows']}"
 
@@ -71,6 +115,10 @@ def main():
                  intact=test(ag, args["seed"]))
         if args["schema"] != "off":
             r["lesion"] = test(ag, args["seed"], mode="off")
+        if r["point"] == "reveal=1.0|p_capture=0.25|windows=1,2":   # chosen working point: spread of H1/H3 measures
+            r["profile"] = search_profile(ag, args["seed"])
+            if args["schema"] != "off":
+                r["profile_lesion"] = search_profile(ag, args["seed"], mode="off")
         if args["schema"] == "learned":                 # H5 measurability check (not the H5 test)
             from h5 import run_h5, summarise_h5
             ev = run_h5(ag, SearchEnv(ag.cfg, seed=950_000 + args["seed"]), N_TEST,
