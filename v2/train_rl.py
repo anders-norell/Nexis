@@ -146,6 +146,12 @@ def evaluate(agent, n_ep, seed, B=500, greedy=False):
                 ret=float(ret.mean()))
 
 
+def env_config(args):
+    """Environment for a run; defaults reproduce sprint 2."""
+    return EnvConfig(reveal=args.reveal, p_capture=args.p_capture,
+                     windows=tuple(int(x) for x in str(args.windows).split(",")))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=0)
@@ -168,9 +174,12 @@ def main():
     ap.add_argument("--eval-every", type=int, default=200)
     ap.add_argument("--eval-episodes", type=int, default=2000)
     ap.add_argument("--log-every", type=int, default=20)
+    ap.add_argument("--reveal", type=float, default=1.0, help="fovea reveal probability (sprint 3)")
+    ap.add_argument("--p-capture", type=float, default=0.25)
+    ap.add_argument("--windows", default="1,2", help="spotlight sizes drawn per episode")
     args = ap.parse_args()
 
-    cfg = EnvConfig()
+    cfg = env_config(args)
     agent = PriorityMapAgent(cfg, d=args.d, dh=args.dh, seed=args.seed, schema_mode=args.schema)
     opt = Adam(agent.p, args.lr)
     env = SearchEnv(cfg, seed=10_000 + args.seed)
@@ -224,10 +233,11 @@ def main():
             print("EVAL", rec, flush=True)
             if ev["found"] > best:
                 best = ev["found"]
-                agent.save(args.out + ".best.npz", it=it, episodes=episodes, eval_found=best)
+                agent.save(args.out + ".best.npz", it=it, episodes=episodes, eval_found=best,
+                           args=json.dumps(vars(args)))
             save_ckpt()
     save_ckpt()
-    agent.save(args.out + ".final.npz", it=it, episodes=episodes)
+    agent.save(args.out + ".final.npz", it=it, episodes=episodes, args=json.dumps(vars(args)))
     print("done", it, episodes, flush=True)
 
 

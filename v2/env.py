@@ -29,6 +29,12 @@ Which object captures, and when, is therefore not known in advance. Intended and
 windows then differ (needed for H5). A capture that happens to cover the target finds it,
 as it would in an animal.
 
+Fovea reveal (sprint 3, cfg.reveal): on each step the fovea shows its content with probability
+reveal. Otherwise the glimpse is masked: the in-window flags stay (the agent still knows its
+window size) and the occupied channel is 0.5 ("something unclear"), colour and shape are zero.
+A masked glimpse says nothing about where the spotlight landed. reveal = 1 is the sprint 1-2
+environment exactly (no extra random draws).
+
 Reward: +1 when the actual window covers the target (episode ends), -step_cost per step
 otherwise. The episode also ends when the step budget is used up. Revisits are allowed but
 cost steps like any other step.
@@ -58,6 +64,7 @@ class EnvConfig:
     p_capture: float = 0.25                   # capture chance per step per unit salience
     capture_cap: float = 0.6                  # max total capture chance per step
     efference_copy: bool = True
+    reveal: float = 1.0                       # chance per step that the fovea shows its content
     step_cost: float = 0.02
 
     @property
@@ -154,6 +161,7 @@ class SearchEnv:
         self.last_actual = np.full((B, 2), -1)          # actual window origin, last step
         self.last_window = np.zeros((B, cfg.W, cfg.W, 2 + cfg.n_colors + cfg.n_shapes))
         self.last_intended = np.zeros((B, G * G))
+        self.last_revealed = np.zeros(B, bool)
         self._new_sal_noise()
         return self.observe()
 
@@ -196,6 +204,13 @@ class SearchEnv:
                     patch[i, j, 1] = 1.0
                     patch[i, j, 2 + col] = 1.0
                     patch[i, j, 2 + cfg.n_colors + shp] = 1.0
+        return patch
+
+    def _masked(self, w):
+        cfg = self.cfg
+        patch = np.zeros((cfg.W, cfg.W, 2 + cfg.n_colors + cfg.n_shapes))
+        patch[:w, :w, 0] = 1.0
+        patch[:w, :w, 1] = 0.5
         return patch
 
     # ----------------------------------------------------------------- step
@@ -245,10 +260,12 @@ class SearchEnv:
         hit = active & in_window(self.target[:, 0], self.target[:, 1], r0, c0, self.w)
         reward = np.where(active, np.where(hit, 1.0, -cfg.step_cost), 0.0)
 
+        show = (self.rng.random(B) < cfg.reveal) if cfg.reveal < 1.0 else np.ones(B, bool)
         for b in np.nonzero(active)[0]:
             w = self.w[b]
             self.visits[b, r0[b]:r0[b] + w, c0[b]:c0[b] + w] += 1
-            self.last_window[b] = self._fovea(b, r0[b], c0[b], w)
+            self.last_window[b] = self._fovea(b, r0[b], c0[b], w) if show[b] else self._masked(w)
+        self.last_revealed = np.where(active, show, self.last_revealed)
         self.last_actual = np.where(active[:, None], np.stack([r0, c0], 1), self.last_actual)
         onehot = np.zeros((B, G * G))
         onehot[np.arange(B), ar * G + ac] = 1.0
@@ -260,5 +277,5 @@ class SearchEnv:
         self.done |= hit | (self.steps >= self.budget)
         self.t += 1
         info = dict(intended=np.stack([ir0, ic0], 1), actual=np.stack([r0, c0], 1),
-                    captured=cap, capturer=who, hit=hit, active=active)
+                    captured=cap, capturer=who, hit=hit, active=active, revealed=show & active)
         return self.observe(), reward, self.done.copy(), info

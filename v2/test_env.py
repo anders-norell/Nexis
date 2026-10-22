@@ -285,10 +285,44 @@ def test_agents_order():
     check(f"guided agent beats random agent ({gui:.2f} vs {rnd:.2f})", gui > rnd + 0.1)
 
 
+def test_reveal():
+    """Sprint 3 fovea reveal knob."""
+    # reveal = 1 must reproduce the sprint 1-2 environment exactly
+    a = SearchEnv(EnvConfig(), seed=21)
+    b = SearchEnv(EnvConfig(reveal=1.0), seed=21)
+    ra = run(a, RandomAgent(np.random.default_rng(4)), 300)
+    rb = run(b, RandomAgent(np.random.default_rng(4)), 300)
+    check("reveal=1 identical to default environment",
+          np.array_equal(ra["steps"], rb["steps"]) and np.array_equal(ra["found"], rb["found"]))
+    for rev in (0.0, 0.25, 0.5):
+        env = SearchEnv(EnvConfig(reveal=rev), seed=22)
+        env.reset(2000)
+        shown, n, masked_ok, shown_ok = 0, 0, True, True
+        rng = np.random.default_rng(5)
+        while not env.done.all():
+            act = rng.integers(0, env.cfg.G ** 2, env.B)
+            _, _, _, info = env.step(act)
+            for bb in np.nonzero(info["active"])[0]:
+                w = env.w[bb]
+                fv = env.last_window[bb]
+                r0, c0 = info["actual"][bb]
+                n += 1
+                if info["revealed"][bb]:
+                    shown += 1
+                    shown_ok &= np.array_equal(fv, env._fovea(bb, r0, c0, w))
+                else:
+                    masked_ok &= (fv[:w, :w, 0] == 1).all() and (fv[:w, :w, 1] == 0.5).all() \
+                        and (fv[:w, :w, 2:] == 0).all() and (fv[w:, :, :] == 0).all() and (fv[:, w:, :] == 0).all()
+        check(f"reveal={rev}: share shown {shown / n:.3f} close to {rev}", abs(shown / n - rev) < 0.02)
+        check(f"reveal={rev}: masked glimpse keeps window flags, hides content", masked_ok)
+        check(f"reveal={rev}: shown glimpse equals the actual window", shown_ok)
+
+
 if __name__ == "__main__":
     for f in [test_layout, test_cue_levels, test_periphery_no_shape, test_fovea_window,
               test_window_inside_grid, test_params_vary, test_prior, test_capture,
-              test_efference, test_reward_and_budget, test_clamp_and_k_limit, test_reproducible, test_agents_order]:
+              test_efference, test_reward_and_budget, test_clamp_and_k_limit, test_reproducible, test_agents_order,
+              test_reveal]:
         f()
     print(f"\n{len(FAILS)} failed")
     raise SystemExit(1 if FAILS else 0)
