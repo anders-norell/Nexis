@@ -71,6 +71,15 @@ def main():
                  intact=test(ag, args["seed"]))
         if args["schema"] != "off":
             r["lesion"] = test(ag, args["seed"], mode="off")
+        if args["schema"] == "learned":                 # H5 measurability check (not the H5 test)
+            from h5 import run_h5, summarise_h5
+            ev = run_h5(ag, SearchEnv(ag.cfg, seed=950_000 + args["seed"]), N_TEST,
+                        np.random.default_rng(950_000 + args["seed"]))
+            s = summarise_h5(ev)
+            # Blind: keep only how many eligible events there are. Where the head points in them
+            # is the H5 result itself and is not looked at before the thresholds are locked.
+            r["h5_check"] = dict(n_events=s["n"], n_with_other_salient=s.get("n_with_other_salient", 0),
+                                 episodes=N_TEST)
         res["runs"][name] = r
         print(name, r["point"], r["schema"], f"intact {r['intact']['found']:.3f}",
               f"lesion {r['lesion']['found']:.3f}" if "lesion" in r else "", flush=True)

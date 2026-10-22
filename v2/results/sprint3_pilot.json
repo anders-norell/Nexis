@@ -1,0 +1,51 @@
+{
+ "runs": {
+  "p3_r1.0_c0.25_w12_fixed_s0": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "fixed",
+   "seed": 0,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.9515
+   },
+   "intact": {
+    "found": 0.94725,
+    "found_se": 0.003534382460204328,
+    "mean_steps": 4.1075
+   },
+   "lesion": {
+    "found": 0.505,
+    "found_se": 0.007905298855830814,
+    "mean_steps": 6.6685
+   }
+  },
+  "p3_r1.0_c0.25_w12_off_s0": {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "schema": "off",
+   "seed": 0,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.884
+   },
+   "intact": {
+    "found": 0.875,
+    "found_se": 0.005229125165837973,
+    "mean_steps": 4.6235
+   }
+  }
+ },
+ "table": [
+  {
+   "point": "reveal=1.0|p_capture=0.25|windows=1,2",
+   "seed": 0,
+   "base": 0.875,
+   "fixed": 0.94725,
+   "fixed_lesion": 0.505,
+   "gain_1a": 0.07225000000000004,
+   "gain_1a_se": 0.006311545719948483,
+   "lesion_cost_1a": 0.44225000000000003
+  }
+ ]
+}

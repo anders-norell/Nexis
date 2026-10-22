@@ -1,8 +1,16 @@
-"""Sprint 3 pilot, step 2: grid of working points. Baseline and Fixed schema (1a), seed 0,
+"""Sprint 3 pilot, step 2 (grid) and step 4 (confirm).
+
+Step 2: grid of working points. Baseline and Fixed schema (1a), seed 0,
 400 000 episodes each (entropy annealed over 300 000). Two runs at a time, one thread each.
 Skips finished runs and resumes interrupted ones, so it can simply be started again.
 
   python3 run_sprint3_grid.py > results/p3_grid.stdout 2>&1
+
+Step 4, at the chosen working point (standard settings, chosen 22 Oct by the pre-set rule):
+three new seeds (1, 2, 3) for Baseline, Fixed schema (1a) and Shuffled schema, plus one seed of
+Learned schema (1b, head loss weight 1.0) to settle the 1b design and check that H5 is measurable.
+
+  python3 run_sprint3_grid.py confirm > results/p3_confirm.stdout 2>&1
 """
 import os
 import subprocess
@@ -35,9 +43,25 @@ def jobs():
                         "--max-episodes", str(EPISODES), "--ent-episodes", "300000", "--minutes", "90"]
 
 
-def main(par=2):
+def cmd(rev, pc, win, schema, seed, extra=()):
+    out = os.path.join("results", name(rev, pc, win, schema, seed))
+    return out, ["python3", "train_rl.py", "--seed", str(seed), "--out", out, "--schema", schema,
+                 "--reveal", str(rev), "--p-capture", str(pc), "--windows", win,
+                 "--max-episodes", str(EPISODES), "--ent-episodes", "300000", "--minutes", "90", *extra]
+
+
+def confirm_jobs(point=(1.0, 0.25, "1,2")):
+    todo = [("learned", 1, ("--sl", "1.0"))]
+    todo += [(sch, s, ()) for s in (1, 2, 3) for sch in ("off", "fixed", "shuffled")]
+    for sch, s, extra in todo:
+        out, c = cmd(*point, sch, s, extra)
+        if not os.path.exists(os.path.join(HERE, out + ".final.npz")):
+            yield out, c
+
+
+def main(par=2, mode="grid"):
     env = dict(os.environ, OMP_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1")
-    queue, running = list(jobs()), []
+    queue, running = list(jobs() if mode == "grid" else confirm_jobs()), []
     while queue or running:
         while queue and len(running) < par:
             out, cmd = queue.pop(0)
@@ -52,4 +76,4 @@ def main(par=2):
 
 
 if __name__ == "__main__":
-    main(int(sys.argv[1]) if len(sys.argv) > 1 else 2)
+    main(2, sys.argv[1] if len(sys.argv) > 1 else "grid")
