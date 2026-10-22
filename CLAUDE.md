@@ -73,8 +73,9 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 | 1. Miljö | Sökmiljö: rutnät, periferi (färg, ej form), spotlight med fast fönster, distraktorer, ledtrådsnivå "svag", fångstmekanism (spotlighten dras ibland till iögonfallande distraktor), slumpvisa episodparametrar. Enhetstester och slumpagent. | Miljön beter sig enligt spec |
 | 2. Kompetens | Baslinjeagent utan schema lär sig söka klart bättre än slumpagenten. | Kompetens visad |
 | 3. Pilot | Tid per körning, spridning mellan frön, kontroll att schemat behövs. Trösklar och körplan föreslås. | Trösklar godkända och låsta |
-| 4. MVP | Baslinje, Fast schema (1a), Inlärt schema (1b), Blandat schema; 3 frön vardera (12 körningar). H5 mäts på 1b. Ingrepp vid test: falskt schema (H2), lesion (H3), fångst (H5). | Resultat bedömda mot låsta kriterier |
-| 5. Utbyggnad | Zoom, skalning, övriga ledtrådsnivåer, 1c, fem frön. | Enligt resultat |
+| 4. MVP | Baslinje, Fast schema (1a), Blandat schema; frön 10–12 (9 körningar à 1M episoder). Låsta kriterier F, H1, H2, H3a/H3b (alternativ A, grind 3). | Resultat bedömda mot låsta kriterier |
+| 5. H5 | Schemamodul (1b) med lokal matchningsinformation, egen pilot innan H5:s tröskel låses. | Enligt plan |
+| 6. Utbyggnad | Zoom, skalning, övriga ledtrådsnivåer, 1c, fem frön, sedan social fas. | Enligt resultat |
 
 ## Status
 
@@ -160,5 +161,11 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   episoder, frö 2 000 000 + i, separata strömmar för miljö och agentens val). (2) H3 omformulerad:
   H3a = lesion under hela träningen = Baslinjen vs 1a; H3b = akut lesion vid test; båda krävs.
   (3) "2 SD" rättat till standardfel. Ordlistan (se tabellen överst) uppdaterad på tre punkter.
-- **Nästa steg:** produktägaren bekräftar alternativ A och H1 (rättat mått). Lås då trösklarna, skriv
-  sprint 4-planen i specen och vänta på godkännande innan något körs.
+- **Grind 3 godkänd 22 okt 22:30** ("Jag följer dina rekommendationer"): alternativ A, H1 med rättat mått,
+  H3 = H3a + H3b (ingen slumpvis avstängning under träning). **Trösklarna är låsta** (specens tröskeltabell,
+  signifikanskriterium, H2 i detalj, fröbank, H3). Ändringar före körning kräver produktägarens godkännande.
+- **Sprint 4-plan skriven i specen 22 okt, väntar på godkännande. Inget kört.** Steg: (1) fröbank + H2-ingrepp
+  + testskript, H2-kod prövas aldrig på pilotens agenter; (2) 9 körningar, frön 10–12, 1M ep; (3) bedömning;
+  (4) granskning, grind 4. Förregistrerat: körning < 73 % träff görs om en gång med frö + 1000.
+- `docs/spec_v2.md` är en äldre ögonblicksbild (före sprint 3-resultaten); det levande dokumentet gäller.
+- **Nästa steg:** vänta på produktägarens godkännande av sprint 4-planen.
