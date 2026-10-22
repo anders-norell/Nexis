@@ -19,7 +19,7 @@ import os
 import sys
 import numpy as np
 from env import EnvConfig, SearchEnv
-from agent_rl import PriorityMapAgent
+from agent_rl import PriorityMapAgent, make_agent
 from train_rl import rollout
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +32,7 @@ def load_run(path):
     args = json.loads(str(z["m_args"]))
     cfg = EnvConfig(reveal=args["reveal"], p_capture=args["p_capture"],
                     windows=tuple(int(x) for x in str(args["windows"]).split(",")))
-    ag = PriorityMapAgent(cfg, d=args["d"], dh=args["dh"], seed=args["seed"], schema_mode=args["schema"])
+    ag = make_agent(cfg, d=args["d"], dh=args["dh"], seed=args["seed"], schema_mode=args["schema"])
     meta = ag.load(path)
     return ag, args, {k: (v.tolist() if hasattr(v, "tolist") else v) for k, v in meta.items() if k != "args"}
 
@@ -79,10 +79,22 @@ class SchemaAdapter:
     def reset(self, env):
         G = env.cfg.G
         self.h = self.ag.init_state(env.B)
+        mod = getattr(self.ag, "module", None)
+        self.hm = mod.init_state(env.B) if mod is not None else None
+        self.union = np.zeros((env.B, G, G))
         self.t, self.schema, self.visited = 0, None, np.zeros((env.B, G, G))
         self.donor = self.rng.permutation(env.B)
 
     def act(self, env, obs):
+        mod = getattr(self.ag, "module", None)
+        if mod is not None:
+            G = env.cfg.G
+            xm, mm = mod.features(env, obs, self.t, None)
+            self.hm, _, _, slm, _ = mod.step(xm, mm, self.hm)
+            cur = np.exp(slm).reshape(env.B, G, G) if self.t > 0 else np.zeros((env.B, G, G))
+            self.union = np.maximum(self.union, cur)
+            if self.mode == "module":
+                self.schema = np.stack([cur, self.union], -1)
         x, m = self.ag.features(env, obs, self.t, self.schema)
         self.h, logp, V, slogp, _ = self.ag.step(x, m, self.h)
         self.pred = np.exp(slogp)
@@ -91,7 +103,8 @@ class SchemaAdapter:
 
     def observe(self, env, info):
         from agent_rl import schema_input
-        self.schema, self.visited = schema_input(self.mode, env, info, self.visited, self.pred, self.donor)
+        if self.mode != "module":
+            self.schema, self.visited = schema_input(self.mode, env, info, self.visited, self.pred, self.donor)
 
 
 def search_profile(ag, seed, mode=None):
@@ -143,7 +156,7 @@ def main():
                 r["lesion_covered"] = test(ag, args["seed"], zero_channel=1)
             if args["schema"] != "off":
                 r["profile_lesion"] = search_profile(ag, args["seed"], mode="off")
-        if args["schema"] == "learned":                 # H5 measurability check (not the H5 test)
+        if args["schema"] in ("learned", "module"):      # H5 measurability check (not the H5 test)
             from h5 import run_h5, summarise_h5
             ev = run_h5(ag, SearchEnv(ag.cfg, seed=950_000 + args["seed"]), N_TEST,
                         np.random.default_rng(950_000 + args["seed"]))

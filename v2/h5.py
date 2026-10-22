@@ -84,6 +84,9 @@ def run_h5(agent, env, n_ep, rng, B=500):
     for _ in range(n_ep // B):
         obs = env.reset(B)
         h = agent.init_state(B)
+        mod = getattr(agent, "module", None)
+        hm = mod.init_state(B) if mod is not None else None
+        union = np.zeros((B, G, G))
         visited = np.zeros((B, G, G))
         schema = None
         donor = rng.permutation(B)
@@ -91,10 +94,22 @@ def run_h5(agent, env, n_ep, rng, B=500):
         t = 0
         while not env.done.all():
             idx = np.nonzero(~env.done)[0]
+            if mod is not None:                          # separate schema module: its 1b head is the schema
+                xm, mm = mod.features(env, obs, t, None)
+                hms, _, _, slm, _ = mod.step(xm[idx], mm[idx], hm[idx])
+                hm[idx] = hms
+                cur = np.zeros((B, G * G))
+                if t > 0:
+                    cur[idx] = np.exp(slm)
+                union = np.maximum(union, cur.reshape(B, G, G))
+                if agent.schema_mode == "module":
+                    schema = np.stack([cur.reshape(B, G, G), union], -1)
             x, m = agent.features(env, obs, t, schema)
             hs, logp, Vs, slogp, _ = agent.step(x[idx], m[idx], h[idx])
             h[idx] = hs
             pred = np.zeros((B, G * G)); pred[idx] = np.exp(slogp)
+            if mod is not None:
+                pred = cur
             for b, ev in list(pending.items()):          # read the head the step after the capture
                 p = pred[b].reshape(G, G)
                 regions = ev.pop("_masks")
@@ -128,9 +143,7 @@ def run_h5(agent, env, n_ep, rng, B=500):
                 obs_mass["other"] = 1.0 - obs_mass["intended"] - obs_mass["actual"]
                 pending[b] = dict(t=t, w=int(w), n_cand=len(post), observer=obs_mass,
                                   _masks=dict(intended=mi, actual=ma_only, other=mo_only, rest=rest))
-            if agent.schema_mode == "learned":
-                schema, visited = schema_input("learned", env, info, visited, pred, donor)
-            else:
+            if agent.schema_mode != "module":
                 schema, visited = schema_input(agent.schema_mode, env, info, visited, pred, donor)
             t += 1
     return events
