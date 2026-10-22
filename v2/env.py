@@ -166,7 +166,15 @@ class SearchEnv:
         return self.observe()
 
     def _new_sal_noise(self):
-        self.sal_obs = (self.salient + self.rng.normal(0, self.cfg.sal_noise, self.salient.shape)) * self.valid
+        self.sal_obs = (self.salient + self._normal_noise()) * self.valid
+
+    # Random draws made while episodes run. Sprint 4's seed bank (bank.py) overrides these two so that
+    # every episode draws from its own stream; here they draw from the shared stream, exactly as before.
+    def _normal_noise(self):
+        return self.rng.normal(0, self.cfg.sal_noise, self.salient.shape)
+
+    def _uniform(self):
+        return self.rng.random(self.B)
 
     # -------------------------------------------------------------- observe
     def periphery(self):
@@ -240,13 +248,13 @@ class SearchEnv:
         scale = np.where(tot > cfg.capture_cap, cfg.capture_cap / np.maximum(tot, 1e-12), 1.0)
         p = p * scale[:, None]
         if force_capture is None:
-            u = self.rng.random(B)
+            u = self._uniform()
             cum = np.cumsum(p, 1)
             who = np.where(u < cum[:, -1], (u[:, None] >= cum).sum(1), -1)
         else:
             fc = np.asarray(force_capture, bool)
             q = self.sal_val * eligible
-            u = self.rng.random(B) * np.cumsum(q, 1)[:, -1]
+            u = self._uniform() * np.cumsum(q, 1)[:, -1]
             who = np.where(fc & (q.sum(1) > 0), (u[:, None] >= np.cumsum(q, 1)).sum(1), -1)
             who = np.minimum(who, M - 1)
         cap = who >= 0
@@ -260,7 +268,7 @@ class SearchEnv:
         hit = active & in_window(self.target[:, 0], self.target[:, 1], r0, c0, self.w)
         reward = np.where(active, np.where(hit, 1.0, -cfg.step_cost), 0.0)
 
-        show = (self.rng.random(B) < cfg.reveal) if cfg.reveal < 1.0 else np.ones(B, bool)
+        show = (self._uniform() < cfg.reveal) if cfg.reveal < 1.0 else np.ones(B, bool)
         for b in np.nonzero(active)[0]:
             w = self.w[b]
             self.visits[b, r0[b]:r0[b] + w, c0[b]:c0[b] + w] += 1
