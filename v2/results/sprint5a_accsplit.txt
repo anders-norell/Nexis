@@ -1,0 +1,16 @@
+p5_ref1e-4_s20 nocap_w1 steps 1464 acc 0.999
+p5_ref1e-4_s20 nocap_w2 steps 1039 acc 1.0
+p5_ref1e-4_s20 cap steps 1325 acc 0.115
+p5_ref1e-4_s20 mean max prob 0.502
+p5_ref1e-4_s21 nocap_w1 steps 1512 acc 1.0
+p5_ref1e-4_s21 nocap_w2 steps 1070 acc 1.0
+p5_ref1e-4_s21 cap steps 1300 acc 0.109
+p5_ref1e-4_s21 mean max prob 0.506
+p5_ref1e-3_s20 nocap_w1 steps 1458 acc 0.999
+p5_ref1e-3_s20 nocap_w2 steps 1027 acc 1.0
+p5_ref1e-3_s20 cap steps 1289 acc 0.108
+p5_ref1e-3_s20 mean max prob 0.496
+p5_ref1e-3_s21 nocap_w1 steps 1536 acc 0.999
+p5_ref1e-3_s21 nocap_w2 steps 1080 acc 1.0
+p5_ref1e-3_s21 cap steps 1300 acc 0.115
+p5_ref1e-3_s21 mean max prob 0.505
