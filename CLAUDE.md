@@ -274,6 +274,16 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   bruset, 5,5 bitar ej matchbar; (7–8) två formuleringar rättade; (9) 5b: lås mål i bitar, pröva förutsättning igen,
   slutcheckpoint. Reviderat förslag + fem beslutspunkter i specen ("Grind 5a: dina beslut"). Grind 5a i två steg:
   beslut → H5-kod skrivs, provas på otränade agenter, pushas, genomförbarhet per nivå (bara träffsäkerhet) → låsning.
+- **Grind 5a, produktägarens beslut 24 okt 01:24 (införda i specen under "Grind 5a: dina beslut"):** referens = medel
+  över fröna (22 och 11 bitar bedöms, 5,5 redovisas); nollmodellens glimt ersätts efter kapningens förhandssannolikheter;
+  matchning på omnormerad massa på faktiska fönstret, reserv mest sannolik ruta, annars ej bedömbar; beteendemått och
+  H2 (b) på 1b beskrivande; resten godkänt, H5 per nivå utan samlat ja. **Ändrad inriktning:** H5 i 1b blir ett
+  beskrivande prov som körs en gång på pilotens E-körningar (frö 20–21) när trösklarna är låsta. **5b körs inte.**
+  Nästa sprint blir 1c (återanvänder H5-maskineriet, H5 som kriterium på ett schema som växer fram under belöning).
+- **H5-koden skriven, provad, pushad 24 okt (commit ad3e092):** `v2/h5_eval.py` (regioner I/A/O, nollmodell med
+  glimt efter förhandssannolikhet, cellkarta, matchning med reserv, bootstrap över episoder), `v2/h5_5a.py`
+  (`feasibility` blind; `measure` vägrar utan `results/h5_lock.json`, som skrivs först efter produktägarens låsning),
+  `v2/test_h5_eval.py` (otränade agenter och syntetiska scheman). Testbank för H5: MVP-banken 2 000 000 + i.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
 - **Nästa steg:** vänta på produktägarens svar vid grind 5a. Rör inte sprint 4:s låsta utfall. Titta inte på vart
   schemats fel pekar förrän H5:s trösklar är låsta.
