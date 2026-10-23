@@ -25,8 +25,12 @@ def untrained_events(blind):
 
 
 def test_detail(events):
-    ok_frac = all(np.allclose(e["det"]["frac"].sum(1), 1.0) for e in events)
-    check("every candidate window lies in I + A + O (frac rows sum to 1)", ok_frac)
+    def covered(e):
+        det = e["det"]
+        sh = det["masks"][0] & ~det["I"]                     # cells of the intended window dropped as shared
+        sh_frac = (det["masks"] & sh).sum((1, 2)) / det["w"] ** 2
+        return np.allclose(det["frac"].sum(1) + sh_frac, 1.0)
+    check("every candidate window lies in I + A + O + dropped shared cells", all(covered(e) for e in events))
     check("glimpse excludes the intended window (L[src, intended] = 0)",
           all(e["det"]["L"][e["det"]["src"], 0] == 0 for e in events))
     check("regions are disjoint", all(not (e["det"]["I"] & e["det"]["A"]).any() and
@@ -75,48 +79,92 @@ def test_prior_predictive(events):
     check("q = 1 replacement follows the capture prior", max(errs) < 0.02, f"max err {max(errs):.3f}")
 
 
-def synthetic(d, q0, move=0.0):
-    """Schema = the null itself at q0 (other random numbers), optionally with a fraction `move` of the error
-    mass moved from O to I (move > 0) or from I to O (move < 0)."""
-    s = dict(d)
-    regs = np.zeros((d["n"], 3))
-    argA = np.zeros(d["n"])
-    for i, e in enumerate(d["_events"]):
-        r, a = H.null_curve(e["det"], [e["seed"], e["t"], 99], qs=np.array([q0]))
-        regs[i], argA[i] = r[0], a[0]
-    I, A, O = regs.T.copy()
-    if move > 0:
-        I, O = I + move * O, (1 - move) * O
-    elif move < 0:
-        I, O = (1 + move) * I, O - move * I
-    s.update(sI=I, sA=A, sO=O, s_argA=argA, s_rest=np.zeros(d["n"]))
-    return s
+def schema_map(e, q0, u=0.0, move=0.0, peaked=False):
+    """A synthetic schema cell map with the null's own beliefs at q0 (other random numbers):
+    u      share of uniform (diffuse) mass over the valid cells, as a noisy softmax has;
+    move   fraction of the O-region mass moved to the I region (> 0) or of I moved to O (< 0);
+    peaked salient candidates' mass on the object's own cell instead of spread over its window."""
+    det = e["det"]
+    cm, post = H.null_cellmap(det, [e["seed"], e["t"], 99], q0, return_post=True)
+    if peaked:
+        G = cm.shape[0]
+        cm = det["masks"][0] * post[0] / det["w"] ** 2
+        for k in range(1, len(post)):
+            cm[det["objs"][k]] += post[k]
+    I, O = det["I"], det["O"]
+    if move > 0 and I.any():
+        m = move * cm[O].sum(); cm[O] *= 1 - move; cm[I] += m / I.sum()
+    elif move < 0 and O.any():
+        m = -move * cm[I].sum(); cm[I] *= 1 + move; cm[O] += m / O.sum()
+    valid = np.zeros_like(cm); valid[:det["n"], :det["n"]] = 1.0
+    return (1 - u) * cm + u * valid / valid.sum()
+
+
+def synth_events(events, **kw):
+    out = []
+    for e in events:
+        e2 = dict(e)
+        sb, sf = H.schema_regions(schema_map(e, **kw), e["det"])
+        e2.update(sb); e2.update(sf)
+        out.append(e2)
+    return out
 
 
 def test_synthetic(events):
-    d = H.build(events)
-    d["_events"] = [e for e in events if e["det"]["has_other"]]
+    ev = [e for e in events if e["det"]["has_other"]]
+    d0 = H.build(ev)
+    raw = d0["_raw"]
+    run = lambda method="mass", **kw: H.evaluate(H.build(synth_events(ev, **kw), raw=raw), method, n_boot=300)
     for q0 in (0.3, 0.7):
-        s = synthetic(d, q0)
-        r = H.evaluate(s, "mass", n_boot=300)
-        check(f"schema = null at q0 = {q0}: q recovered, no difference (mass matching)",
-              abs(r["q"] - q0) < 0.05 and abs(r["diff"]) < 2 * r["se"] + 0.005,
-              f"q={r['q']:.3f} diff={r['diff']:+.4f} se={r['se']:.4f}")
-    # The null's argmax curve is flat for q < ~0.5 (the observer's most probable cell barely moves), so argmax
-    # matching identifies q only where the curve is steep. It is the reserve, used when mass matching fails,
-    # i.e. at low accuracy, which is the steep part. Tested there.
+        for u in (0.0, 0.45, 0.85):
+            r = run(q0=q0, u=u)
+            check(f"schema = null at q0={q0}, diffuse share {u}: q recovered, no difference (mass)",
+                  abs(r["q"] - q0) < 0.05 and abs(r["diff"]) < 2 * r["se"] + 0.005,
+                  f"q={r['q']:.3f} diff={r['diff']:+.4f} se={r['se']:.4f} rest={r['schema_rest_mass']:.2f}")
+    r = run(q0=0.5, u=0.45, peaked=True)
+    check("object-peaked schema with the null's beliefs: no difference (shared cells dropped)",
+          abs(r["diff"]) < 2 * r["se"] + 0.005, f"diff={r['diff']:+.4f} se={r['se']:.4f}")
+    # Argmax reserve: tested where the null's argmax curve is steep; on its plateau q is not identified.
     for q0 in (0.75, 0.9):
-        s = synthetic(d, q0)
-        r = H.evaluate(s, "argmax", n_boot=300)
-        check(f"schema = null at q0 = {q0}: q recovered, no difference (argmax matching, steep part)",
+        r = run("argmax", q0=q0, u=0.45)
+        check(f"schema = null at q0={q0}, diffuse: q recovered, no difference (argmax, steep part)",
               abs(r["q"] - q0) < 0.05 and abs(r["diff"]) < 2 * r["se"] + 0.005,
               f"q={r['q']:.3f} diff={r['diff']:+.4f} se={r['se']:.4f}")
-    r = H.evaluate(synthetic(d, 0.5, +0.3), "mass", n_boot=300)
+    f = H.feasibility(H.build(synth_events(ev, q0=0.2, u=0.0), raw=raw))
+    check("argmax on the plateau (q0 = 0.2) is not identified", not f["argmax"]["possible"],
+          f"schema argA={f['argmax']['schema']:.3f}")
+    r = run(q0=0.5, u=0.45, move=0.3)
     check("errors moved toward intended: passes", r["passed"], f"diff={r['diff']:+.3f} z={r['z']:.1f}")
-    r = H.evaluate(synthetic(d, 0.5, -0.3), "mass", n_boot=300)
+    r = run(q0=0.5, u=0.45, move=-0.3)
     check("errors moved away from intended: fails, negative", (not r["passed"]) and r["diff"] < 0,
           f"diff={r['diff']:+.3f} z={r['z']:.1f}")
-    return d
+    # cluster bootstrap: duplicating every event within its own episode leaves the SE unchanged
+    d = H.build(synth_events(ev, q0=0.5, u=0.45), raw=raw)
+    dd = {k: (np.concatenate([v] * 3) if isinstance(v, np.ndarray) else v) for k, v in d.items() if k != "_raw"}
+    dd["n"] = 3 * d["n"]
+    a, b_ = H.evaluate(d, "mass", n_boot=400), H.evaluate(dd, "mass", n_boot=400)
+    check("bootstrap resamples episodes (duplicates within episode keep the SE)", abs(a["se"] - b_["se"]) < 0.25 * a["se"],
+          f"se {a['se']:.4f} vs {b_['se']:.4f}")
+    return d0
+
+
+def test_argmax_ties():
+    """Null argmax ties are split evenly over the tied candidate cells."""
+    G = 4
+    I = np.zeros((G, G), bool); I[0, 0:2] = True
+    A = np.zeros((G, G), bool); A[1, 0:2] = True
+    O = np.zeros((G, G), bool); O[2, 0:2] = True
+    masks = np.stack([I, A, O])
+    det = dict(sal=np.array([0.5, 0.5]), p_capture=0.25, cap=0.6, src=1, L=np.eye(3), masks=masks,
+               frac=np.stack([(masks & R).sum((1, 2)) for R in (I, A, O)], 1) / 2.0, w=1, I=I, A=A, O=O, s_min=0.3)
+    det["masks"] = masks
+    # q = 1 with equal salience: posterior = prior, actual and other tie; each window has 2 cells (w treated as
+    # sqrt of cells only for the spread); intended has the highest prior so it wins alone
+    _, a = H.null_curve(dict(det, w=np.sqrt(2)), 0, qs=np.array([1.0]), K=4000)
+    check("argmax: intended wins alone at q = 1 (prior >= 0.4)", a[0] == 0.0, f"argA={a[0]}")
+    det2 = dict(det, w=np.sqrt(2), sal=np.array([1.0, 1.0]), p_capture=0.5, cap=1.0, L=np.ones((3, 3)))
+    _, a = H.null_curve(det2, 0, qs=np.array([0.0]), K=10)
+    check("argmax: a tie between A and O counts one half", abs(a[0] - 0.5) < 1e-12, f"argA={a[0]}")
 
 
 def test_solve_and_reserve():
@@ -148,6 +196,7 @@ if __name__ == "__main__":
     test_null_q0_is_observer()
     test_prior_predictive([e for e in ev if e["det"]["has_other"]])
     test_solve_and_reserve()
+    test_argmax_ties()
     d = test_synthetic(ev)
     r = H.evaluate(d, H.level_method([H.feasibility(d)]) or "mass", n_boot=300)
     print("descriptive, untrained (diffuse) schema:", {k: (round(v, 3) if isinstance(v, float) else v) for k, v in r.items()})

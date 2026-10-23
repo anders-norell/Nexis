@@ -4,6 +4,9 @@ once on the pilot's E runs (seeds 20, 21) and reported. 5b is not run.
   python3 h5_5a.py feasibility   BLIND. For each run, which matching works (mass on the actual window, else
                                  most probable cell, else not assessable). Uses only quantities about the
                                  actual window. Writes results/sprint5a_h5_feasibility.json.
+  python3 h5_5a.py lock "<approval>"   ONLY after the product owner has approved the locked thresholds: writes
+                                 results/h5_lock.json with SHA-256 of the code and the feasibility file, the
+                                 fixed parameters and the approval text.
   python3 h5_5a.py measure       UNBLINDED. Refuses to run unless results/h5_lock.json exists (written
                                  only after the product owner has approved the locked thresholds). Writes
                                  results/sprint5a_h5.json.
@@ -13,6 +16,7 @@ Runs (final checkpoints, review point 9): levels by the mean reading of the refe
 44.2 bits reported. Test bank: the MVP bank, episode i has seed 2 000 000 + i, i < 4 000 (these agents
 have never been tested on it; the pilot bank 4 000 000+ was used for the design decisions).
 """
+import hashlib
 import json
 import os
 import sys
@@ -57,10 +61,35 @@ def feasibility():
     print("LEVELS", json.dumps(out["levels"]), flush=True)
 
 
+FILES = ("h5_eval.py", "h5_5a.py", "h5_bank.py", "h5.py", "results/sprint5a_h5_feasibility.json")
+
+
+def fingerprint():
+    return dict(sha256={f: hashlib.sha256(open(os.path.join(HERE, f), "rb").read()).hexdigest() for f in FILES},
+                params=dict(QS=len(H.QS), K_NULL=H.K_NULL, N_BOOT=H.N_BOOT, boot_seeds=[1000, 1001],
+                            DROP_SHARED=H.DROP_SHARED, EQUALIZE_DIFFUSE=H.EQUALIZE_DIFFUSE,
+                            PLATEAU=H.PLATEAU, PLATEAU_TOL=H.PLATEAU_TOL, seeds=list(SEEDS),
+                            judged=list(JUDGED), reported=list(REPORTED), bank=[BANK_SEED, N_BANK],
+                            checkpoint="final"),
+                criterion="per seed: schema share > null share by more than 2 bootstrap SE; a judged level is "
+                          "'klarad' if both seeds pass; no overall verdict across levels")
+
+
+def lock(approval):
+    if os.path.exists(LOCK):
+        sys.exit("already locked")
+    json.dump(dict(approval=approval, **fingerprint()), open(LOCK, "w"), indent=1)
+    print("locked", LOCK)
+
+
 def measure():
     if not os.path.exists(LOCK):
         sys.exit("h5_lock.json missing: thresholds not locked by the product owner. Refusing to unblind.")
     lock = json.load(open(LOCK))
+    now = fingerprint()
+    for k in ("sha256", "params", "criterion"):
+        if lock[k] != now[k]:
+            sys.exit(f"lock mismatch in {k}: code, parameters or feasibility changed after locking. Refusing.")
     feas = json.load(open(os.path.join(RES, "sprint5a_h5_feasibility.json")))
     out = dict(lock=lock, runs={}, levels={})
     for lvl, stem in LEVELS.items():
@@ -85,4 +114,7 @@ def measure():
 
 
 if __name__ == "__main__":
-    {"feasibility": feasibility, "measure": measure}[sys.argv[1]]()
+    if sys.argv[1] == "lock":
+        lock(sys.argv[2])
+    else:
+        {"feasibility": feasibility, "measure": measure}[sys.argv[1]]()
