@@ -23,12 +23,16 @@ covered in the module's running map for the rest of the episode. "Aims there" = 
 import numpy as np
 from bank import BankEnv, streams, _window_mask, H2_T, H2_SPAN, BLOCK
 from h5 import excludes_intended_restricted, observer_restricted
+from h5_eval import event_detail, schema_regions
 
 N_MIN = 200          # minimum events per behaviour group (dose check), per seed and level
 
 
-def run_bank_module(agent, seeds, intervention=None, blind=True, block=BLOCK, overrides=None, record=False):
-    out = [_block(agent, seeds[s:s + block], intervention, blind, overrides, record)
+def run_bank_module(agent, seeds, intervention=None, blind=True, block=BLOCK, overrides=None, record=False,
+                    detail=False):
+    """detail=True (gate 5a, 24 Oct): each H5 event also carries 'det' (h5_eval.event_detail) and the
+    schema's region fields: blind-safe ones always, I and O only when blind=False."""
+    out = [_block(agent, seeds[s:s + block], intervention, blind, overrides, record, detail)
            for s in range(0, len(seeds), block)]
     grp = np.sum([o.pop("_grp") for o in out], 0)          # (right, wrong) among behaviour-eligible events
     res = {}
@@ -43,7 +47,7 @@ def run_bank_module(agent, seeds, intervention=None, blind=True, block=BLOCK, ov
     return res
 
 
-def _block(agent, seeds, intervention, blind, overrides, record=False):
+def _block(agent, seeds, intervention, blind, overrides, record=False, detail=False):
     cfg = agent.cfg
     G = cfg.G
     B = len(seeds)
@@ -117,6 +121,11 @@ def _block(agent, seeds, intervention, blind, overrides, record=False):
                     grp[1] += bool(ev["_mi"][cell])
                 if not blind:
                     ev["group_wrong"] = bool(ev["_mi"][cell])
+                if "det" in ev:
+                    sb, sf = schema_regions(p, ev["det"])
+                    ev.update(sb)
+                    if not blind:
+                        ev.update(sf)
                 for k in ("_ma", "_mi"):
                     ev.pop(k)
                 events.append(ev)
@@ -152,6 +161,9 @@ def _block(agent, seeds, intervention, blind, overrides, record=False):
                 unseen_tc = tcol[b] & mi & ((vis[b] + newcur[b]) == 0)
                 pending[b] = dict(seed=int(seeds[b]), t=t, w=int(w), observer_actual=float(obs_actual),
                                   behaviour_eligible=bool(unseen_tc.any()), _ma=ma, _mi=mi)
+                if detail:
+                    pending[b]["det"] = event_detail(env, b, ir0[b], ic0[b], r0[b], c0[b],
+                                                     int(info["capturer"][b]))
         prev_actual = newcur
         vis = np.maximum(vis, newcur)
         t += 1

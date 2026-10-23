@@ -1,0 +1,25 @@
+untrained agent: 955 H5 events, 769 with another salient candidate
+ok   every candidate window lies in I + A + O (frac rows sum to 1)
+ok   glimpse excludes the intended window (L[src, intended] = 0)
+ok   regions are disjoint
+ok   events with only the capturer as salient candidate have no other region  n=185
+ok   prior sums to 1, intended >= 1 - cap
+ok   null at q = 0 equals the restricted observer  n=163 worst=7.5e-15
+ok   q = 1 replacement follows the capture prior  max err 0.004
+ok   solve_q inside range
+ok   solve_q outside range gives None
+ok   reserve order: mass first
+ok   reserve order: argmax when mass fails in a seed
+ok   reserve order: not assessable
+ok   schema = null at q0 = 0.3: q recovered, no difference (mass matching)  q=0.298 diff=+0.0004 se=0.0014
+ok   schema = null at q0 = 0.7: q recovered, no difference (mass matching)  q=0.699 diff=+0.0004 se=0.0013
+ok   schema = null at q0 = 0.75: q recovered, no difference (argmax matching, steep part)  q=0.749 diff=+0.0011 se=0.0015
+ok   schema = null at q0 = 0.9: q recovered, no difference (argmax matching, steep part)  q=0.906 diff=-0.0006 se=0.0018
+ok   errors moved toward intended: passes  diff=+0.129 z=28.7
+ok   errors moved away from intended: fails, negative  diff=-0.171 z=-37.9
+descriptive, untrained (diffuse) schema: {'method': 'mass', 'n_events': 769, 'n_episodes': 239, 'q': 0.81, 'point_clipped': False, 'schema_share': 0.412, 'null_share': 0.663, 'diff': -0.25, 'se': 0.007, 'z': -33.792, 'passed': False, 'boot_clipped_frac': 0.0, 'schema_rest_mass': 0.851}
+ok   blind run stores no I/O split
+ok   evaluate refuses blind data
+ok   feasibility works on blind data  {'mass': True, 'argmax': True}
+
+ALL PASSED
