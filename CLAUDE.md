@@ -230,8 +230,8 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   0,0001-varianten (= förutsättningskontrollen); (c) riskstycket: ren komprimering drar också mot avsedd plats,
   ett ja på H5 är en följd av AST, inte unikt; det AST-specifika prövas i 1c.
 - **Steg 1 (diagnostik) klart 23 okt ca 12:40:** `v2/diag_h2.py` → `results/sprint5_diag_h2.json`. Återskapar låsta
-  H2-siffror exakt. Iögonfallande föremål uteslutna (teknisk rättelse efter 500-episodkontroll). Ingen av E1, E3,
-  E4 förklarar asymmetrin: normerat stänger (b) 93–95 % av gapet, (a) 10–33 %. E1-provet svagt (fångade rutor
+  H2-siffror exakt. Iögonfallande föremål uteslutna (teknisk rättelse efter 500-episodkontroll). E3 och E4 förklarar
+  inte asymmetrin, E1 oavgjord (golv): normerat stänger (b) 93–95 % av gapet, (a) 10–33 %. E1-provet svagt (fångade rutor
   ligger intill iögonfallande föremål). Steg 3-rutor 2–3× större effekt (närhet eller färskhet, oavgjort).
   (b) per kommando −0,29, alla tre kommandon −0,95. Beteendemåttet mäts som det står (ingen delning/normering).
 - **Steg 2 (bygge) klart och pushat 23 okt 12:22 (commit 003308e), inget tränat före push.** `v2/schema_channel.py`
@@ -247,7 +247,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   rätt vid 20–21 % av H5-händelserna (krav ≥ 50 %; begränsade betraktaren 0,94 på faktiskt fönster). Rätt utan fångst
   99,9–100 %, vid fångst 11–12 % (fångst ≈ 1/3 av stegen). Referensen ej väldefinierad: 78 bitar (0,001) mot 183
   (0,0001), faktor 2,4 > 1,5. Ingen nytta: 1b 86,3–87,2 % träff, Baslinje 86,6–86,8 %. Förlusten planar ut ~200k.
-  Tolkning: informationen finns men modulen beräknar inte fångsten (rutorna kommunicerar bara via globalt medel).
+  Tolkning: informationen finns men modulen hittar inte fångsten (trolig orsak: rutorna kommunicerar bara via globalt medel; vart felen pekar är inte mätt).
   Förslag: A (rek.) lokal "var passar glimten"-signal per ruta; B global max-samordning; C längre träning (avråds);
   D avsluta H5 i denna form. Blindhet bevarad: var felen pekar ej tittat på.
 - **Beslut 23 okt 14:03 (produktägaren): alternativ E** (Claudes förslag efter frågan om mest evolutionärt sannolik
@@ -266,5 +266,14 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   fönster, ratio-of-sums, bootstrap, > 2 SE alla tre frön, per nivå), beteendemått (i) 20 000-episodbank + N ≥ 200
   eller (ii) beskrivande, H2 (b) på 1b redovisas, 5b = Baslinje + 0,0001 + tre nivåer, frö 30–32, 400k, MVP-banken.
   Oberoende granskning startad 16:25 (ska skriva `v2/results/sprint5a_review.md`, blind). Sedan grind 5a.
+- **Granskning 5a klar 23 okt 16:40: godkänd med anmärkningar** (`v2/results/sprint5a_review.md`). Kod, pilot och
+  villkor b godkända. **H5-kriteriet i steg 4 kan inte låsas**: (1) q omatchbar (nollmodellens massa på faktiskt ≥ 0,33
+  vid q = 1, schemat 0,09–0,29); (2) olika stöd (schemat diffust över rutnätet, nollmodellen bara kandidater; vid ett
+  enda iögonfallande föremål är nollmodellens andel ≡ 1); (3) glimtersättning jämn vs efter förhandssannolikhet ändrar
+  ribban 0,54–0,58 → 0,72–0,77; (4) H5-beräkningskoden saknas; (5) beteendemått → beskrivande; (6) referensläsning inom
+  bruset, 5,5 bitar ej matchbar; (7–8) två formuleringar rättade; (9) 5b: lås mål i bitar, pröva förutsättning igen,
+  slutcheckpoint. Reviderat förslag + fem beslutspunkter i specen ("Grind 5a: dina beslut"). Grind 5a i två steg:
+  beslut → H5-kod skrivs, provas på otränade agenter, pushas, genomförbarhet per nivå (bara träffsäkerhet) → låsning.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
-- **Nästa steg:** bygget i steg 2 (se ovan), sedan piloten. Rör inte sprint 4:s låsta utfall.
+- **Nästa steg:** vänta på produktägarens svar vid grind 5a. Rör inte sprint 4:s låsta utfall. Titta inte på vart
+  schemats fel pekar förrän H5:s trösklar är låsta.

@@ -1,4 +1,4 @@
-<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 efter pilotens fas A (förutsättningen ej klarad), rev 332. Vid skillnad gäller det levande dokumentet. -->
+<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 vid grind 5a (beslut väntar), rev 339. Vid skillnad gäller det levande dokumentet. -->
 
 # Nexis v2 – spec
 
@@ -796,14 +796,14 @@ Hur ett ja på H5 ska läsas (villkor c, produktägarens beslut 23 okt): Ren kom
 
 ### Steg 1: diagnostik av H2-asymmetrin – resultat
 
-**Resultat (23 okt ca 12:40): ingen av E1, E3 och E4 förklarar asymmetrin. Den finns kvar i det normerade måttet och sitter alltså i agenten, inte i måttet.** Ett falskt "redan tittat här" stänger 93–95 % av gapet till fullt förtroende, ett falskt "inte tittat här" bara 10–33 %. Diagnostiken återskapar de låsta H2-siffrorna exakt. Beskrivande, inget godkänt eller underkänt. Skript: `v2/diag_h2.py`, resultat: `v2/results/sprint5_diag_h2.json`.
+**Resultat (23 okt ca 12:40): E3 och E4 förklarar inte asymmetrin, och E1 gick inte att avgöra (rättat efter granskningen 23 okt). Asymmetrin finns kvar i det normerade måttet och sitter alltså i agenten, inte i måttet.** Ett falskt "redan tittat här" stänger 93–95 % av gapet till fullt förtroende, ett falskt "inte tittat här" bara 10–33 %. Diagnostiken återskapar de låsta H2-siffrorna exakt. Beskrivande, inget godkänt eller underkänt. Skript: `v2/diag_h2.py`, resultat: `v2/results/sprint5_diag_h2.json`.
 
 Mått: antal av de tre följande kommandona som siktar mot rutan, med lögn minus utan, medel per ruta och episod. Bara rutor i målets färg, inte målet och inte iögonfallande föremål. Fast schema 1a, bästa checkpoint, MVP:s fröbank.
 
 | Prov | Förutsägelse | Frö 10 | Frö 11 | Frö 12 | Utfall |
 | --- | --- | --- | --- | --- | --- |
 | E1: (a), rutor agenten siktade mot | – | +0,12 ± 0,01 | +0,08 ± 0,01 | +0,04 ± 0,01 | – |
-| E1: (a), rutor täckta bara genom fångst | Större än siktade | −0,01 ± 0,01 | 0,00 | 0,00 | Motsatt, inget stöd |
+| E1: (a), rutor täckta bara genom fångst | Större än siktade | −0,01 ± 0,01 | 0,00 | 0,00 | Golv vid noll, ej avgjort |
 | E3: steg 3:s rutor, bara steg 3 ljuger | Större än hela (a) | +0,30 ± 0,02 | +0,22 ± 0,01 | +0,09 ± 0,01 | Lika, inget stöd |
 | E3: steg 3:s rutor, hela (a) ljuger | – | +0,29 ± 0,02 | +0,21 ± 0,01 | +0,09 ± 0,01 | – |
 | E4: (a), 0–2 / 3–5 / 6+ konkurrerande rutor | Krymper | +0,12 / +0,12 / +0,11 | +0,09 / +0,07 / +0,06 | +0,05 / +0,03 / +0,01 | Svagt i två frön |
@@ -877,9 +877,9 @@ Alla siffror på pilotbanken. Frö 20 och 21, 400 000 episoder, bästa checkpoin
 
 **Min tolkning (Claudes, inte ett beslut):**
 
-- **Modulen har informationen men använder den inte.** Matchningssignalen visar avvikelse vid varje upptäckbar fångst, och den begränsade betraktaren hittar rätt plats med 94 % säkerhet. Ändå säger modulen nästan alltid "där jag siktade", precis som i sprint 3 utan matchningssignal. Det som saknas är alltså beräkning, inte information.
+- **Modulen har informationen men använder den inte.** Matchningssignalen visar avvikelse vid varje upptäckbar fångst, och den begränsade betraktaren hittar rätt plats med 94 % säkerhet. Ändå hittar modulen rätt plats vid bara 11–12 % av fångsterna. En trolig men oprövad förklaring är att den säger "där jag siktade". Vart felen pekar är inte mätt (rättat efter granskningen 23 okt). Det som saknas är alltså beräkning, inte information.
 - **En trolig orsak är arkitekturen.** Avvikelsen syns i de rutor agenten siktade mot, men den faktiska platsen ligger på ett annat ställe, hos ett iögonfallande föremål. Rutorna kommunicerar bara via ett globalt medelvärde. Att flytta sannolikheten från en ruta till en annan kräver samordning som den arkitekturen klarar dåligt. Det är diskussionstrådens fråga 2, schemat som samordning.
-- **Det är inte ett H5-resultat.** Men det är ett informativt negativt fynd: ett självschema med full tillgång till bevisen rapporterar ändå avsikten, av arkitektoniska skäl och inte på grund av komprimering. H5 mätt på den här modulen skulle mest spegla arkitekturen, som befarades redan i sprint 3.
+- **Det är inte ett H5-resultat.** Men det är ett informativt negativt fynd: ett självschema med full tillgång till bevisen hittar ändå inte rätt plats vid fångst, troligen av arkitektoniska skäl och inte på grund av komprimering. H5 mätt på den här modulen skulle mest spegla arkitekturen, som befarades redan i sprint 3.
 
 **Förslag, du beslutar (inget körs före ditt svar):**
 
@@ -892,7 +892,127 @@ Med A eller B mäts referensen om, och villkor b gäller som det står.
 
 **Beslut för produktägaren** (skriv svar: under punkten)
 
-- [ ] Väg vidare för H5: A, B, C eller D?
+- [x] Väg vidare för H5: A, B, C eller D?
+- [x] svar (i chatten 23 okt 14:03, infört av Claude): E, ett femte alternativ som togs fram i chatten. Se nedan.
+
+**Beslut 23 okt 2026 kl. 14:03 (produktägaren, i chatten): alternativ E, global larmsignal.** Bakgrund: produktägaren frågade vilket alternativ som mest sannolikt kunde ha drivits fram evolutionärt, som en silvertejpslösning. Claude föreslog E, som inte fanns bland A–D.
+
+- **Vad E är:** matchningssignalen räknas ihop till en enda siffra per steg, "något stämde inte där jag siktade", och sänds till alla rutor i schemamodulen. Modulen behåller den lokala matchningssignalen och sin vanliga indata. Varje ruta har redan sin egen brusiga salience från periferin. Modulen kan då lära sig tumregeln att om larmet går och rutan är iögonfallande, hamnade uppmärksamheten troligen här.
+- **Varför evolutionärt sannolik:** den återanvänder det som redan finns, jämförelsen via efferenskopian och prioritetskartans salience. Det enda nya är en spridningskanal. Globala fel- och överraskningssignaler är vanliga i hjärnan, till exempel via noradrenalin från locus coeruleus. Larmet säger bara att något gick fel, inte var, så med flera iögonfallande föremål måste modulen gissa.
+- **Jämfört med A och B:** A säger var glimten passar, vilket är generösare än biologin. B ändrar arkitekturen. E är en indatakanal till, beräknad som matchningssignalen, utan nya gradienter.
+- **För H5:** vid en fångst konkurrerar tre gissningar: den avsedda platsen enligt styrsignalen, det mest iögonfallande föremålet enligt larmet och saliencen, och rätt plats.
+- **Oförändrat:** H5:s mätning, nollmodellen, villkor a–c, förutsättningen på 50 %, nivåerna och beteendemåttet. Fas A körs om med E: referensvarianterna 0,001 och 0,0001, frö 20 och 21. Baslinjens körningar återanvänds, eftersom Baslinjen inte påverkas. Resultaten från den första fas A står kvar ovan.
+
+### Steg 3b: pilot med alternativ E – resultat
+
+**Fas A med E (23 okt 14:49): förutsättningen klaras.** Modulen med larmsignal och kostnad 0,0001 lägger sin mest sannolika ruta i det faktiska fönstret vid 57 % av H5-händelserna. Kravet var minst 50 %. Referensen är fortfarande inte väldefinierad, så halveringsregeln i villkor b gäller. Doskontrollen för beteendemåttet klaras inte, se nedan.
+
+| Körning | Frö | Träffar målet | Bitar per steg | Rätt över alla steg | Rätt vid H5-händelser | Betraktarens massa på faktiskt fönster | Beteendegrupper ≥ 200 (rätt / fel) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| E, kostnad 0,001 | 20 | 87,9 % | 74 | 76,1 % | 55,6 % | 0,94 | ja / nej |
+| E, kostnad 0,001 | 21 | 87,9 % | 75 | 76,1 % | 55,0 % | 0,95 | ja / nej |
+| E, kostnad 0,0001 | 20 | 87,4 % | 183 | 76,2 % | 57,2 % | 0,94 | ja / nej |
+| E, kostnad 0,0001 | 21 | 87,9 % | 171 | 76,4 % | 57,4 % | 0,95 | ja / nej |
+
+Baslinjen träffar 86,8 och 86,6 %. Larmsignalen höjer alltså modulens träffsäkerhet vid fångst från ca 20 till ca 56 %. Agenten träffar målet ungefär 1 procentenhet oftare än Baslinjen, en liten skillnad nära gränsen för vad piloten kan säkerställa.
+
+- **Förutsättningen:** 57,2 och 57,4 % mot kravet 50 %. Klarad i båda fröna.
+- **Referensen (villkor b):** 75 bitar vid 0,001 och 177 vid 0,0001, en faktor 2,4. Halveringsregeln gäller. Träffsäkerheten över alla steg är densamma vid 75 som vid 177 bitar, så referensen hamnar lägre.
+- **Doskontrollen för beteendemåttet klaras inte.** Gruppen där schemat felaktigt pekar på det avsedda fönstret, och den avsedda rutan har ett osett föremål i målets färg, når inte 200 fall i någon körning. Beteendemåttet kan därför inte låsas i den form det har nu. Det är en fråga till grind 5a.
+- **En brist i blindheten.** Ja/nej-svaret i doskontrollen avslöjar något om H5 som jag inte förutsåg. Med ungefär 1 100 fel vid H5-händelser per körning kan felen inte till största delen ligga på den avsedda platsen. Annars hade gruppen blivit större. Antalet har jag inte sett. Bristen redovisas här, så att du och granskaren kan väga in den när trösklarna för H5 låses.
+
+**Halveringsregeln (villkor b), tekniskt genomförande:** körningar som regleras mot halveringar av 0,0001-variantens informationsmängd, alltså 177, 88, 44, 22, 11, 5,5 och 2,8 bitar per steg, båda fröna. Referensen blir den minsta nivå där träffsäkerheten över alla steg ligger inom 1 procentenhet av 0,0001-varianten. Eftersom nivåerna är 50, 25 och 12,5 % av referensen sammanfaller de med de tre följande halveringarna. Samma körningar är därför både svep och nivåer. 44 och 22 bitar körs först, start 14:55, och utfallet avgör om svepet fortsätter nedåt. Träffsäkerheten vid 75 bitar ligger redan inom 1 procentenhet, så 88 hoppas över.
+
+**Resultat (23 okt 16:17): flaskhalsen biter tydligt, och regleringen höll nivåerna.** Träffsäkerheten vid H5-händelser faller från 57 % vid 177 bitar per steg till 14 % vid 5,5 bitar, jämnt i båda fröna. Agentens träffandel påverkas knappt. Vart felen pekar har jag inte tittat på.
+
+| Bitar per steg (mål) | Uppmätt, frö 20 / 21 | Rätt över alla steg | Rätt vid H5-händelser | Schemats massa på faktiskt fönster vid H5 | Träffar målet |
+| --- | --- | --- | --- | --- | --- |
+| 177 (kostnad 0,0001) | 183 / 171 | 76,2 / 76,4 % | 57,2 / 57,4 % | 0,26 / 0,27 | 87,4 / 87,9 % |
+| 75 (kostnad 0,001) | 74 / 75 | 76,1 / 76,1 % | 55,6 / 55,0 % | 0,28 / 0,27 | 87,9 / 87,9 % |
+| 44,2 | 44,9 / 43,6 | 76,0 / 75,2 % | 54,1 / 51,5 % | 0,29 / 0,24 | 86,6 / 87,9 % |
+| 22,1 | 21,8 / 22,3 | 73,4 / 73,2 % | 44,1 / 44,8 % | 0,23 / 0,24 | 87,2 / 87,7 % |
+| 11,05 | 10,7 / 11,4 | 63,4 / 64,9 % | 24,7 / 26,5 % | 0,14 / 0,15 | 87,2 / 87,2 % |
+| 5,53 | 5,5 / 6,0 | 46,7 / 48,5 % | 14,6 / 14,1 % | 0,09 / 0,09 | 86,8 / 86,5 % |
+| Baslinje | – | – | – | – | 86,8 / 86,6 % |
+
+Standardfelet för träffandelen är ca 0,5 procentenheter. Den begränsade betraktaren lägger 93–95 % av sin sannolikhet på det faktiska fönstret i alla körningar. Varje körning har 2 494–2 658 H5-händelser.
+
+**Referensen enligt villkor b:** träffsäkerheten över alla steg för 0,0001-varianten är 76,3 % i medel. Vid 44 bitar ligger medelvärdet 0,7 procentenheter lägre, alltså inom gränsen. Vid 22 bitar ligger det 3,0 lägre. Villkoret säger inte om gränsen gäller medelvärdet eller varje frö. I frö 21 ligger 44 bitar 1,2 procentenheter under. Det ger två läsningar:
+
+| Läsning | Referens | Nivåer (50 / 25 / 12,5 %) |
+| --- | --- | --- |
+| Medelvärdet över fröna (rekommenderas) | 44 bitar | 22 / 11 / 5,5 bitar |
+| Varje frö för sig | 88 bitar | 44 / 22 / 11 bitar |
+
+Jag rekommenderar medelvärdet, eftersom referensen i planen redan är definierad som medelvärdet över fröna. Tvetydigheten upptäcktes efter att siffrorna setts, så du beslutar. Alla nivåer finns körda för båda läsningarna.
+
+**Iakttagelser:**
+
+- **Schemats nytta är liten.** E-modulerna träffar målet 0–1 procentenhet oftare än Baslinjen, nära gränsen för vad piloten kan säkerställa. Agenten läser alltså schemat lite. Det försvagar beteendemåttet och H2 (b) på 1b, men inte H5, som mäts på modulen själv.
+- **Vid den lägsta nivån blir modulen också sämre utan fångst.** Vid 5,5 bitar är den rätt i bara 47–49 % av alla steg. Nollmodellen matchas mot schemats träffsäkerhet och hanterar det, men tolkningen vid den nivån blir svårare.
+- **Doskontrollen för beteendemåttet klaras inte vid någon nivå.** Felgruppen når inte 200 fall. Bristen i blindheten som beskrivs ovan gäller alla nivåer.
+
+### Steg 4: förslag till trösklar och körplan för 5b (låses vid grind 5a)
+
+**H5, förslag.** Vid H5-händelser jämförs schemats andel fel på det avsedda fönstret med nollmodellens. Andelen är schemats sannolikhetsmassa på det avsedda fönstret delad med dess massa utanför det faktiska fönstret. Båda summeras över händelserna inom fröt. Nollmodellen är blandningsbetraktaren (villkor a). Dess q väljs per frö och nivå så att dess massa på det faktiska fönstret blir densamma som schemats, och samma andel räknas för den. Godkänt: schemats andel är större än nollmodellens med mer än 2 standardfel, i alla tre frön. Standardfelet tas fram med bootstrap över händelserna (1 000 omdragningar). H5 bedöms per nivå och redovisas för alla tre. Varianten utan kostnad redovisas också, men den är inget kriterium.
+
+**Beteendemåttet, förslag.** Det kan inte låsas som det står, eftersom felgruppen är för liten. Två vägar:
+
+- **(i) Större bank (rekommenderas):** 5b använder 20 000 testepisoder per frö för beteendemåttet, i stället för 4 000. Regeln om minst 200 fall per grupp låses. Nås den inte i 5b redovisas måttet som omätbart, utan godkänt eller underkänt.
+- **(ii) Beskrivande:** måttet blir inget kriterium och redovisas bara.
+
+**H2 (b) på 1b:** jag rekommenderar att det redovisas utan att bli kriterium, eftersom agenten läser schemat så lite.
+
+**Körplan för 5b, förslag.** Baslinje, 1b utan kostnad (0,0001) och 1b vid de tre nivåerna, frö 30, 31 och 32, 15 körningar à 400 000 episoder. Modulens förlust planar ut vid ca 200 000 episoder, och H5 mäts på modulen. Ca 21 minuter per körning, två åt gången, ca 2,7 timmar. Test på MVP:s fröbank, 4 000 episoder, och för beteendemåttet en utökad bank om 20 000 episoder.
+
+**Om svaret blir nej (5b)**
+
+| Utfall | Vad det betyder | Vad som händer |
+| --- | --- | --- |
+| H5 klaras vid alla nivåer | En kapacitetsbegränsad modell behåller avsikten och släpper undantagen, mer än en jämnt försvagad betraktare | En följd av AST, inte unikt för AST (villkor c). Det AST-specifika prövas i 1c |
+| H5 klaras vid några nivåer | Beror på hur hårt modulen måste förenkla | Rapporteras per nivå |
+| H5 klaras inte | Komprimeringen fördelar felen som en opartisk betraktare | Ett negativt resultat för H5 i den här formen. Rapporteras som det är |
+
+### Oberoende granskning av 5a
+
+**Oberoende granskning (23 okt 16:40): godkänd med anmärkningar. Kod, pilot och villkor b är godkända. H5-kriteriet i steg 4 kan inte låsas som det står.** Hela rapporten: `v2/results/sprint5a_review.md`. Granskaren höll blindheten. Nollmodellens siffror nedan kommer från fångster hos Baslinjen och en slumpagent, aldrig från schemamodulen.
+
+- **Bekräftat:** alla testsviter går igenom, och granskarens eget gradienttest på E-modulen ger största relativa fel 4 × 10⁻⁵. Avkodaren ser bara kanalen, och inget läcker det faktiska fönstret eller målet. Träningen, fröna och bankerna är som de redovisats, och regleringen nådde målen. Pilotens siffror stod sig när granskaren räknade om dem med egen kod. Diagnostiken återskapar de låsta H2-siffrorna exakt, och uteslutningen av iögonfallande föremål är motiverad och öppet redovisad.
+- **1, blockerande: q går inte att matcha som jag föreslog.** Även när all evidens ersätts (q = 1) behåller nollmodellen 0,33 av sin massa på det faktiska fönstret. Schemat ligger under det på alla nivåer. Att matcha på massa avviker dessutom från specens egen definition av träffsäkerhet, som gäller den mest sannolika rutan.
+- **2, blockerande: schemat och nollmodellen jämförs på olika rutor.** Nollmodellen sprider sin massa bara över kandidatfönstren, medan schemats karta är diffus över hela rutnätet. Vid händelser med bara ett iögonfallande föremål, 18–20 % av händelserna, är nollmodellens andel alltid 1, och där kan inget schema slå den. Kriteriet lutade alltså mot underkänt per konstruktion.
+- **3, stor: hur nollmodellen ersätter glimten sätter ribban.** Koden väljer ett kandidatfönster jämnt. Villkor a:s lydelse, "ur sin egen fördelning", och dess motivering pekar mot att glimten dras efter fångstens förhandssannolikheter. Nollmodellens andel fel på den avsedda platsen blir 0,54–0,58 med jämnt val och 0,72–0,77 med förhandssannolikheter.
+- **4, stor: koden som ska beräkna H5 finns inte än.** Den ska skrivas, provas på otränade agenter och pushas före låsningen. Bootstrap ska göras över episoder, med q matchat på nytt i varje omdragning, och regeln för hur nivåerna vägs samman ska bestämmas i förväg.
+- **5, måttlig: beteendemåttet.** Läckan från doskontrollen är verklig men svag. Granskaren rekommenderar att måttet blir beskrivande, eftersom agenten bara träffar 0–1 procentenhet oftare med schemat och ett nollresultat därför inte säger något. Samma sak gäller H2 (b) på 1b.
+- **6, måttlig: referensens läsning.** Texten stöder medelvärdet, men avgörandet, 0,70 mot 1 procentenhet, ligger inom bruset. Vid 5,5 bitar är modulen fel i hälften av alla steg, och där går ingen nollmodell att matcha.
+- **7 och 8, mindre: två formuleringar sa mer än vad som mätts.** E1 var inte prövad, bara oavgjord. Att den första modulen "nästan alltid säger där jag siktade" gäller vart felen pekar, vilket ingen tittat på. Båda är rättade ovan.
+- **9, mindre: körplanen för 5b.** Lås målen i bitar som tal. Pröva förutsättningen igen i de nya fröna, med en följd bestämd i förväg. Använd slutcheckpointen, eftersom den bästa väljs på agentens träffandel, inte på modulen.
+- **Tolkningsnot:** vid varje H5-händelse går larmet per definition. All massa på den avsedda platsen betyder alltså att modulen släpper en helt pålitlig signal. Det är vad komprimering väntas släppa först, och det stärker villkor c. Schemat hjälper agenten med bara 0–1 procentenhet, så vad H5 än visar gäller en modell av uppmärksamheten som agenten knappt använder för styrning.
+
+### Reviderat H5-förslag efter granskningen (23 okt, Claude)
+
+Förslaget i steg 4 ersätts av det här. Det låses inte förrän koden är skriven, provad på otränade agenter och pushad (granskningens punkt 4), och förrän det är visat att matchningen går att genomföra på varje nivå. Grind 5a tas därför i två steg: dina beslut nu, sedan kod och genomförbarhet, sedan låsning.
+
+- **Samma rutor för schema och nollmodell (punkt 2).** Båda jämförs bara över kandidatfönstren: det avsedda, det faktiska och övriga iögonfallande föremåls fönster. Schemats massa normeras om över dem. Massan utanför kandidaterna redovisas för sig.
+- **Bara händelser med minst ett annat iögonfallande föremål (punkt 2).** Annars finns det bara en felaktig plats, och provet blir tomt.
+- **Måttet:** schemats andel av felmassan som ligger på det avsedda fönstret, jämfört med nollmodellens. Felmassan är massan på kandidaterna utom det faktiska fönstret. Andelen summeras över händelserna inom fröt.
+- **Matchning (punkt 1):** q väljs så att nollmodellens massa på det faktiska fönstret, omnormerad över kandidaterna, blir densamma som schemats. Alternativet är den mest sannolika rutan. Den har ett golv som gör låga nivåer omöjliga att matcha. Går matchningen inte att genomföra på en nivå, redovisas nivån som ej bedömbar. Det bestäms nu.
+- **Glimtens ersättning i nollmodellen (punkt 3):** dragen efter fångstens förhandssannolikheter, inte jämnt. Det motsvarar villkor a:s lydelse och ger den hårdare ribban, 0,72–0,77 mot 0,54–0,58.
+- **Statistik (punkt 4):** bootstrap över episoder, 1 000 omdragningar, med q matchat på nytt i varje. Godkänt: schemats andel är större än nollmodellens med mer än 2 standardfel, i alla tre frön.
+- **Nivåer:** H5 bedöms per nivå, utan samlat godkännande. Med medelvärdesläsningen bedöms 22 och 11 bitar, och 5,5 bitar redovisas utan bedömning, eftersom modulen där är fel i hälften av alla steg (punkt 6). Varianten utan kostnad redovisas också.
+- **Beteendemåttet och H2 (b) på 1b:** beskrivande (punkt 5). Agenten använder schemat så lite att ett nollresultat inte skulle säga något.
+- **5b (punkt 9):** målen låses i bitar per steg som tal från piloten. Förutsättningen prövas igen i frö 30–32, och klaras den inte bedöms H5 inte i 5b. Mätningen görs på slutcheckpointen.
+
+### Grind 5a: dina beslut
+
+**Beslut för produktägaren** (skriv svar: under respektive punkt)
+
+- [ ] Referensens läsning: medelvärdet över fröna (rekommenderas, stöds av texten; nivåer 22 / 11 / 5,5 bitar, där 5,5 bara redovisas) eller varje frö för sig (nivåer 44 / 22 / 11 bitar)?
+- [ ] Glimtens ersättning i nollmodellen: efter fångstens förhandssannolikheter (rekommenderas, hårdare ribba) eller jämnt?
+- [ ] Matchning: omnormerad massa på det faktiska fönstret (rekommenderas) eller den mest sannolika rutan?
+- [ ] Beteendemåttet och H2 (b) på 1b blir beskrivande, inte kriterier?
+- [ ] Godkänner du resten av det reviderade förslaget: samma rutor för schema och nollmodell, händelser med minst ett annat iögonfallande föremål, bootstrap över episoder, bedömning per nivå och körplanen för 5b med 400 000 episoder, frö 30–32 och slutcheckpoint?
+
+Efter dina svar skriver och provar jag H5-koden och redovisar om matchningen går att genomföra på varje nivå. Genomförbarheten avgörs bara på schemats träffsäkerhet, inte på vart felen pekar. Därefter låses trösklarna.
 
 ## Efter MVP: 1c, social fas och begreppsbildning
 
