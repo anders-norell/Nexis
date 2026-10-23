@@ -258,7 +258,11 @@ def feasibility(d):
     for m in ("mass", "argmax"):
         t, c = match_targets(d, w, m)
         q = solve_q(c, t, plateau=m == "argmax")
-        res[m] = dict(schema=float(t), null_q0=float(c[0]), null_q1=float(c[-1]),
+        bar = None
+        if q is not None:                          # the null's share on I at the matched q: the bar (blind-safe)
+            nI, nO = _weights(d["nI"], w), _weights(d["nO"], w)
+            bar = interp(nI, q) / max(interp(nI, q) + interp(nO, q), 1e-12)
+        res[m] = dict(bar=bar, schema=float(t), null_q0=float(c[0]), null_q1=float(c[-1]),
                       null_min=float(c.min()), null_max=float(c.max()), q=q, possible=q is not None)
     res["schema_rest_mass"] = float(d["s_rest"].mean())
     return res
