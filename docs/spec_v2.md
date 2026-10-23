@@ -1,4 +1,4 @@
-<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 efter införda förslag från diskussionstråden, rev 292. Vid skillnad gäller det levande dokumentet. -->
+<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 efter reviderad plan 5a, rev 317. Vid skillnad gäller det levande dokumentet. -->
 
 # Nexis v2 – spec
 
@@ -695,49 +695,61 @@ Med en verklig lögn reagerar Blandat svagt och åt olika håll. 1a:s effekt är
 
 ## Sprint 5: H5
 
-### Plan 5a (väntar på produktägarens godkännande)
+### Plan 5a, reviderad 23 okt (väntar på produktägarens godkännande)
 
 Sprint 5 ska avgöra om ett schema som måste förenkla anger den avsedda platsen när spotlighten fångas, och inte bara för att det saknar information. Den har två delar. 5a: diagnostik av H2-asymmetrin, bygge och pilot. Den slutar med att H5:s trösklar låses vid grind 5a. 5b: huvudkörning med nya frön, bedömd mot de låsta trösklarna. Planen nedan gäller 5a. Plan 5b skrivs in när 5a är klar. Inget körs förrän du har godkänt planen.
+
+**Revision 23 okt efter nio kommentarer från diskussionstråden** (förslag, inte beslut; svar i varje tråd):
+
+- **Flaskhalsen flyttas** från modulens indata till dess inre representation, det modulen lämnar till agenten. Modulen får full indata.
+- **Nivåerna anges som andelar**, 50, 25 och 12,5 %, av den informationsmängd varianten utan kostnad använder, räknat per steg och inte per ruta.
+- **H5 får en nollmodell som låses vid grind 5a.** Den föreslagna formen behövde en justering, annars hade provet klarats automatiskt. Se punkt 3 nedan.
+- **Diagnostiken:** E1 och E2 slås ihop. E3:s prov delas efter fångst. E4, att asymmetrin sitter i måttet, läggs till. Alla jämförelser görs bara på rutor i målets färg.
+- **Beteendemåttet byts** mot en jämförelse inom samma agent: fångster där schemat hade fel mot fångster där det hade rätt.
+- **H2 (b) körs på 1b-agenterna i 5b**, med lögnen i modulens karta. Det svarar på invändningen om oraklet. Ingen 1a-variant med brus.
 
 **Varför H5 kan avgöras i förväg (ditt villkor)**
 
 | Schemamodulens information | Vad den troligen lär sig | Vad ett utfall säger om AST |
 | --- | --- | --- |
 | Ingen matchningssignal, som i sprint 3 | Den avsedda platsen, eftersom fångsten inte syns | Inget, H5 är sann per konstruktion |
-| Matchningssignal, ingen flaskhals | Den faktiska platsen, eftersom den tränas mot den | Inget, H5 är falsk per konstruktion |
-| Matchningssignal och flaskhals | Det som är billigast att representera | Det informativa fallet |
+| Full indata, ingen kostnad | Den faktiska platsen, eftersom den tränas mot den | Inget, H5 är falsk per konstruktion. Varianten är förutsättningskontroll |
+| Full indata, kostnad på den inre representationen | En grov bild av platsen. Med en kostnad per bit är den faktiska platsen inte dyrare att beskriva än den avsedda, så utan AST väntas grova men opartiska fel | Det informativa fallet. Samlas felen ändå på den avsedda platsen, mer än nollmodellen säger, är det AST:s signatur |
 
 Så hanterar planen det:
 
-1. **Varianten utan flaskhals är en förutsättningskontroll, inte H5-provet.** Den ska visa att informationen räcker för att se fångsten. Klarar den inte det är H5 omätbar i den här formen, och vi stannar.
-2. **H5 prövas på varianter med flaskhals, i en dosserie med fyra nivåer som bestäms nu.** Ingen nivå väljs efter resultat.
-3. **Förutsägelsen kan falla åt båda håll.** AST förutsäger att felen vid fångst samlas på den avsedda platsen, alltså på styrsignalen, när kapaciteten minskar. Alternativen är att felen sprids, eller hamnar på iögonfallande objekt som i en modell byggd nerifrån. Alla tre utfallen går att observera.
-4. **Ett beteendemått kopplar H5 till H2 (b).** När schemat felaktigt anger att den avsedda platsen redan är sedd, går agenten då inte tillbaka dit? Då får det förenklade schemat en kostnad i beteendet, vilket är vad AST säger att en förenklad modell ger.
+1. **Varianten utan kostnad är en förutsättningskontroll, inte H5-provet.** Den ska visa att informationen räcker för att se fångsten. Klarar den inte det är H5 omätbar i den här formen, och vi stannar.
+2. **H5 prövas på tre nivåer med kostnad, som bestäms nu.** Nivåerna är 50, 25 och 12,5 % av den informationsmängd per steg som varianten utan kostnad faktiskt använder. Ingen nivå väljs efter resultat.
+3. **Förutsägelsen prövas mot en nollmodell som låses vid grind 5a.** Nollmodellen är en försvagad ideal betraktare. Den får samma träffsäkerhet vid fångst som schemat, genom att dess bevis försvagas lika mycket för alla platser. Då fördelas dess fel enligt förhandssannolikheterna, som redan gynnar den avsedda platsen. AST:s signatur är att schemats fel ligger på den avsedda platsen oftare än nollmodellens. En modul som bara blir allmänt sämre klarar inte provet. En som faller tillbaka på styrsignalen gör det.
+4. **Ett beteendemått kopplar H5 till H2 (b).** Inom samma agent jämförs fångster där schemat hade fel med fångster där det hade rätt. Går agenten mer sällan tillbaka till den avsedda platsen när schemat felaktigt säger att den redan är sedd? Då har det förenklade schemat en kostnad i beteendet.
 
-En risk finns kvar, och den tas inte bort av designen. En komprimerad prediktor lutar sig nästan alltid på den starkaste billiga ledtråden, här efferenskopian. Att felen hamnar på den avsedda platsen är därför väntat även utan AST. Det informativa är var i dosserien bytet sker, om felen är samlade eller spridda, och om ett felaktigt men förenklat schema ändå hjälper agenten. Jag skriver det rakt ut, så att ett ja på H5 inte läses som mer än det är.
+En risk finns kvar, men den är mindre än i första versionen. Med flaskhalsen på representationen pekar det väntade utfallet inte längre mot H5. En kostnad per bit gör den faktiska platsen lika billig att beskriva som den avsedda, så en ren komprimering ger grova men opartiska fel. Ett ja på H5 är därför inte inbyggt. Kvar finns en väg dit som inte är AST i strikt mening: efferenskopian är den lättaste ledtråden att lära sig, och träningen kan fastna i den. Det går inte att skilja från AST:s mekanism i det här försöket. Jag skriver det rakt ut, så att ett ja på H5 inte läses som mer än det är. Var bytet sker i dosserien redovisas, men det är nollmodellen som avgör.
 
 **Steg**
 
-1. **Diagnostik av asymmetrin i H2, ca 1 timme, ingen träning.** Körs på sprint 4:s 1a- och Blandat-agenter. Den är beskrivande och ändrar inget låst utfall. Tre möjliga förklaringar prövas, var och en med ett prov och en förutsägelse som bestäms nu:
-   - **E1, minnet av siktet väger tyngre.** Agenten minns vart den siktat och litar på det. Prov: (a)-rutorna delas i dem agenten siktade mot och dem som täcktes bara genom fångst. E1 förutsäger större effekt för fångstrutorna.
-   - **E2, rutornas värde.** Täckta rutor har redan visat fel föremål och är inte värda ett nytt besök, vad schemat än säger. Prov: (a)-rutorna delas efter innehåll, målets färg, annan färg eller tom. E2 förutsäger att effekten finns nästan bara för rutor i målets färg.
-   - **E3, rimlighet.** (b) liknar en verklig fångst. I (a) försvinner tre stegs täckning på en gång, något som nästan aldrig händer i träningen. Prov: en variant av (a) där bara steg 3:s fönster blir falskt obesökt, som efter en enda fångst. E3 förutsäger större effekt per ruta än i hela (a).
+1. **Diagnostik av asymmetrin i H2, ca 1 timme, ingen träning.** Körs på sprint 4:s 1a- och Blandat-agenter. Den är beskrivande och ändrar inget låst utfall. Alla jämförelser görs bara på rutor i målets färg, eftersom tomma rutor och rutor i annan färg aldrig är värda ett besök. Tre förklaringar prövas, var och en med ett prov och en förutsägelse som bestäms nu:
+   - **E1, agentens eget minne av sikte och synintryck.** Agenten minns vart den siktat och vad den såg där, och litar på det framför schemat. Prov: (a)-rutorna delas i dem agenten siktade mot och dem som täcktes bara genom fångst. E1 förutsäger större effekt för fångstrutorna, eftersom agenten saknar eget minne av dem.
+   - **E2, rutornas värde, slås ihop med E1.** Den första förutsägelsen, effekt nästan bara i målets färg, följer av alla förklaringar och skiljer inte ut E2. Inom målets färg sammanfaller E2 med E1: agenten vet vad en ruta innehöll bara genom remappningen, som lägger synintrycket på den ruta den siktade mot. Jag hittar ingen förutsägelse där de skiljer sig, så de prövas tillsammans.
+   - **E3, rimlighet.** (b) liknar en verklig fångst. I (a) försvinner tre stegs täckning på en gång, något som nästan aldrig händer i träningen. Prov: en variant av (a) där bara steg 3:s fönster blir falskt obesökt, som efter en enda fångst. Effekten per ruta jämförs med samma rutor från steg 3 när hela (a) ljuger, delat efter om steg 3 var en fångst. Inom varje grupp skiljer sig då bara hur mycket av kartan som ljuger, inte minnet. E3 förutsäger större effekt per ruta när bara steg 3 ljuger, i båda grupperna.
+   - **E4, asymmetrin sitter i måttet.** (b) mäter undvikande från en hög nivå, eftersom agenten var på väg till rutorna. (a) mäter dragning till rutor som konkurrerar med alla verkligt obesökta rutor i målets färg. Prov: (a) delas efter antalet kvarvarande obesökta rutor i målets färg. Dessutom räknas båda ingreppen per ruta, i förhållande till en verkligt obesökt ruta i målets färg i samma episod. E4 förutsäger att (a)-effekten krymper med antalet konkurrenter, och att asymmetrin minskar med det normerade måttet.
    - Dessutom, efter granskningen: (a) och (b) på slutcheckpointerna, och (b) räknat per kommando och bara i episoder där alla tre kommandona hann ges.
 
-   Förklaringarna utesluter inte varandra. Resultatet styr beteendemåttet i steg 3. Stöder det E1, måste beteendemåttet skilja på rutor agenten siktat mot och rutor den bara fångats till.
-2. **Bygge, ca 4 timmar.** Allt pushas innan något tränas.
+   Förklaringarna utesluter inte varandra. De redovisas med standardfel, utan godkänt eller underkänt. Resultatet används när beteendemåttet låses vid grind 5a. Stöder det E1 måste beteendemåttet skilja på rutor agenten siktat mot och rutor den bara fångats till. Stöder det E4 måste måttet normeras mot konkurrerande rutor.
+2. **Bygge, ca 5 timmar.** Allt pushas innan något tränas.
    - **Matchningssignal.** För varje ruta i det avsedda fönstret anger den om det foveán visade stämmer med vad periferin visar där, upptaget och färg. Den går bara till schemamodulen, inte till styrningen. Biologiskt motsvarar det en jämförelse mellan förväntad och faktisk syninformation.
-   - **Flaskhals** (rekommenderad form, se beslut nedan): kostnad per informationsmängd, nära 1c. Modulens indata per ruta passerar en brusig kanal. Ju mer information som släpps igenom, desto högre kostnad i träningen. Modulen måste då själv välja vad den behåller av efferenskopia, matchning och periferi. AST förutsäger förenkling just för att schemat är resursbegränsat. Dosserien bestäms nu i informationsmängd, 4, 2 och 1 bit per ruta och steg, plus en variant utan kostnad. Kostnadens vikt ställs in i korta kalibreringskörningar så att den uppmätta informationsmängden hamnar på nivån. Kalibreringen tittar bara på informationsmängden, inte på något H5-mått.
+   - **Flaskhals** (rekommenderad form och plats, se beslut nedan): kostnad per informationsmängd på modulens inre representation, nära 1c. Modulen får full indata: efferenskopia, matchning och periferi. Det den lämnar till agenten passerar en brusig kanal, där det kostar i träningen att släppa igenom information. Schemat som agenten får räknas bara ur det som passerat kanalen, så efferenskopian kan inte gå runt flaskhalsen. AST förutsäger förenkling just för att schemat är resursbegränsat, och enligt AST är det modellen som är karikatyren, inte sinnena. Samma kanal kan återanvändas i 1c.
+   - **Nivåer som andelar av det som behövs.** Informationsmängden räknas per steg, summerad över alla rutor. Varianten utan kostnad ger referensen: den informationsmängd den faktiskt använder. De tre nivåerna är 50, 25 och 12,5 % av referensen och låses nu. Under träningen regleras kostnadens vikt så att den uppmätta informationsmängden håller nivån. Regleringen tittar bara på informationsmängden, inte på något H5-mått.
    - **Ändring av H5:s mätvillkor (ingår i godkännandet av planen).** "Foveán utesluter avsedd plats" avgörs med upptaget och färg, det agenten kan jämföra mot periferin. Formen ingår inte, eftersom periferin aldrig visar form. Den ideala betraktaren får samma begränsning. Annars ser den mer än agenten kan.
-   - **Doskontroll enligt din lärdom.** Ett test visar att matchningssignalen skiljer sig vid fångst i samma andel fall som den ideala betraktaren kan upptäcka fångsten, och att alla flaskhalsnivåer får exakt samma indata.
-3. **Pilot, ca 2 timmar träning i bakgrunden, inklusive kalibrering.** Fem villkor: Baslinje samt 1b med 4, 2 och 1 bit och utan kostnad. Frö 20 och 21, 400 000 episoder, tio körningar. Testet görs på en egen pilotbank, inte på MVP:s fröbank. Piloten mäter följande, blint för H5:s utfall:
-   - **Förutsättningen:** modulen utan flaskhals lägger sin mest sannolika ruta i det faktiska fönstret vid minst hälften av de H5-händelser där den ideala betraktaren kan se att spotlighten fångats.
+   - **Doskontroll enligt din lärdom.** Ett test visar att matchningssignalen skiljer sig vid fångst i samma andel fall som den ideala betraktaren kan upptäcka fångsten, och att alla nivåer får exakt samma indata. Piloten räknar dessutom hur många fångster som hamnar i varje grupp för beteendemåttet, så att båda grupperna är tillräckligt stora innan måttet låses.
+   - **Nollmodellen och beteendemåttet** byggs och testas på otränade agenter, liksom H2 (b) med lögnen i modulens karta, som används först i 5b.
+3. **Pilot, ca 2,5 timmar träning i bakgrunden.** Fem villkor: Baslinje, 1b utan kostnad och 1b med 50, 25 och 12,5 % av referensens informationsmängd. Varianten utan kostnad tränas först, eftersom den ger referensen. Frö 20 och 21, 400 000 episoder, tio körningar. Testet görs på en egen pilotbank, inte på MVP:s fröbank. Piloten mäter följande, blint för H5:s utfall:
+   - **Förutsättningen:** modulen utan kostnad lägger sin mest sannolika ruta i det faktiska fönstret vid minst hälften av de H5-händelser där den ideala betraktaren kan se att spotlighten fångats.
    - **Att flaskhalsen biter:** andelen rätt vid fångst sjunker när informationsmängden minskar. Det visar hur ofta schemat har fel, inte vart det pekar.
    - **Schemats nytta:** träffandel för varje nivå, jämförd med Baslinjen.
-   - Antal H5-händelser, spridning mellan frön och tid per körning.
+   - Uppmätt informationsmängd per nivå, antal H5-händelser, antal fångster per grupp för beteendemåttet, spridning mellan frön och tid per körning.
 
    Vart felen pekar, och beteendemåttet, tittar jag inte på förrän trösklarna är låsta.
-4. **Förslag till trösklar och körplan för 5b, oberoende granskning, grind 5a.** Du godkänner, och trösklarna låses.
+4. **Förslag till trösklar och körplan för 5b, oberoende granskning, grind 5a.** Nollmodellen, beteendemåttet och deras trösklar låses då. Du godkänner, och trösklarna låses.
 
 **Om svaret blir nej**
 
@@ -745,19 +757,25 @@ En risk finns kvar, och den tas inte bort av designen. En komprimerad prediktor 
 | --- | --- | --- |
 | Förutsättningen klaras inte | Matchningssignalen räcker inte för att se fångsten | H5 är omätbar i den här formen. Jag föreslår en annan signal, du beslutar |
 | Flaskhalsen biter inte på någon nivå | Uppgiften är för lätt att komprimera | Rapporteras. Jag föreslår smalare nivåer, du beslutar innan något körs |
-| Inget schema hjälper agenten | Modulen ger ingen användbar självkunskap, som i sprint 3 | Rapporteras. H5 kan ändå mätas, men tolkningen blir svagare |
-| Diagnostiken stöder ingen av E1–E3 | Asymmetrin är oförklarad | Rapporteras. Beteendemåttet räknas både för siktade och fångade rutor |
+| Inget schema hjälper agenten | Modulen ger ingen användbar självkunskap, som i sprint 3 | Rapporteras. H5 kan ändå mätas, men tolkningen blir svagare. Beteendemåttet och H2 (b) på 1b blir tomma, eftersom agenten inte läser schemat |
+| Diagnostiken stöder ingen av E1, E3 och E4 | Asymmetrin är oförklarad | Rapporteras. Beteendemåttet räknas både för siktade och fångade rutor |
 
 **Beslut för produktägaren** (skriv svar: under respektive punkt)
 
-- [ ] Godkänner du plan 5a: diagnostik, bygge, pilot och förslag till trösklar, inklusive ändringen av H5:s mätvillkor?
-- [ ] Flaskhalsens form. Jag rekommenderar kostnad per informationsmängd, som diskussionstråden föreslog. Den ligger nära 1c, motsvarar AST:s argument att schemat är resursbegränsat, och dosen kan anges i bitar. Den kostar ungefär en timmes extra bygge. Jag ändrade rekommendationen efter att ha läst trådens förslag. En smal kanal är enklare, men den kan bära mycket information ändå, så det är osäkert om den tvingar fram förenkling. Alternativ 1: en smal indatakanal med 1, 2 eller 4 tal per ruta. Alternativ 2: ett schema som bara kan ange en plats och en bredd. Det är närmast AST:s karikatyr av uppmärksamhet, men felen hamnar då mellan platser och blir svåra att tolka.
-- [ ] Ska beteendemåttet bli ett kriterium bredvid H5, med en tröskel som låses vid grind 5a? Måttet: går agenten tillbaka till den avsedda platsen efter en fångst? Jag rekommenderar ja.
-- [ ] Din invändning att schemat i 1a aldrig haft fel. I 1b har schemat ibland fel under träningen, så frågan om agenten litar på ett ofullständigt schema prövas där. Jag föreslår därför ingen egen 1a-variant med brus i schemat. Räcker det?
+- [ ] Godkänner du den reviderade plan 5a: diagnostik, bygge, pilot och förslag till trösklar, inklusive ändringen av H5:s mätvillkor?
+- [ ] Flaskhalsens form och plats. Jag rekommenderar kostnad per informationsmängd på modulens inre representation, med full indata, som diskussionstråden föreslog. Nivåerna är 50, 25 och 12,5 % av referensens informationsmängd. Alternativet är kostnaden på modulens indata, som i första versionen. Det ger okännedom snarare än förenkling, och jag avråder från det.
+- [ ] Ska beteendemåttet bli ett kriterium bredvid H5, med en tröskel som låses vid grind 5a? Måttet, enligt diskussionstråden: inom samma agent jämförs fångster där schemat hade fel med fångster där det hade rätt. Fel betyder att schemats mest sannolika ruta låg i det avsedda fönstret. Grupperna matchas på den ideala betraktarens sannolikhet. Bara fångster där den avsedda rutan har ett osett föremål i målets färg räknas, annars finns inget skäl att gå tillbaka. Godkänt: färre återvändanden när schemat har fel, med mer än 2 standardfel i alla frön. Jag rekommenderar ja.
+- [ ] Din invändning att schemat i 1a aldrig haft fel. H2 (b) körs på 1b-agenterna i 5b, med lögnen i modulens karta. Består auktoriteten trots att schemat haft fel i träningen har invändningen fått sitt svar. Försvinner den var H2 (b) en orakeleffekt. Ska det redovisas eller låsas som kriterium? Jag föreslår att du beslutar vid grind 5a, när piloten visat om 1b-agenterna alls använder schemat. Ingen 1a-variant med brus.
+- [ ] Nollmodellen för H5. Diskussionstråden föreslog att schemats fel fördelas som den ideala betraktarens sannolikheter. Vid H5-händelserna har den ideala betraktaren per definition uteslutit den avsedda platsen, så dess sannolikhet där är noll. Då skulle varje fel på den avsedda platsen klara provet. Jag föreslår i stället en försvagad ideal betraktare med samma träffsäkerhet som schemat, se punkt 3 ovan. Godkänner du det?
 
 **Tekniska val (Claudes, kräver inte beslut)**
 
 - Schemamodulen är ett separat nätverk som i sprint 3 (`--schema module`), tränat mot förra stegets faktiska fönster. Ingen gradient går mellan modul och styrning.
+- Kanalen: modulen lämnar ett tal per ruta, med brus vars styrka den lär sig. Informationsmängden räknas i bitar, som avståndet mellan den brusiga signalen och rent brus, summerat över rutorna. Avkodaren som gör schemakartan ser bara kanalens utdata. Kanalen per ruta, inte en gemensam vektor, eftersom resten av agenten är uppbyggd ruta för ruta.
+- Referensen: helt utan kostnad kan bruset krympa mot noll och informationsmängden växa utan gräns. Varianten "utan kostnad" får därför en mycket liten fast kostnad, som inte påverkar träffsäkerheten märkbart men gör informationsmängden mätbar. Referensen är medelvärdet över de två pilotfröna.
+- Regleringen: kostnadens vikt justeras under träningen, uppåt när informationsmängden ligger över nivån och nedåt när den ligger under.
+- Nollmodellen: den ideala betraktarens sannolikhet för det foveán visade försvagas med en faktor mellan 0 och 1, samma för alla platser. Faktorn väljs per frö och nivå så att betraktarens träffsäkerhet vid fångst blir densamma som schemats. Bara träffsäkerheten används för valet, inte vart felen pekar.
+- Schemats fel vid en H5-händelse räknas som den del av dess sannolikhet som ligger utanför det faktiska fönstret. H5 mäter hur stor del av den som ligger på det avsedda fönstret.
 - Piloten använder frö 20 och 21 och 400 000 episoder, som sprint 3:s pilot. 5b får nya frön.
 - Pilotbanken: episod i har frö 4 000 000 + i, 4 000 episoder, samma uppsättning strömmar som MVP:s fröbank. MVP:s fröbank används igen först i 5b.
 - Arbetspunkt och miljö är oförändrade från sprint 4.

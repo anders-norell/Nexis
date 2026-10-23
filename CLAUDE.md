@@ -195,17 +195,27 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Villkor för sprint 5 (produktägaren):** planen ska hantera risken att H5 blir falsk per konstruktion
   (modul med matchningssignal tränad mot faktisk plats pekar på faktisk plats). Jämför med en variant med
   flaskhals som måste förenkla, och ta in H2-asymmetrin som underlag.
-- **Plan 5a skriven i specen 23 okt ca 11:15, väntar på produktägarens godkännande. Inget kört.** Avsnitt
-  "Sprint 5: H5" i specen: (1) diagnostik på sprint 4:s agenter, förklaringar E1 minnet av siktet, E2 rutornas
-  värde, E3 rimlighet (lögn som efter en fångst), plus slutcheckpoints och (b) per kommando; (2) bygge:
-  matchningssignal (upptaget + färg, bara till modulen), flaskhals = kostnad per informationsmängd, dos 4/2/1 bit
-  per ruta och steg + utan kostnad (vikt kalibreras blint mot uppmätt informationsmängd; ändrat 23 okt efter
-  diskussionstrådens förslag, tidigare smal kanal m = 1, 2, 4, nu alternativ),
-  ändrat H5-mätvillkor (utesluta med upptaget och färg, ideala betraktaren begränsad likadant), doskontroll;
-  (3) pilot: Baslinje + fyra 1b-nivåer, frö 20–21, 400k, pilotbank 4 000 000 + i, blind för var felen pekar;
-  förutsättning: modul utan flaskhals rätt vid ≥ hälften av upptäckbara H5-händelser; (4) trösklar, granskning,
-  grind 5a. Fyra beslutspunkter: planen, flaskhalsens form, beteendemått som kriterium, ingen 1a med brus.
-  Ordlistan fick matchningssignal, dosserie, doskontroll och utvidgad flaskhals.
+- **Plan 5a reviderad 23 okt ca 12:30 efter nio kommentarer från diskussionstråden; väntar på produktägarens
+  godkännande. Inget kört.** Avsnitt "Sprint 5: H5" i specen (svar postade i alla nio trådar):
+  (1) diagnostik på sprint 4:s agenter, bara rutor i målets färg: E1 eget minne av sikte och synintryck (E2 sammanslagen),
+  E3 rimlighet (bara steg 3 ljuger, delat efter fångst, jämfört med samma rutor i hela (a)), E4 asymmetrin i måttet
+  (konkurrerande obesökta målfärgsrutor, mått per ruta normerat), plus slutcheckpoints och (b) per kommando;
+  (2) bygge: matchningssignal (upptaget + färg, bara till modulen); **flaskhals = kostnad per informationsmängd på
+  modulens inre representation, full indata**, avkodaren ser bara kanalen (ett brusigt tal per ruta, bitar summerade
+  per steg); nivåer **50/25/12,5 % av referensens informationsmängd** (referens = variant "utan kostnad" med mycket
+  liten fast kostnad, medel över två frön; vikten regleras under träning mot nivån); ändrat H5-mätvillkor
+  (utesluta med upptaget och färg); doskontroll inkl. gruppstorlek för beteendemåttet; nollmodell, beteendemått och
+  H2 (b) i modulens karta byggs och testas på otränade agenter;
+  (3) pilot: Baslinje, 1b utan kostnad (först), 1b 50/25/12,5 %, frö 20–21, 400k, pilotbank 4 000 000 + i, blind för
+  var felen pekar; (4) trösklar, nollmodell och beteendemått låses vid grind 5a.
+  **Nollmodell (Claudes justering av trådens förslag):** försvagad ideal betraktare med samma träffsäkerhet vid fångst
+  som schemat (sannolikhet för glimten upphöjd till faktor 0–1, vald bara på träffsäkerhet); trådens form ger noll på
+  avsedd plats vid H5-händelser och vore automatiskt godkänd. AST-signatur = schemats felmassa på avsedd plats >
+  nollmodellens. **Beteendemått:** inom agent, fångster där schemat har fel (mest sannolika ruta i avsett fönster) mot rätt,
+  matchat på ideala betraktarens sannolikhet, bara när avsedd ruta har osett målfärgsföremål; godkänt färre återvändanden
+  > 2 SE alla frön. **H2 (b) på 1b i 5b** (svar på orakelinvändningen), meningsfullt bara om 1b-agenten läser schemat.
+  Fem beslutspunkter: planen, flaskhalsens form och plats, beteendemått som kriterium, H2 (b) på 1b, nollmodellen.
+  Ordlistan: matchningssignal, dosserie, doskontroll, flaskhals (uppdaterad), nollmodell.
 - **Diskussionstrådens förslag 22–23 okt införda i specen 23 okt ca 11:45** (produktägaren skickade texten):
   skärpt tolkning av sprint 4 (1a = orakel; MVP visar schemat som auktoritet, inte förenklad modell; AST:s
   kärna prövas i H5 och 1c; H3 tillför lite eget; asymmetrin = vad agenten behandlar som auktoritet), och nytt
