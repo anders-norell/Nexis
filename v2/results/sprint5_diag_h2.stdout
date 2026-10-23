@@ -1,0 +1,13 @@
+diagnostic runner reproduces bank.run_bank exactly
+s4_fixed_s10|final done
+s4_fixed_s10|best done
+s4_fixed_s11|best done
+s4_fixed_s11|final done
+s4_fixed_s12|final done
+s4_fixed_s12|best done
+s4_shuffled_s10|final done
+s4_shuffled_s10|best done
+s4_shuffled_s11|final done
+s4_shuffled_s11|best done
+s4_shuffled_s12|final done
+s4_shuffled_s12|best done

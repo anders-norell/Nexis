@@ -222,6 +222,19 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   avsnitt under "Efter MVP" (sammanhållande fråga, Rogers/Minsky/Dennett–Harari, tre prövbara frågor: inre
   kapning, schemat som samordning, från modell till berättelse), märkt ej beslutat. Kommentaren vid grind 3
   är överspelad (produktägarens egen markering); svar postade i de två kommentarstrådarna.
+- **Plan 5a godkänd med villkor 23 okt 12:04** (produktägaren, i chatten; alla fem beslutspunkter enligt
+  rekommendation). Villkor införda i specen före bygget: (a) nollmodellen försvagas genom blandning (varje signal
+  byts med sannolikhet q mot slumpvärde, q matchas mot schemats träffsäkerhet), inte exponent (0 förblir 0);
+  syntetiskt test före låsning; (b) referensens fasta kostnad låst 0,001 per bit och steg, även 0,0001; skiljer
+  sig informationsmängden > 1,5× används minsta informationsmängd med träffsäkerhet över alla steg inom 1 p av
+  0,0001-varianten (= förutsättningskontrollen); (c) riskstycket: ren komprimering drar också mot avsedd plats,
+  ett ja på H5 är en följd av AST, inte unikt; det AST-specifika prövas i 1c.
+- **Steg 1 (diagnostik) klart 23 okt ca 12:40:** `v2/diag_h2.py` → `results/sprint5_diag_h2.json`. Återskapar låsta
+  H2-siffror exakt. Iögonfallande föremål uteslutna (teknisk rättelse efter 500-episodkontroll). Ingen av E1, E3,
+  E4 förklarar asymmetrin: normerat stänger (b) 93–95 % av gapet, (a) 10–33 %. E1-provet svagt (fångade rutor
+  ligger intill iögonfallande föremål). Steg 3-rutor 2–3× större effekt (närhet eller färskhet, oavgjort).
+  (b) per kommando −0,29, alla tre kommandon −0,95. Beteendemåttet mäts som det står (ingen delning/normering).
+- **Nästa:** steg 2, bygget (matchningssignal, kanal med informationskostnad, reglering, nollmodell med blandning
+  + syntetiskt test, beteendemått, H2 (b) i modulens karta, pilotbank, testskript). Pusha innan något tränas.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
-- **Nästa steg:** vänta på produktägarens svar på plan 5a i specen. Vid godkännande: steg 1 (diagnostik) först,
-  sedan bygge och pusha innan något tränas. Rör inte sprint 4:s låsta utfall.
+- **Nästa steg:** bygget i steg 2 (se ovan), sedan piloten. Rör inte sprint 4:s låsta utfall.
