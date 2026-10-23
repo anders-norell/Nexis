@@ -250,5 +250,11 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   Tolkning: informationen finns men modulen beräknar inte fångsten (rutorna kommunicerar bara via globalt medel).
   Förslag: A (rek.) lokal "var passar glimten"-signal per ruta; B global max-samordning; C längre träning (avråds);
   D avsluta H5 i denna form. Blindhet bevarad: var felen pekar ej tittat på.
+- **Beslut 23 okt 14:03 (produktägaren): alternativ E** (Claudes förslag efter frågan om mest evolutionärt sannolik
+  silvertejpslösning): global larmsignal = matchningssignalen ihopräknad till en siffra ("något stämde inte där jag
+  siktade"), sänd till alla rutor i modulen (`agent_rl.alarm_signal`, läge `channel_e`). Allt annat oförändrat.
+  Byggt, testat, pushat; fas A med E (`sh run_sprint5a.sh EA`, körningar p5_eref1e-3/1e-4, frö 20–21) startad ca 14:15,
+  därefter `python3 pilot_5a.py eref` (förutsättning + referens). Baslinjens p5_off återanvänds. Fas B med E:
+  `sh run_sprint5a.sh EB <T50> <T25> <T12>` om förutsättningen klaras; annars stopp och beslut.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
 - **Nästa steg:** bygget i steg 2 (se ovan), sedan piloten. Rör inte sprint 4:s låsta utfall.

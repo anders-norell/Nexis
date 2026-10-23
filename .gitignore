@@ -21,3 +21,4 @@ v2/results/p5_*.best.npz
 v2/results/p5_*.final.npz
 v2/results/p5_runner.log
 v2/results/sprint5a_eval.stdout
+v2/results/sprint5a_eval_e.stdout
