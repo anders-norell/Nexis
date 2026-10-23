@@ -143,6 +143,102 @@
     "right_ok": false,
     "wrong_ok": false
    }
+  },
+  "p5_eref1e-3_s20": {
+   "schema": "channel_e",
+   "seed": 20,
+   "rate_cost": 0.001,
+   "rate_target": 0.0,
+   "checkpoint": {
+    "it": 1200,
+    "episodes": 307200,
+    "eval_found": 0.891,
+    "beta": 0.001
+   },
+   "found": 0.8785,
+   "found_se": 0.005165698161913837,
+   "bits_per_step": 74.33308387279855,
+   "acc_all_steps": 0.7609863617578179,
+   "n_h5_events": 2534,
+   "acc_at_h5": 0.5564325177584846,
+   "mass_actual_at_h5": 0.2843554766084107,
+   "observer_actual_at_h5": 0.9424268794532334,
+   "dose_groups": {
+    "right_ok": true,
+    "wrong_ok": false
+   }
+  },
+  "p5_eref1e-3_s21": {
+   "schema": "channel_e",
+   "seed": 21,
+   "rate_cost": 0.001,
+   "rate_target": 0.0,
+   "checkpoint": {
+    "it": 1200,
+    "episodes": 307200,
+    "eval_found": 0.886,
+    "beta": 0.001
+   },
+   "found": 0.87925,
+   "found_se": 0.005151927733868168,
+   "bits_per_step": 74.81440109523342,
+   "acc_all_steps": 0.7605065023956195,
+   "n_h5_events": 2536,
+   "acc_at_h5": 0.5496845425867508,
+   "mass_actual_at_h5": 0.2705979141937426,
+   "observer_actual_at_h5": 0.948333921506305,
+   "dose_groups": {
+    "right_ok": true,
+    "wrong_ok": false
+   }
+  },
+  "p5_eref1e-4_s20": {
+   "schema": "channel_e",
+   "seed": 20,
+   "rate_cost": 0.0001,
+   "rate_target": 0.0,
+   "checkpoint": {
+    "it": 1200,
+    "episodes": 307200,
+    "eval_found": 0.879,
+    "beta": 0.0001
+   },
+   "found": 0.87425,
+   "found_se": 0.0052425408319821416,
+   "bits_per_step": 182.87883434765672,
+   "acc_all_steps": 0.7621905982329534,
+   "n_h5_events": 2586,
+   "acc_at_h5": 0.5719257540603249,
+   "mass_actual_at_h5": 0.2561947685964582,
+   "observer_actual_at_h5": 0.9433494115505391,
+   "dose_groups": {
+    "right_ok": true,
+    "wrong_ok": false
+   }
+  },
+  "p5_eref1e-4_s21": {
+   "schema": "channel_e",
+   "seed": 21,
+   "rate_cost": 0.0001,
+   "rate_target": 0.0,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.887,
+    "beta": 0.0001
+   },
+   "found": 0.87925,
+   "found_se": 0.005151927733868168,
+   "bits_per_step": 170.7245809100931,
+   "acc_all_steps": 0.7639929184257116,
+   "n_h5_events": 2528,
+   "acc_at_h5": 0.5743670886075949,
+   "mass_actual_at_h5": 0.2662350977977682,
+   "observer_actual_at_h5": 0.9505037276124012,
+   "dose_groups": {
+    "right_ok": true,
+    "wrong_ok": false
+   }
   }
  },
  "reference": {
@@ -158,5 +254,24 @@
   "mean_1e4": 183.41228141102658,
   "ratio": 2.355481490221985,
   "well_defined": false
+ },
+ "reference_eref": {
+  "bits_1e3": [
+   74.33308387279855,
+   74.81440109523342
+  ],
+  "bits_1e4": [
+   182.87883434765672,
+   170.7245809100931
+  ],
+  "mean_1e3": 74.57374248401598,
+  "mean_1e4": 176.8017076288749,
+  "ratio": 2.3708305596540273,
+  "well_defined": false,
+  "precondition_acc_at_h5": [
+   0.5719257540603249,
+   0.5743670886075949
+  ],
+  "precondition_met": true
  }
 }

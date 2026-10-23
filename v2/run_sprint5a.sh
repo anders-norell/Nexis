@@ -12,6 +12,8 @@ if [ "$phase" = "A" ]; then
   JOBS="off:20:0:0 off:21:0:0 ref1e-3:20:0.001:0 ref1e-3:21:0.001:0 ref1e-4:20:0.0001:0 ref1e-4:21:0.0001:0"
 elif [ "$phase" = "EA" ]; then        # alternative E (23 Oct): the two reference variants with the global alarm
   JOBS="eref1e-3:20:0.001:0 eref1e-3:21:0.001:0 eref1e-4:20:0.0001:0 eref1e-4:21:0.0001:0"
+elif [ "$phase" = "EH" ]; then        # condition b halving rule for E: regulated runs at the given bits per step
+  shift; JOBS=""; for T in "$@"; do JOBS="$JOBS ehalf$T:20:0.001:$T ehalf$T:21:0.001:$T"; done
 elif [ "$phase" = "EB" ]; then
   JOBS="elvl50:20:0.001:$2 elvl50:21:0.001:$2 elvl25:20:0.001:$3 elvl25:21:0.001:$3 elvl12.5:20:0.001:$4 elvl12.5:21:0.001:$4"
 else
