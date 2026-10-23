@@ -103,3 +103,87 @@ The reserve is not used: feasibility chose mass matching at every level. Fix it 
 - Null Monte Carlo noise (K = 400 draws, with the same random numbers across q) is not in the bootstrap SE. It averages out over about 1 900 events and is negligible.
 - **How high the bar is:** at q ≈ 0.7–0.8 the null's share on I is about 0.62–0.65 (random-agent events). To pass, the schema has to put roughly two-thirds or more of its error mass on candidates onto the intended window. That follows from the decided prior-predictive replacement and is intended, but the product owner should see the number before locking.
 - With the fix in finding 1, the matched q values per level will change. The feasibility file should be regenerated and re-read (blind) before the lock.
+
+## Re-review of fixes (commits 73c3c2b and 9eccd59)
+
+**Verdict: approve with remarks.** One condition must be met before the lock: R1, which is cheap and blind-safe.
+
+- Finding 1 is fixed under the model it assumes: diffuse mass spread evenly over the valid cells.
+- Findings 2–5 are fixed, or reduced to a small residual.
+- R1: the result is still sensitive to whether the schema's diffuse mass really is uniform. The blind feasibility numbers suggest it may not be. This must be checked blind, with a pre-declared response, before locking.
+
+Blindness was kept. My checks used random-agent events and synthetic schemas only. From the trained runs I read only the blind-safe fields of the second feasibility run (`results/sprint5a_h5_feasibility_v2.json`, the same run as `_v2.stdout`). I started no runs on trained agents, created no lock and ran no `measure`.
+
+### What I verified
+
+- **Tests:** `test_h5_eval.py` passes 30/30, and my output is identical to the committed `results/test_h5_eval.txt`. `test_h5_5a.py` also passes. The new tests go through `schema_regions` on cell maps and include diffuse and object-peaked schemas, null argmax ties, the plateau rule and the cluster bootstrap. They test what they claim.
+- **Diffuse fix (`build`):**
+  - λ = (rest_schema − r_null) / ((1 − cand_share) − r_null) is correct. It sets the null's mass outside the regions, (1 − λ)·r_null + λ·(1 − cand_share), equal to the schema's rest mass. r_null is the null's own mass on the dropped shared cells, and λ is clipped to [0, 1].
+  - Uniform mass is spread over the n × n valid cells, which is the same support as the decoder's softmax.
+  - λ uses only the schema's rest mass, so it is blind-safe.
+  - Both maps are renormalised over I + A + O.
+- **Independent synthetic check:** a schema with the null's beliefs plus 65 % uniform noise gives diff +0.0009 (q0 = 0.4) and +0.0003 (q0 = 0.8), with q recovered to within 0.002. Before the fix the same kind of schema gave −0.06 to −0.14.
+- **Shared cells (DROP_SHARED):** I is the intended window minus cells shared with the actual or another candidate window. A is the actual window minus the intended window. O is the other windows minus I and A. The test that windows are fully covered was updated to allow for the dropped cells.
+- **Argmax reserve:**
+  - The schema's argmax and the null's argmax are both taken over candidate cells only.
+  - The null splits ties evenly; the new tie test confirms it.
+  - Plateau rule: if the curve stays within 0.01 of the target over a q-span wider than 0.10, the reserve counts as impossible. Applied in both feasibility and evaluate.
+- **Lock (`h5_5a.py lock` / `measure`):**
+  - The lock stores SHA-256 hashes of h5_eval, h5_5a, h5_bank, h5 and the feasibility JSON, plus the parameters and the criterion text.
+  - `measure` refuses on any mismatch, and `lock` refuses to overwrite an existing lock.
+- **9eccd59:** feasibility now also reports the null's bar, i.e. its share on I at the matched q, for both matching methods. It is computed from the null alone; λ depends only on the schema's rest mass. Blind-safe.
+
+### Remaining findings
+
+**R1. Major, condition before lock: the fix assumes the schema's diffuse mass is uniform, and the answer is sensitive to that.**
+
+In a synthetic test I put the diffuse mass on occupied cells (cells with objects) instead of spreading it evenly. Everything else was identical to the null (u = 0.65), but the result was diff **−0.14** (q0 = 0.4) and **−0.11** (q0 = 0.8), biased toward fail. The direction depends on where the diffuse mass sits. On cells near salient objects (O, A) it biases toward fail. On target-colour cells near the aimed cell (I) it would bias toward pass.
+
+The blind feasibility v2 data hint that the diffuse mass is not uniform:
+- **Mass-matched and argmax-matched q diverge as rest mass grows.** For a schema that was null plus uniform noise, the two would agree; they did in all my synthetic runs.
+
+  | Variant | Mass-matched q | Argmax-matched q | Gap |
+  | --- | --- | --- | --- |
+  | No-cost | 0.68 / 0.71 | 0.72 / 0.72 | 0.01–0.04 |
+  | 22 bits | 0.65 / 0.65 | 0.73 / 0.73 | ≈ 0.08 |
+  | 11 bits | 0.64 / 0.63 | 0.74 / 0.74 | ≈ 0.10 |
+  | 5.5 bits | 0.64 / 0.67 | 0.75 / 0.75 | ≈ 0.10 |
+
+- **The mass-matched q is flat or falling across levels (0.63–0.71)**, although the argmax rate in A over candidates falls from 0.51 to 0.37.
+
+*Fix (blind-safe, before lock):*
+- (a) Compute the schema's mean mass per **non-candidate** cell for each trained run, by cell class: empty, occupied non-target colour, target colour, and possibly visited or unvisited. This touches neither I nor O.
+- (b) Pre-declare a rule. If the class densities differ by more than an agreed factor (for example 1.5), the null's diffuse component uses class-matched densities: the schema's per-class rest density, applied to each candidate cell by its class.
+- (c) Pre-declare that H5 is also reported with **argmax matching** as a sensitivity analysis. The bar it gives is now in the feasibility output (9eccd59).
+- (d) If the mass-matched and argmax-matched results disagree, call the level "inconclusive" rather than "klarad" or "ej klarad".
+
+This changes the reporting rule, so the product owner must approve it.
+
+**R2. Minor: the object-peaked residual is acceptable.**
+
+| Case | Diff | SE |
+| --- | --- | --- |
+| The test's own case | −0.0041 | 0.0019 |
+| My check, q0 = 0.4 | −0.0030 | 0.0013 |
+| My check, q0 = 0.8 | −0.0023 | 0.0012 |
+| No diffuse mass | −0.0018 to +0.0006 | — |
+
+Dropping every cell shared between any two candidate windows does not remove it (−0.005 / −0.003). Against a realistic SE for a trained schema of about 0.005–0.01, this is 0.2–0.8 SE, toward fail.
+
+It does not matter for the verdict unless a judged level ends near the 2 SE line. *Fix:* state it in the lock text as a known conservative bias of at most about 0.005. Note that the test passes only through its +0.005 tolerance: the diff is 2.2 synthetic SE.
+
+**R3. Minor: q is weakly identified at low bits.**
+
+After the diffuse share is equalised, the null's mass curve becomes narrow:
+
+| Level | Null mass curve spans |
+| --- | --- |
+| 5.5 bits | 0.27–0.49 |
+| 11 bits | 0.25–0.63 |
+| No-cost | 0.22–0.79 |
+
+On a narrow curve the matched q is sensitive to small changes. The bootstrap re-matches q, so the SE will include this, but resamples may fall outside the curve and be clipped. *Fix:* report `boot_clipped_frac` and a bootstrap interval for q for every run. Pre-declare that a judged level with clipping above 5 % is reported as weakly identified.
+
+**R4. Minor: the lock's hashes leave inputs out.**
+
+The hashes do not cover `env.py`, `bank.py`, `pilot_5a.py` (`load`), `agent_rl.py` or `schema_channel.py`, or the ten checkpoint files (`*.final.npz`). Any of these changes the events. *Fix:* add them to `FILES`.

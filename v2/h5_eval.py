@@ -51,7 +51,8 @@ from h5 import restricted
 QS = np.linspace(0.0, 1.0, 41)
 # Proposed after the code review (24 Oct, not yet approved by the product owner):
 DROP_SHARED = True        # cells shared by the intended window and another candidate window belong to no region
-EQUALIZE_DIFFUSE = True   # the null gets the schema's diffuse (uniform) share, per event, before renormalising
+EQUALIZE_DIFFUSE = True   # the null gets the schema's diffuse share, per event, before renormalising
+CLASS_DIFFUSE = True      # ... with the schema's own density per cell class (review R1), not uniform
 PLATEAU = 0.10            # argmax reserve: if the curve is within PLATEAU_TOL of the target over a q-span wider
 PLATEAU_TOL = 0.01        # than this, q is not identified and the reserve counts as impossible
 K_NULL = 400
@@ -95,7 +96,13 @@ def event_detail(env, b, ir0, ic0, ar0, ac0, who):
     O = Ow & ~Iw & ~A
     frac = np.stack([(masks & R).sum((1, 2)) for R in (I, A, O)], 1) / float(w * w)
     n = int(env.n[b])
-    return dict(origins=origins, objs=objs, sal=np.array(sal), src=src, L=L, masks=masks, I=I, A=A, O=O, frac=frac,
+    # cell classes for the schema's diffuse mass (review R1): 0 empty, 1 occupied in another colour, 2 target colour
+    cls = np.full((G, G), -1)
+    col = env.color[b]
+    cls[:n, :n] = np.where(col[:n, :n] < 0, 0, np.where(col[:n, :n] == env.target_color[b], 2, 1))
+    cls_cnt = np.array([[(R & (cls == c)).sum() for c in range(3)] for R in (I, A, O)], float)   # (3 regions, 3)
+    cls_tot = np.array([(cls == c).sum() for c in range(3)], float)
+    return dict(cls=cls, cls_cnt=cls_cnt, cls_tot=cls_tot, origins=origins, objs=objs, sal=np.array(sal), src=src, L=L, masks=masks, I=I, A=A, O=O, frac=frac,
                 w=w, n=n, n_valid=n * n, counts=np.array([I.sum(), A.sum(), O.sum()], float),
                 p_capture=cfg.p_capture, cap=cfg.capture_cap, s_min=cfg.s_min, has_other=bool(O.any()))
 
@@ -116,7 +123,11 @@ def schema_regions(p, det):
     cand = det["I"] | det["A"] | det["O"]
     cell = np.unravel_index(int(np.argmax(np.where(cand, p, -1.0))), p.shape)   # over candidate cells only
     region = "A" if det["A"][cell] else "I" if det["I"][cell] else "O"
-    blind = dict(sA=A / tot if tot > 0 else 0.0, s_cand=tot, s_rest=1.0 - tot, s_argA=float(region == "A"))
+    rest = (det["cls"] >= 0) & ~cand & ~(det["masks"][0] & ~det["I"])   # shared cells kept out of the density
+    rm = np.array([p[rest & (det["cls"] == c)].sum() for c in range(3)])
+    rc = np.array([(rest & (det["cls"] == c)).sum() for c in range(3)], float)
+    blind = dict(sA=A / tot if tot > 0 else 0.0, s_cand=tot, s_rest=1.0 - tot, s_argA=float(region == "A"),
+                 rest_cls_mass=rm, rest_cls_cnt=rc)
     full = dict(sI=I / tot if tot > 0 else 0.0, sO=O / tot if tot > 0 else 0.0, s_argregion=region)
     return blind, full
 
@@ -195,14 +206,25 @@ def build(events, seed_offset=0, raw=None):
     cnt = np.array([e["det"]["counts"] for e in ev]).reshape(n, 3)
     nval = np.array([e["det"]["n_valid"] for e in ev], float)
     cand_share = cnt.sum(1) / nval
-    r_null = 1.0 - nr.sum(2)                                   # null mass on shared cells, (n, nq)
+    # Review R1: the diffuse part follows the schema's own density per cell class (empty / other colour / target
+    # colour), measured on its non-candidate cells (blind-safe). Null map = (1 - lam) * null + D, D = class density
+    # on every valid cell, lam = total mass of D. Uniform density is the special case (CLASS_DIFFUSE = False).
     if EQUALIZE_DIFFUSE:
-        lam = (out["s_rest"][:, None] - r_null) / np.maximum((1.0 - cand_share)[:, None] - r_null, 1e-12)
-        lam = np.clip(lam, 0.0, 1.0)
+        rm = np.array([e["rest_cls_mass"] for e in ev]).reshape(n, 3)
+        rc = np.array([e["rest_cls_cnt"] for e in ev]).reshape(n, 3)
+        flat = rm.sum(1) / np.maximum(rc.sum(1), 1)                       # overall rest density per cell
+        dens = np.where(rc > 0, rm / np.maximum(rc, 1), flat[:, None]) if CLASS_DIFFUSE else \
+            np.repeat(flat[:, None], 3, 1)
+        cls_cnt = np.array([e["det"]["cls_cnt"] for e in ev]).reshape(n, 3, 3)
+        cls_tot = np.array([e["det"]["cls_tot"] for e in ev]).reshape(n, 3)
+        D = (cls_cnt * dens[:, None, :]).sum(2)                           # diffuse mass on I, A, O  (n, 3)
+        lam = (cls_tot * dens).sum(1)
+        sc = np.where(lam > 1, 1 / np.maximum(lam, 1e-12), 1.0)
+        D, lam = D * sc[:, None], lam * sc
     else:
-        lam = np.zeros_like(r_null)
+        D, lam = np.zeros((n, 3)), np.zeros(n)
     out["lam"] = lam
-    mixed = (1 - lam)[:, :, None] * nr + lam[:, :, None] * (cnt / nval[:, None])[:, None, :]
+    mixed = (1 - lam)[:, None, None] * nr + D[:, None, :]
     mixed = mixed / np.maximum(mixed.sum(2, keepdims=True), 1e-12)
     out["nI"], out["nA"], out["nO"], out["n_argA"] = mixed[..., 0], mixed[..., 1], mixed[..., 2], na
     return out
@@ -301,15 +323,18 @@ def evaluate(d, method, n_boot=N_BOOT, seed=0):
     w0 = np.ones(d["n"])
     s_sh, n_sh, q0, cl0 = once(w0)
     rng = np.random.default_rng(seed)
-    diffs, clipped = [], 0
+    diffs, clipped, qb = [], 0, []
     for _ in range(n_boot):
         cnt = np.bincount(rng.integers(0, len(uniq), len(uniq)), minlength=len(uniq))
-        a, b_, _, c = once(cnt[inv].astype(float))
+        a, b_, qq, c = once(cnt[inv].astype(float))
         diffs.append(a - b_)
         clipped += c
+        qb.append(qq)
     se = float(np.std(diffs, ddof=1))
     diff = s_sh - n_sh
     return dict(method=method, n_events=int(d["n"]), n_episodes=int(len(uniq)), q=q0, point_clipped=cl0,
                 schema_share=s_sh, null_share=n_sh, diff=diff, se=se, z=diff / se if se > 0 else float("nan"),
                 passed=bool(diff > 2 * se), boot_clipped_frac=clipped / n_boot,
+                q_interval=[float(np.percentile(qb, 2.5)), float(np.percentile(qb, 97.5))],
+                clip_flag=bool(clipped / n_boot > 0.05),
                 schema_rest_mass=float(d["s_rest"].mean()))

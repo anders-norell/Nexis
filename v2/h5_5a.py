@@ -61,13 +61,15 @@ def feasibility():
     print("LEVELS", json.dumps(out["levels"]), flush=True)
 
 
-FILES = ("h5_eval.py", "h5_5a.py", "h5_bank.py", "h5.py", "results/sprint5a_h5_feasibility.json")
+FILES = ("h5_eval.py", "h5_5a.py", "h5_bank.py", "h5.py", "env.py", "bank.py", "pilot_5a.py", "agent_rl.py",
+         "schema_channel.py", "results/sprint5a_h5_feasibility.json") + tuple(
+    f"results/{stem}_s{s}.final.npz" for stem in sorted(set(LEVELS.values())) for s in SEEDS)
 
 
 def fingerprint():
     return dict(sha256={f: hashlib.sha256(open(os.path.join(HERE, f), "rb").read()).hexdigest() for f in FILES},
                 params=dict(QS=len(H.QS), K_NULL=H.K_NULL, N_BOOT=H.N_BOOT, boot_seeds=[1000, 1001],
-                            DROP_SHARED=H.DROP_SHARED, EQUALIZE_DIFFUSE=H.EQUALIZE_DIFFUSE,
+                            DROP_SHARED=H.DROP_SHARED, EQUALIZE_DIFFUSE=H.EQUALIZE_DIFFUSE, CLASS_DIFFUSE=H.CLASS_DIFFUSE,
                             PLATEAU=H.PLATEAU, PLATEAU_TOL=H.PLATEAU_TOL, seeds=list(SEEDS),
                             judged=list(JUDGED), reported=list(REPORTED), bank=[BANK_SEED, N_BANK],
                             checkpoint="final"),
@@ -94,22 +96,33 @@ def measure():
     out = dict(lock=lock, runs={}, levels={})
     for lvl, stem in LEVELS.items():
         method = feas["levels"][lvl]["method"]
-        res = []
+        res, sens = [], []
         for i, s in enumerate(SEEDS):
             run = f"{stem}_s{s}"
             ev, info = events_for(run, blind=False)
             d = H.build(ev)
             r = H.evaluate(d, method, seed=1000 + i) if method else dict(method=None, n_events=int(d["n"]))
             r.update(info)
+            # sensitivity (review R1): the other matching method, where it is identified
+            other = "argmax" if method == "mass" else None
+            if other and feas["runs"][run][other]["possible"]:
+                r["sensitivity_argmax"] = H.evaluate(d, other, seed=2000 + i)
             out["runs"][run] = r
             res.append(r)
-            print(run, json.dumps({k: (v if not isinstance(v, float) else round(v, 4)) for k, v in r.items()}),
-                  flush=True)
-        verdict = ("ej bedömbar" if method is None else
-                   "klarad" if all(r["passed"] for r in res) else "ej klarad")
+            sens.append(r.get("sensitivity_argmax"))
+            print(run, json.dumps({k: (v if not isinstance(v, float) else round(v, 4)) for k, v in r.items()
+                                   if k != "sensitivity_argmax"}), flush=True)
+        if method is None:
+            verdict = "ej bedömbar"
+        else:
+            verdict = "klarad" if all(r["passed"] for r in res) else "ej klarad"
+            if all(x is not None for x in sens):
+                v2 = "klarad" if all(x["passed"] for x in sens) else "ej klarad"
+                if v2 != verdict:
+                    verdict = "osäker (matchningsmetoderna ger olika svar)"
         out["levels"][lvl] = dict(judged=lvl in JUDGED, method=method,
                                   verdict=verdict if lvl in JUDGED else "redovisas (" + verdict + ")")
-        json.dump(out, open(os.path.join(RES, "sprint5a_h5.json"), "w"), indent=1)
+        json.dump(out, open(os.path.join(RES, "sprint5a_h5.json"), "w"), indent=1, default=float)
     print("LEVELS", json.dumps(out["levels"], ensure_ascii=False), flush=True)
 
 
