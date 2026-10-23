@@ -1,4 +1,4 @@
-<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 efter grind 4-beslutet med plan 5a, rev 284. Vid skillnad gäller det levande dokumentet. -->
+<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 efter införda förslag från diskussionstråden, rev 292. Vid skillnad gäller det levande dokumentet. -->
 
 # Nexis v2 – spec
 
@@ -638,6 +638,13 @@ Episoderna är de som pågick efter tre steg, ungefär hälften av banken. I (b)
 - **H1 får inte stöd,** som piloten förutsade. Bland hittade mål söker 1a inte flackare än Baslinjen eller Blandat. Schemats vinst ligger i färre missar och återbesök, inte i en flackare söklutning.
 - Ett godkänt H2 visar att mekanismen beter sig som AST förutsäger. Det säger inget om upplevelse.
 
+**Skärpt tolkning efter grind 4 (produktägaren och Claude, 23 okt).** Den här tolkningen gäller framför punkterna ovan:
+
+- **MVP har prövat ett orakel, inte AST:s kärna.** I 1a räknas schemat ut ur den verkliga spotlighten och har aldrig fel under träningen. Därför är det rationellt för agenten att lita på det. H2 visar att agenten behandlar schemat som auktoritet. Det visar inte att schemat är en förenklad modell. AST:s kärna, att kunskapen om den egna uppmärksamheten kommer från en förenklad modell, prövas först i H5 och 1c.
+- **H2 (b) bär resultatet.** Agenten litar mer på schemat än på sitt eget minne av vart den siktade.
+- **H3 tillför lite eget.** Träffandelen i H3a är samma jämförelse som F, med samma siffror. Återbesöken är delvis givna per konstruktion, eftersom återbesök är vad kartan registrerar. H3b bygger på en akut lesion utanför träningsfördelningen.
+- **Asymmetrin i H2 är oförklarad.** Ett falskt "redan tittat här" följs nästan alltid, ett falskt "inte tittat här" bara delvis. Asymmetrin visar vilken information agenten behandlar som auktoritet, och det är vad H5 handlar om. Min förklaring ovan, att agenten minns var den siktat, är en av flera möjliga. De prövas i sprint 5a.
+
 ### Oberoende granskning
 
 **Oberoende granskning (23 okt 01:20): godkänd med anmärkningar. Ingen anmärkning ändrar utfallet för något kriterium.** Hela rapporten: `v2/results/sprint4_review.md`.
@@ -718,14 +725,14 @@ En risk finns kvar, och den tas inte bort av designen. En komprimerad prediktor 
    - Dessutom, efter granskningen: (a) och (b) på slutcheckpointerna, och (b) räknat per kommando och bara i episoder där alla tre kommandona hann ges.
 
    Förklaringarna utesluter inte varandra. Resultatet styr beteendemåttet i steg 3. Stöder det E1, måste beteendemåttet skilja på rutor agenten siktat mot och rutor den bara fångats till.
-2. **Bygge, ca 3 timmar.** Allt pushas innan något tränas.
+2. **Bygge, ca 4 timmar.** Allt pushas innan något tränas.
    - **Matchningssignal.** För varje ruta i det avsedda fönstret anger den om det foveán visade stämmer med vad periferin visar där, upptaget och färg. Den går bara till schemamodulen, inte till styrningen. Biologiskt motsvarar det en jämförelse mellan förväntad och faktisk syninformation.
-   - **Flaskhals** (rekommenderad form, se beslut nedan). Modulens indata per ruta passerar en smal kanal med m tal, m = 1, 2 eller 4. Dessutom finns en variant utan flaskhals. Modulen måste själv välja vad den behåller av efferenskopia, matchning och periferi.
+   - **Flaskhals** (rekommenderad form, se beslut nedan): kostnad per informationsmängd, nära 1c. Modulens indata per ruta passerar en brusig kanal. Ju mer information som släpps igenom, desto högre kostnad i träningen. Modulen måste då själv välja vad den behåller av efferenskopia, matchning och periferi. AST förutsäger förenkling just för att schemat är resursbegränsat. Dosserien bestäms nu i informationsmängd, 4, 2 och 1 bit per ruta och steg, plus en variant utan kostnad. Kostnadens vikt ställs in i korta kalibreringskörningar så att den uppmätta informationsmängden hamnar på nivån. Kalibreringen tittar bara på informationsmängden, inte på något H5-mått.
    - **Ändring av H5:s mätvillkor (ingår i godkännandet av planen).** "Foveán utesluter avsedd plats" avgörs med upptaget och färg, det agenten kan jämföra mot periferin. Formen ingår inte, eftersom periferin aldrig visar form. Den ideala betraktaren får samma begränsning. Annars ser den mer än agenten kan.
    - **Doskontroll enligt din lärdom.** Ett test visar att matchningssignalen skiljer sig vid fångst i samma andel fall som den ideala betraktaren kan upptäcka fångsten, och att alla flaskhalsnivåer får exakt samma indata.
-3. **Pilot, ca 1,5 timme träning i bakgrunden.** Fem villkor: Baslinje samt 1b med m = 1, 2, 4 och utan flaskhals. Frö 20 och 21, 400 000 episoder, tio körningar. Testet görs på en egen pilotbank, inte på MVP:s fröbank. Piloten mäter följande, blint för H5:s utfall:
+3. **Pilot, ca 2 timmar träning i bakgrunden, inklusive kalibrering.** Fem villkor: Baslinje samt 1b med 4, 2 och 1 bit och utan kostnad. Frö 20 och 21, 400 000 episoder, tio körningar. Testet görs på en egen pilotbank, inte på MVP:s fröbank. Piloten mäter följande, blint för H5:s utfall:
    - **Förutsättningen:** modulen utan flaskhals lägger sin mest sannolika ruta i det faktiska fönstret vid minst hälften av de H5-händelser där den ideala betraktaren kan se att spotlighten fångats.
-   - **Att flaskhalsen biter:** andelen rätt vid fångst sjunker när m minskar. Det visar hur ofta schemat har fel, inte vart det pekar.
+   - **Att flaskhalsen biter:** andelen rätt vid fångst sjunker när informationsmängden minskar. Det visar hur ofta schemat har fel, inte vart det pekar.
    - **Schemats nytta:** träffandel för varje nivå, jämförd med Baslinjen.
    - Antal H5-händelser, spridning mellan frön och tid per körning.
 
@@ -744,7 +751,7 @@ En risk finns kvar, och den tas inte bort av designen. En komprimerad prediktor 
 **Beslut för produktägaren** (skriv svar: under respektive punkt)
 
 - [ ] Godkänner du plan 5a: diagnostik, bygge, pilot och förslag till trösklar, inklusive ändringen av H5:s mätvillkor?
-- [ ] Flaskhalsens form. Jag rekommenderar en smal indatakanal med m = 1, 2, 4. Den är enkel att bygga och tvingar modulen att välja vad den behåller. Alternativ 1: brus med kostnad på matchningssignalen. Det ligger närmare informationsteori men kräver mer handskriven kod. Alternativ 2: ett schema som bara kan ange en plats och en bredd. Det är närmast AST:s karikatyr av uppmärksamhet, men felen hamnar då mellan platser och blir svåra att tolka.
+- [ ] Flaskhalsens form. Jag rekommenderar kostnad per informationsmängd, som diskussionstråden föreslog. Den ligger nära 1c, motsvarar AST:s argument att schemat är resursbegränsat, och dosen kan anges i bitar. Den kostar ungefär en timmes extra bygge. Jag ändrade rekommendationen efter att ha läst trådens förslag. En smal kanal är enklare, men den kan bära mycket information ändå, så det är osäkert om den tvingar fram förenkling. Alternativ 1: en smal indatakanal med 1, 2 eller 4 tal per ruta. Alternativ 2: ett schema som bara kan ange en plats och en bredd. Det är närmast AST:s karikatyr av uppmärksamhet, men felen hamnar då mellan platser och blir svåra att tolka.
 - [ ] Ska beteendemåttet bli ett kriterium bredvid H5, med en tröskel som låses vid grind 5a? Måttet: går agenten tillbaka till den avsedda platsen efter en fångst? Jag rekommenderar ja.
 - [ ] Din invändning att schemat i 1a aldrig haft fel. I 1b har schemat ibland fel under träningen, så frågan om agenten litar på ett ofullständigt schema prövas där. Jag föreslår därför ingen egen 1a-variant med brus i schemat. Räcker det?
 
@@ -775,6 +782,28 @@ Skiss för den sociala fasen (förslag 22 okt, ej beslutad), i Conways anda: min
 **Inriktning 22 okt 2026 (produktägaren):** medvetande är i hög grad knutet till att vi kan tala om det, och dess evolutionära fördel bör sökas i ett socialt sammanhang med begreppsbildning, inte nödvändigtvis språk i snäv mening. Begreppsbildning ska därför ingå i det som driver fram ett schema. Förslag till form (ej beslutad): schemakanalen i 1c och den sociala fasen går genom ett fåtal diskreta symboler i stället för en numerisk karta. I den sociala fasen beskriver agenterna sin uppmärksamhet för varandra med symbolerna, och samma symboler matas tillbaka till agenten själv, som inre tal. Förutsägelse: symbolerna blir grova kategorier för egen och andras uppmärksamhet, med samma kod för båda, de styr agentens egen uppmärksamhet (lesion och falska symboler försämrar respektive flyttar den), och de är fel på det sätt AST förutsäger.
 
 Koppling till fas 2 (22 okt): en språkmodell är formad av den sociala vägen, att förutsäga människor som modellerar varandras uppmärksamhet, men har inte belönats för en korrekt modell av sin egen. Om tesen att det sociala spelet räcker stämmer, kan ett schema ha vuxit fram där som bieffekt. Modellens egna utsagor bevisar inget, eftersom den lärt sig människors schemaspråk. Därför mäter fas 2 de inre tillstånden, inte vad modellen säger. Ordningen ändras inte: fas 2 körs om fas 1 visar effekt.
+
+### Förslag från diskussionstråden 22–23 okt (Anders och Claude, ej beslutat)
+
+Infört 23 okt på produktägarens begäran. Inget av det här är beslutat, och det påverkar varken sprint 4:s låsta utfall eller plan 5a.
+
+**Sammanhållande fråga:** när behöver en helhet av delar en gemensam, förenklad modell av sin egen uppmärksamhet, och vad händer när modellen och verkligheten skiljer sig åt?
+
+**Inspiration:**
+
+- **Fåglars lateralisering (Rogers).** Ena hjärnhalvan fokuserar och kategoriserar, den andra vakar.
+- **Minskys Society of Mind.** En B-hjärna övervakar en A-hjärna, och självkännedomen är förenklad. Nexis-agenten, med en enhet per ruta och kommunikation bara via ett globalt medelvärde, är ett sådant samhälle.
+- **Dennett och Harari.** Jaget och samhällets fiktioner fungerar som berättelser. Anders poäng är att berättelsen inte existerar i sig men är verklig genom det den handlar om, alltså genom sin intentionalitet. Språket är ett av flera sätt att modellera. Det ger en icke-alienerande läsning av AST: schemat är förenklat, men ingen illusion.
+
+**Tre frågor som går att pröva:**
+
+1. **Inre kapning.** En agent med en fokuserande och en vaksam kanal, där fångsten kommer inifrån i stället för från en slumpmekanism. Anger schemat den avsedda platsen när den vaksamma sidan tagit över? Det är H5 med fågelns arkitektur.
+2. **Schemat som samordning.** Piloten antyder att 1b misslyckades delvis för att rutorna bara kommunicerar via ett globalt medelvärde. Ger bättre kommunikation mellan rutorna ett fungerande eget schema, eller behövs en separat modul, en B-hjärna?
+3. **Från modell till berättelse.** Uppstår vilseledning om den egna uppmärksamheten i den sociala fasen först när schemakanalen får diskreta symboler? Ett ordlöst schema kan ha fel men inte ljuga. En symbolisk modell kan frikopplas och ljuga.
+
+**Förbehåll:** tänkarna tillhör i stort samma funktionalistiska tradition, så att de stämmer överens är ingen oberoende bekräftelse.
+
+**Claudes kommentar:** fråga 1 ligger närmast det som redan finns. Plan 5a:s matchningssignal och flaskhals kan återanvändas, och fångstmekanismen byts mot en inre vaksam kanal. Fråga 2 går delvis att besvara redan i 5a, eftersom schemamodulen där är just en separat B-hjärna.
 
 ## Öppna frågor och beslut för produktägaren
 

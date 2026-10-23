@@ -198,12 +198,20 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Plan 5a skriven i specen 23 okt ca 11:15, väntar på produktägarens godkännande. Inget kört.** Avsnitt
   "Sprint 5: H5" i specen: (1) diagnostik på sprint 4:s agenter, förklaringar E1 minnet av siktet, E2 rutornas
   värde, E3 rimlighet (lögn som efter en fångst), plus slutcheckpoints och (b) per kommando; (2) bygge:
-  matchningssignal (upptaget + färg, bara till modulen), flaskhals = smal indatakanal m = 1, 2, 4 + utan,
+  matchningssignal (upptaget + färg, bara till modulen), flaskhals = kostnad per informationsmängd, dos 4/2/1 bit
+  per ruta och steg + utan kostnad (vikt kalibreras blint mot uppmätt informationsmängd; ändrat 23 okt efter
+  diskussionstrådens förslag, tidigare smal kanal m = 1, 2, 4, nu alternativ),
   ändrat H5-mätvillkor (utesluta med upptaget och färg, ideala betraktaren begränsad likadant), doskontroll;
   (3) pilot: Baslinje + fyra 1b-nivåer, frö 20–21, 400k, pilotbank 4 000 000 + i, blind för var felen pekar;
   förutsättning: modul utan flaskhals rätt vid ≥ hälften av upptäckbara H5-händelser; (4) trösklar, granskning,
   grind 5a. Fyra beslutspunkter: planen, flaskhalsens form, beteendemått som kriterium, ingen 1a med brus.
   Ordlistan fick matchningssignal, dosserie, doskontroll och utvidgad flaskhals.
+- **Diskussionstrådens förslag 22–23 okt införda i specen 23 okt ca 11:45** (produktägaren skickade texten):
+  skärpt tolkning av sprint 4 (1a = orakel; MVP visar schemat som auktoritet, inte förenklad modell; AST:s
+  kärna prövas i H5 och 1c; H3 tillför lite eget; asymmetrin = vad agenten behandlar som auktoritet), och nytt
+  avsnitt under "Efter MVP" (sammanhållande fråga, Rogers/Minsky/Dennett–Harari, tre prövbara frågor: inre
+  kapning, schemat som samordning, från modell till berättelse), märkt ej beslutat. Kommentaren vid grind 3
+  är överspelad (produktägarens egen markering); svar postade i de två kommentarstrådarna.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
 - **Nästa steg:** vänta på produktägarens svar på plan 5a i specen. Vid godkännande: steg 1 (diagnostik) först,
   sedan bygge och pusha innan något tränas. Rör inte sprint 4:s låsta utfall.
