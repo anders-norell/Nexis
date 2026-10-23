@@ -53,7 +53,7 @@ def _block(agent, seeds, intervention, blind, overrides, record=False):
     arng = [x[1] for x in st]
     hrng = [x[2] for x in st]
     mod = getattr(agent, "module", None)
-    channel = agent.schema_mode == "channel"
+    channel = agent.schema_mode in ("channel", "channel_e")
     h = agent.init_state(B)
     hm = mod.init_state(B) if channel else None
     union = np.zeros((B, G, G))

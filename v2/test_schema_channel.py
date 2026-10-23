@@ -135,6 +135,32 @@ def test_matching_signal_detects_exactly_detectable_captures():
     check("no mismatch without capture", n_mis_nocap == 0, f"{n_mis_nocap}")
 
 
+def test_alarm_signal_alternative_e():
+    """The alarm is 1 exactly when the matching signal shows a mismatch anywhere, the same on every cell,
+    and only the alternative-E module gets it."""
+    from h5 import excludes_intended_restricted
+    env = SearchEnv(EnvConfig(p_capture=0.6), seed=8)
+    obs = env.reset(300)
+    ag = PriorityMapAgent(env.cfg, matching=True, alarm=True)
+    rng = np.random.default_rng(8)
+    ok_any, ok_flat, agree, n_cap = True, True, 0, 0
+    while not env.done.all():
+        obs, _, _, info = env.step(rng.integers(0, env.cfg.G ** 2, env.B))
+        x, _ = ag.features(env, obs, 1, None)
+        G = env.cfg.G
+        ms, al = x[..., -2].reshape(env.B, G, G), x[..., -1].reshape(env.B, G, G)
+        ok_any &= np.array_equal(al[:, 0, 0] > 0, (ms < 0).any((1, 2)))
+        ok_flat &= bool((al == al[:, :1, :1]).all())
+        for b in np.nonzero(info["active"] & info["captured"] & ~info["hit"])[0]:
+            n_cap += 1
+            agree += (al[b, 0, 0] > 0) == excludes_intended_restricted(env, b, *info["intended"][b])
+    check("alarm = mismatch anywhere", ok_any)
+    check("alarm is the same on every cell (broadcast, says nothing about where)", ok_flat)
+    check(f"alarm goes off exactly at detectable captures ({n_cap} captures)", agree == n_cap)
+    e = make_agent(EnvConfig(), schema_mode="channel_e"); c = make_agent(EnvConfig(), schema_mode="channel")
+    check("only the E module has the alarm channel", e.module.net.dx == c.module.net.dx + 1 and not c.module.net.alarm)
+
+
 def test_existing_agents_unchanged():
     """Policy and module features without matching are exactly as before (sprint 4 checkpoints load)."""
     import os, json
@@ -162,6 +188,10 @@ def test_existing_agents_unchanged():
           all(np.array_equal(a, b) for a, b in zip(o1[:4], o2[:4])))
     ag2 = make_agent(EnvConfig(), schema_mode="channel")
     check("channel module has one extra input channel", ag2.module.net.dx == ag.dx + 1)
+    from pilot_5a import load as pload, RES as PRES
+    if os.path.exists(os.path.join(PRES, "p5_ref1e-4_s20.best.npz")):
+        a3, _, _ = pload(os.path.join(PRES, "p5_ref1e-4_s20.best.npz"))
+        check("first-round pilot modules still load (no alarm)", a3.module.net.alarm is False)
 
 
 if __name__ == "__main__":

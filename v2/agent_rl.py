@@ -31,7 +31,7 @@ differences in test_agent_rl.py.
 import numpy as np
 from env import window_origin
 
-SCHEMA_MODES = ("off", "fixed", "learned", "shuffled", "module", "channel")
+SCHEMA_MODES = ("off", "fixed", "learned", "shuffled", "module", "channel", "channel_e")
 
 
 def sigmoid(x):
@@ -49,13 +49,22 @@ def matching_signal(per, rem, C):
     return np.where(inwin, np.where(same, 1.0, -1.0), 0.0)
 
 
+def alarm_signal(ms):
+    """Sprint 5 alternative E: one number per step, 1 if the matching signal shows a mismatch anywhere
+    ("something was not right where I aimed"), else 0, broadcast to every cell (B, G, G). It says that
+    something went wrong, not where."""
+    alarm = (ms < 0).any((1, 2)).astype(float)
+    return np.broadcast_to(alarm[:, None, None], ms.shape).copy()
+
+
 class PriorityMapAgent:
-    def __init__(self, cfg, d=16, dh=32, seed=0, schema_mode="off", dtype=np.float32, matching=False):
+    def __init__(self, cfg, d=16, dh=32, seed=0, schema_mode="off", dtype=np.float32, matching=False, alarm=False):
         assert schema_mode in SCHEMA_MODES
         self.cfg, self.d, self.dh, self.schema_mode = cfg, d, dh, schema_mode
         C, S = cfg.n_colors, cfg.n_shapes
         self.matching = matching          # sprint 5: one extra input channel, the matching signal (module only)
-        self.dx = (3 + C) + (C + S) + (2 + C + S) + 2 + 1 + 2 + (1 if matching else 0)
+        self.alarm = alarm                # sprint 5, alternative E: global alarm, broadcast to every cell
+        self.dx = (3 + C) + (C + S) + (2 + C + S) + 2 + 1 + 2 + (1 if matching else 0) + (1 if alarm else 0)
         self.n_schema = 2
         din = self.dx + d
         rng = np.random.default_rng(seed)
@@ -104,8 +113,12 @@ class PriorityMapAgent:
         tt = np.full((B, G, G, 1), t / 20.0)
         sch = np.zeros((B, G, G, self.n_schema)) if schema is None else schema
         parts = [per, cue, rem, pos, tt, sch]
+        if self.matching or self.alarm:
+            ms = matching_signal(per, rem, cfg.n_colors)
         if self.matching:
-            parts.append(matching_signal(per, rem, cfg.n_colors)[..., None])
+            parts.append(ms[..., None])
+        if self.alarm:
+            parts.append(alarm_signal(ms)[..., None])
         x = np.concatenate(parts, -1)
         return (x.reshape(B, G * G, self.dx).astype(self.dtype),
                 valid.reshape(B, G * G).astype(self.dtype))
@@ -215,9 +228,9 @@ def make_agent(cfg, d=16, dh=32, seed=0, schema_mode="off"):
     ag = PriorityMapAgent(cfg, d=d, dh=dh, seed=seed, schema_mode=schema_mode)
     if schema_mode == "module":
         ag.module = PriorityMapAgent(cfg, d=d, dh=dh, seed=10_000 + seed, schema_mode="off")
-    if schema_mode == "channel":
+    if schema_mode in ("channel", "channel_e"):
         from schema_channel import ChannelSchema
-        ag.module = ChannelSchema(cfg, d=d, dh=dh, seed=10_000 + seed)
+        ag.module = ChannelSchema(cfg, d=d, dh=dh, seed=10_000 + seed, alarm=schema_mode == "channel_e")
     return ag
 
 
@@ -229,7 +242,7 @@ def schema_input(mode, env, info, visited, learned_pred=None, donor=None):
     shuffled  the fixed schema of another episode in the batch, same size (Blandat)
     Returns (schema, visited).
     """
-    if mode in ("off", "module", "channel"):            # module schema is built in the rollout
+    if mode in ("off", "module", "channel", "channel_e"):   # module schema is built in the rollout
         return None, visited
     G = env.cfg.G
     B = env.B

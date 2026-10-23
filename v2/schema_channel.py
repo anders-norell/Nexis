@@ -14,6 +14,9 @@ Approved design (spec, "Sprint 5: H5", plan 5a, step 2, product owner 23 Oct):
             The efference copy cannot go round the bottleneck.
   target    the window the spotlight actually covered last step (as 1b in sprint 3), cross-entropy.
 
+Alternative E (product owner, 23 Oct 14:03): with alarm=True the module also gets the global alarm
+(agent_rl.alarm_signal), broadcast to every cell.
+
 The schema the policy receives is [map, running union of maps], with the same timing as sprint 3's module.
 Gradients are hand-written and checked against finite differences in test_schema_channel.py.
 """
@@ -24,9 +27,10 @@ LN2 = np.log(2.0)
 
 
 class ChannelSchema:
-    def __init__(self, cfg, d=16, dh=32, seed=0, dtype=np.float32):
+    def __init__(self, cfg, d=16, dh=32, seed=0, dtype=np.float32, alarm=False):
         self.cfg, self.d, self.dtype = cfg, d, dtype
-        self.net = PriorityMapAgent(cfg, d=d, dh=dh, seed=seed, schema_mode="off", matching=True, dtype=dtype)
+        self.net = PriorityMapAgent(cfg, d=d, dh=dh, seed=seed, schema_mode="off", matching=True, dtype=dtype,
+                                    alarm=alarm)
         rng = np.random.default_rng(seed + 777)
         self.p = self.net.p                       # one dict: network weights + channel weights
         self.p.update(dict(

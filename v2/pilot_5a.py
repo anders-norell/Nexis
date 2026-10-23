@@ -7,6 +7,7 @@ Runs (results/p5_*): Baslinje p5_off_s{20,21}; 1b with the costly channel:
 
 Test on the pilot bank: episode i has seed 4 000 000 + i, i < 4 000 (streams as in bank.py).
 
+  python3 pilot_5a.py eref    the same for alternative E (runs p5_eref*, global alarm)
   python3 pilot_5a.py ref     evaluate the reference runs, decide the reference (condition b), print the
                               level targets in bits per step
   python3 pilot_5a.py all     evaluate every finished run, write results/sprint5a_pilot.json
@@ -65,20 +66,22 @@ def finished(name):
     return os.path.exists(os.path.join(RES, name + ".final.npz"))
 
 
-def decide_reference(res):
+def decide_reference(res, prefix="ref"):
     """Condition b (locked): reference = information per step of the 0.001 variant, mean over the two
     seeds. If it differs from the 0.0001 variant by more than a factor 1.5, the reference is not well
     defined and the halving rule applies instead."""
-    r3 = [evaluate(f"p5_ref1e-3_s{s}", res)["bits_per_step"] for s in (20, 21)]
-    r4 = [evaluate(f"p5_ref1e-4_s{s}", res)["bits_per_step"] for s in (20, 21)]
+    r3 = [evaluate(f"p5_{prefix}1e-3_s{s}", res)["bits_per_step"] for s in (20, 21)]
+    r4 = [evaluate(f"p5_{prefix}1e-4_s{s}", res)["bits_per_step"] for s in (20, 21)]
+    pre = [res["runs"][f"p5_{prefix}1e-4_s{s}"]["acc_at_h5"] for s in (20, 21)]
     m3, m4 = float(np.mean(r3)), float(np.mean(r4))
     ratio = max(m3, m4) / max(min(m3, m4), 1e-9)
     ref = dict(bits_1e3=r3, bits_1e4=r4, mean_1e3=m3, mean_1e4=m4, ratio=ratio,
-               well_defined=bool(ratio <= 1.5))
+               well_defined=bool(ratio <= 1.5), precondition_acc_at_h5=pre,
+               precondition_met=bool(all(a >= 0.5 for a in pre)))
     if ref["well_defined"]:
         ref["reference_bits"] = m3
         ref["targets"] = {f"lvl{int(l * 1000) / 10:g}": m3 * l for l in LEVELS}
-    res["reference"] = ref
+    res["reference" if prefix == "ref" else f"reference_{prefix}"] = ref
     json.dump(res, open(OUT, "w"), indent=1)
     return ref
 
@@ -86,8 +89,8 @@ def decide_reference(res):
 def main():
     res = json.load(open(OUT)) if os.path.exists(OUT) else {"runs": {}}
     what = sys.argv[1] if len(sys.argv) > 1 else "all"
-    if what == "ref":
-        ref = decide_reference(res)
+    if what in ("ref", "eref"):
+        ref = decide_reference(res, what)
         print("REFERENCE", json.dumps(ref), flush=True)
         return
     for p in sorted(glob.glob(os.path.join(RES, "p5_*.final.npz"))):
