@@ -234,7 +234,17 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   E4 förklarar asymmetrin: normerat stänger (b) 93–95 % av gapet, (a) 10–33 %. E1-provet svagt (fångade rutor
   ligger intill iögonfallande föremål). Steg 3-rutor 2–3× större effekt (närhet eller färskhet, oavgjort).
   (b) per kommando −0,29, alla tre kommandon −0,95. Beteendemåttet mäts som det står (ingen delning/normering).
-- **Nästa:** steg 2, bygget (matchningssignal, kanal med informationskostnad, reglering, nollmodell med blandning
-  + syntetiskt test, beteendemått, H2 (b) i modulens karta, pilotbank, testskript). Pusha innan något tränas.
+- **Steg 2 (bygge) klart och pushat 23 okt 12:22 (commit 003308e), inget tränat före push.** `v2/schema_channel.py`
+  (ChannelSchema: modul med full indata + matchning, brusig kanal ett tal/ruta, bitar = KL mot N(0,1), avkodare ser
+  bara kanalen; channel_grads BPTT), `agent_rl.py` (matching_signal, läge "channel"; gamla agenter bitidentiska),
+  `train_rl.py` (--schema channel --rate-cost --rate-target --rate-eta), `h5.py` (observer_restricted,
+  excludes_intended_restricted, observer_mixed = nollmodell villkor a), `h5_bank.py` (run_bank_module: H5-händelser,
+  träffsäkerhet, bitar, beteendegrupper bara som ja/nej ≥ 200, H2 (b) i modulens karta), `pilot_5a.py`
+  (ref/all → results/sprint5a_pilot.json), `run_sprint5a.sh A` / `B T50 T25 T12`. Tester: `test_schema_channel.py`,
+  `test_h5_5a.py`.
+- **Steg 3 (pilot) pågår, start 12:23:** fas A = p5_off, p5_ref1e-3, p5_ref1e-4, frö 20–21, 400k. Sedan
+  `python3 pilot_5a.py ref` (referens + mål i bitar/steg), sedan `sh run_sprint5a.sh B <T50> <T25> <T12>`, sedan
+  `python3 pilot_5a.py all`. Blind: titta inte på var felen pekar eller beteendemåttets utfall förrän grind 5a.
+  H2 (b) körs inte på pilotens agenter.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
 - **Nästa steg:** bygget i steg 2 (se ovan), sedan piloten. Rör inte sprint 4:s låsta utfall.
