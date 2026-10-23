@@ -242,9 +242,13 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   träffsäkerhet, bitar, beteendegrupper bara som ja/nej ≥ 200, H2 (b) i modulens karta), `pilot_5a.py`
   (ref/all → results/sprint5a_pilot.json), `run_sprint5a.sh A` / `B T50 T25 T12`. Tester: `test_schema_channel.py`,
   `test_h5_5a.py`.
-- **Steg 3 (pilot) pågår, start 12:23:** fas A = p5_off, p5_ref1e-3, p5_ref1e-4, frö 20–21, 400k. Sedan
-  `python3 pilot_5a.py ref` (referens + mål i bitar/steg), sedan `sh run_sprint5a.sh B <T50> <T25> <T12>`, sedan
-  `python3 pilot_5a.py all`. Blind: titta inte på var felen pekar eller beteendemåttets utfall förrän grind 5a.
-  H2 (b) körs inte på pilotens agenter.
+- **Steg 3 (pilot) fas A klar 23 okt 13:17; FÖRUTSÄTTNINGEN KLARAS INTE; piloten stoppad, fas B ej startad.
+  Väntar på produktägarens beslut (specen, "Steg 3: pilot – resultat": A/B/C/D).** 1b med full info (kostnad 0,0001)
+  rätt vid 20–21 % av H5-händelserna (krav ≥ 50 %; begränsade betraktaren 0,94 på faktiskt fönster). Rätt utan fångst
+  99,9–100 %, vid fångst 11–12 % (fångst ≈ 1/3 av stegen). Referensen ej väldefinierad: 78 bitar (0,001) mot 183
+  (0,0001), faktor 2,4 > 1,5. Ingen nytta: 1b 86,3–87,2 % träff, Baslinje 86,6–86,8 %. Förlusten planar ut ~200k.
+  Tolkning: informationen finns men modulen beräknar inte fångsten (rutorna kommunicerar bara via globalt medel).
+  Förslag: A (rek.) lokal "var passar glimten"-signal per ruta; B global max-samordning; C längre träning (avråds);
+  D avsluta H5 i denna form. Blindhet bevarad: var felen pekar ej tittat på.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
 - **Nästa steg:** bygget i steg 2 (se ovan), sedan piloten. Rör inte sprint 4:s låsta utfall.
