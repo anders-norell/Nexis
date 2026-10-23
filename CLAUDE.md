@@ -256,5 +256,15 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   Byggt, testat, pushat; fas A med E (`sh run_sprint5a.sh EA`, körningar p5_eref1e-3/1e-4, frö 20–21) startad ca 14:15,
   därefter `python3 pilot_5a.py eref` (förutsättning + referens). Baslinjens p5_off återanvänds. Fas B med E:
   `sh run_sprint5a.sh EB <T50> <T25> <T12>` om förutsättningen klaras; annars stopp och beslut.
+- **Pilot med E klar 23 okt 16:17.** Förutsättningen klarad (0,0001-varianten rätt vid 57,2/57,4 % av H5-händelserna).
+  Referensen ej väldefinierad (75 mot 177 bitar) → halveringsregeln: körningar p5_ehalf{44.2,22.1,11.05,5.53}_s{20,21}.
+  Rätt vid H5: 57→54→44→26→14 % vid 177→44→22→11→5,5 bitar; rätt över alla steg 76→76→73→64→48 %. Träff 86,5–87,9 %
+  (Baslinje 86,7): liten nytta. Tvetydighet i villkor b (medel eller per frö): medel → referens 44, nivåer 22/11/5,5
+  (rekommenderas); per frö → 88, nivåer 44/22/11. Alla körda. Doskontroll beteendemått: felgruppen < 200 i alla
+  körningar (ja/nej-svaret läcker att felen inte mest ligger på avsedd plats; redovisat). Steg 4-förslag i specen:
+  H5-kriterium (andel felmassa på avsett fönster, schema vs blandningsnollmodell med q matchat på massa på faktiskt
+  fönster, ratio-of-sums, bootstrap, > 2 SE alla tre frön, per nivå), beteendemått (i) 20 000-episodbank + N ≥ 200
+  eller (ii) beskrivande, H2 (b) på 1b redovisas, 5b = Baslinje + 0,0001 + tre nivåer, frö 30–32, 400k, MVP-banken.
+  Oberoende granskning startad 16:25 (ska skriva `v2/results/sprint5a_review.md`, blind). Sedan grind 5a.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
 - **Nästa steg:** bygget i steg 2 (se ovan), sedan piloten. Rör inte sprint 4:s låsta utfall.
