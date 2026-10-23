@@ -31,19 +31,31 @@ differences in test_agent_rl.py.
 import numpy as np
 from env import window_origin
 
-SCHEMA_MODES = ("off", "fixed", "learned", "shuffled", "module")
+SCHEMA_MODES = ("off", "fixed", "learned", "shuffled", "module", "channel")
 
 
 def sigmoid(x):
     return 0.5 * (1.0 + np.tanh(0.5 * x))
 
 
+def matching_signal(per, rem, C):
+    """Sprint 5 matching signal per cell (B, G, G): on the cells of the intended window (where the efference
+    copy remaps the fovea), +1 if what the fovea showed agrees with what the periphery shows there
+    (occupied and colour; the periphery never shows shape), -1 if it does not, 0 elsewhere and at the first
+    step. A -1 anywhere means the spotlight was not where the agent aimed: a comparator between expected
+    and actual visual input."""
+    inwin = rem[..., 0] > 0
+    same = (rem[..., 1] == per[..., 1]) & np.all(rem[..., 2:2 + C] == per[..., 3:3 + C], -1)
+    return np.where(inwin, np.where(same, 1.0, -1.0), 0.0)
+
+
 class PriorityMapAgent:
-    def __init__(self, cfg, d=16, dh=32, seed=0, schema_mode="off", dtype=np.float32):
+    def __init__(self, cfg, d=16, dh=32, seed=0, schema_mode="off", dtype=np.float32, matching=False):
         assert schema_mode in SCHEMA_MODES
         self.cfg, self.d, self.dh, self.schema_mode = cfg, d, dh, schema_mode
         C, S = cfg.n_colors, cfg.n_shapes
-        self.dx = (3 + C) + (C + S) + (2 + C + S) + 2 + 1 + 2
+        self.matching = matching          # sprint 5: one extra input channel, the matching signal (module only)
+        self.dx = (3 + C) + (C + S) + (2 + C + S) + 2 + 1 + 2 + (1 if matching else 0)
         self.n_schema = 2
         din = self.dx + d
         rng = np.random.default_rng(seed)
@@ -91,7 +103,10 @@ class PriorityMapAgent:
         pos = np.stack([rr[None] / n, cc[None] / n], -1) * valid[..., None]
         tt = np.full((B, G, G, 1), t / 20.0)
         sch = np.zeros((B, G, G, self.n_schema)) if schema is None else schema
-        x = np.concatenate([per, cue, rem, pos, tt, sch], -1)
+        parts = [per, cue, rem, pos, tt, sch]
+        if self.matching:
+            parts.append(matching_signal(per, rem, cfg.n_colors)[..., None])
+        x = np.concatenate(parts, -1)
         return (x.reshape(B, G * G, self.dx).astype(self.dtype),
                 valid.reshape(B, G * G).astype(self.dtype))
 
@@ -200,6 +215,9 @@ def make_agent(cfg, d=16, dh=32, seed=0, schema_mode="off"):
     ag = PriorityMapAgent(cfg, d=d, dh=dh, seed=seed, schema_mode=schema_mode)
     if schema_mode == "module":
         ag.module = PriorityMapAgent(cfg, d=d, dh=dh, seed=10_000 + seed, schema_mode="off")
+    if schema_mode == "channel":
+        from schema_channel import ChannelSchema
+        ag.module = ChannelSchema(cfg, d=d, dh=dh, seed=10_000 + seed)
     return ag
 
 
@@ -211,7 +229,7 @@ def schema_input(mode, env, info, visited, learned_pred=None, donor=None):
     shuffled  the fixed schema of another episode in the batch, same size (Blandat)
     Returns (schema, visited).
     """
-    if mode in ("off", "module"):                       # module schema is built in the rollout
+    if mode in ("off", "module", "channel"):            # module schema is built in the rollout
         return None, visited
     G = env.cfg.G
     B = env.B

@@ -159,3 +159,70 @@ def summarise_h5(events):
     with_other = [e for e in events if e["n_cand"] > 2]
     return dict(n=len(events), head_mass=head, head_argmax=argmax, observer_mass=obs,
                 n_with_other_salient=len(with_other))
+
+
+# ---------------------------------------------------------------------------------------------------
+# Sprint 5a (approved 23 Oct): restricted observer and the mixing null model (condition a).
+# "The fovea excludes the intended place" is decided with what the agent can compare against the
+# periphery: occupied and colour, not shape (the periphery never shows shape). The observer gets the
+# same restriction.
+
+def restricted(glimpse, C):
+    """Keep in-window flag, occupied and colour channels of a fovea patch."""
+    return glimpse[..., :2 + C]
+
+
+def excludes_intended_restricted(env, b, ir0, ic0):
+    C = env.cfg.n_colors
+    return bool(env.last_revealed[b]) and not np.array_equal(
+        restricted(env._fovea(b, ir0, ic0, env.w[b]), C), restricted(env.last_window[b], C))
+
+
+def observer_restricted(env, b, ir0, ic0, glimpse, sal=None):
+    """Posterior over candidate windows with the restricted likelihood. sal: optional replacement
+    salience values (M,) for the prior. Returns list of (origin, post, kind)."""
+    cfg, w, C = env.cfg, env.w[b], env.cfg.n_colors
+    sv = env.sal_val[b] if sal is None else sal
+    cands, ps = [], []
+    for j in range(env.sal_pos.shape[1]):
+        r, c = env.sal_pos[b, j]
+        if r < 0 or in_window(r, c, ir0, ic0, w):
+            continue
+        ps.append((j, cfg.p_capture * sv[j]))
+    tot = sum(p for _, p in ps)
+    scale = cfg.capture_cap / tot if tot > cfg.capture_cap else 1.0
+    cands.append(((ir0, ic0), 1.0 - tot * scale, "intended"))
+    for j, p in ps:
+        r, c = env.sal_pos[b, j]
+        sr0, sc0 = window_origin(np.array([r]), np.array([c]), w, env.n[b])
+        cands.append(((int(sr0[0]), int(sc0[0])), p * scale, j))
+    g = restricted(glimpse, C)
+    post = [pr * (1.0 if np.array_equal(restricted(env._fovea(b, o[0], o[1], w), C), g) else 0.0)
+            for (o, pr, _) in cands]
+    z = sum(post)
+    return [(o, (p / z if z > 0 else 0.0), kind) for (o, _, kind), p in zip(cands, post)]
+
+
+def observer_mixed(env, b, ir0, ic0, glimpse, q, rng, K=200):
+    """Null model (condition a): the restricted ideal observer weakened by mixing. In each of K draws,
+    with probability q the glimpse is replaced by the (restricted) content of a candidate window drawn
+    at random, and each salience value independently with probability q by a fresh draw from the
+    environment's own distribution U(s_min, 1). The answer is the posterior averaged over the draws.
+    Unlike damping (a power of the likelihood), an excluded place can get mass when q > 0."""
+    cfg = env.cfg
+    base = observer_restricted(env, b, ir0, ic0, glimpse)
+    acc = np.zeros(len(base))
+    if q <= 0:
+        return base
+    for _ in range(K):
+        sal = env.sal_val[b].copy()
+        swap = rng.random(sal.shape) < q
+        sal[swap] = rng.uniform(cfg.s_min, 1.0, swap.sum())
+        g = glimpse
+        if rng.random() < q:
+            o = base[int(rng.integers(len(base)))][0]
+            g = env._fovea(b, o[0], o[1], env.w[b])
+        post = observer_restricted(env, b, ir0, ic0, g, sal)
+        acc += np.array([p for _, p, _ in post])
+    acc /= K
+    return [(o, float(p), kind) for (o, _, kind), p in zip(base, acc)]

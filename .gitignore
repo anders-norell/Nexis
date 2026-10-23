@@ -14,3 +14,10 @@ v2/results/s4_*.best.npz
 v2/results/s4_*.final.npz
 v2/results/s4_runner.log
 v2/results/sprint4_eval.stdout
+v2/results/p5_*.log.jsonl
+v2/results/p5_*.stdout
+v2/results/p5_*.ckpt.npz
+v2/results/p5_*.best.npz
+v2/results/p5_*.final.npz
+v2/results/p5_runner.log
+v2/results/sprint5a_eval.stdout

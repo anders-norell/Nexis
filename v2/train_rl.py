@@ -13,6 +13,7 @@ import time
 import numpy as np
 from env import EnvConfig, SearchEnv
 from agent_rl import PriorityMapAgent, schema_input, make_agent
+from schema_channel import ChannelSchema, channel_grads
 
 
 class Adam:
@@ -44,13 +45,30 @@ def rollout(agent, env, B, rng, greedy=False, keep=True, sl_weight=0.0, override
     ret = np.zeros(B)
     prev_actual = None
     module = getattr(agent, "module", None)
+    channel = isinstance(module, ChannelSchema)
     if module is not None:
         hm = module.init_state(B)
         union = np.zeros((B, G, G))
     mrecs = []
+    bits_sum, bits_n = 0.0, 0
     while not env.done.all():
         idx = np.nonzero(~env.done)[0]                       # only running episodes are computed
-        if module is not None:                               # separate schema module (1b-module)
+        if channel:                                          # sprint 5a: module with costly channel
+            xm, mm = module.features(env, obs, t)
+            eps = rng.normal(0, 1, (len(idx), G * G))
+            hms, slm, bits, mcache = module.forward(xm[idx], mm[idx], hm[idx], eps)
+            hm[idx] = hms
+            cur = np.zeros((B, G * G))
+            if t > 0:
+                cur[idx] = np.exp(slm)
+                bits_sum += float(bits.sum()); bits_n += len(idx)
+            cur = cur.reshape(B, G, G)
+            union = np.maximum(union, cur)
+            schema = np.stack([cur, union], -1)
+            if keep:
+                mrecs.append(dict(idx=idx, cache=mcache, logp=slm, bits=bits,
+                                  target=prev_actual[idx] if t > 0 else None))
+        elif module is not None:                             # separate schema module (1b-module)
             xm, mm = module.features(env, obs, t, None)
             hms, _, _, slm, mcache = module.step(xm[idx], mm[idx], hm[idx])
             hm[idx] = hms
@@ -90,7 +108,8 @@ def rollout(agent, env, B, rng, greedy=False, keep=True, sl_weight=0.0, override
         pred = np.zeros((B, G * G)); pred[idx] = np.exp(slogp)
         schema, visited = schema_input(agent.schema_mode, env, info, visited, pred, donor)
         t += 1
-    stats = dict(found=env.found.copy(), steps=env.steps.copy(), ret=ret, mrecs=mrecs)
+    stats = dict(found=env.found.copy(), steps=env.steps.copy(), ret=ret, mrecs=mrecs,
+                 bits=bits_sum / max(bits_n, 1))
     return recs, stats
 
 
@@ -228,6 +247,11 @@ def main():
     ap.add_argument("--reveal", type=float, default=1.0, help="fovea reveal probability (sprint 3)")
     ap.add_argument("--p-capture", type=float, default=0.25)
     ap.add_argument("--windows", default="1,2", help="spotlight sizes drawn per episode")
+    ap.add_argument("--rate-cost", type=float, default=0.0,
+                    help="sprint 5a channel: cost per bit and step (fixed, or start value with --rate-target)")
+    ap.add_argument("--rate-target", type=float, default=0.0,
+                    help="sprint 5a channel: bits per step to hold; the cost is regulated towards it (0 = fixed cost)")
+    ap.add_argument("--rate-eta", type=float, default=0.05, help="regulation step size")
     args = ap.parse_args()
 
     cfg = env_config(args)
@@ -235,6 +259,8 @@ def main():
     opt = Adam(agent.p, args.lr)
     mod = getattr(agent, "module", None)
     mopt = Adam(mod.p, args.lr) if mod is not None else None
+    if isinstance(mod, ChannelSchema):
+        mod.beta = args.rate_cost
     env = SearchEnv(cfg, seed=10_000 + args.seed)
     rng = np.random.default_rng(20_000 + args.seed)
     ckpt = args.out + ".ckpt.npz"
@@ -250,6 +276,8 @@ def main():
             mopt.t = int(meta["opt_t"])
         opt.t = int(meta["opt_t"]); it = int(meta["it"]); episodes = int(meta["episodes"])
         best = float(meta["best"])
+        if isinstance(mod, ChannelSchema) and "beta" in meta:
+            mod.beta = float(meta["beta"])
         env = SearchEnv(cfg, seed=10_000 + args.seed + 7919 * it)
         rng = np.random.default_rng(20_000 + args.seed + 7919 * it)
         print(f"resumed at it {it}, {episodes} episodes", flush=True)
@@ -262,6 +290,7 @@ def main():
         np.savez(ckpt, **mx, **{f"p_{k}": v for k, v in agent.p.items()},
                  **{f"am_{k}": v for k, v in opt.m.items()}, **{f"av_{k}": v for k, v in opt.v.items()},
                  m_opt_t=opt.t, m_it=it, m_episodes=episodes, m_best=best,
+                 m_beta=getattr(mod, "beta", 0.0),
                  m_args=json.dumps(vars(args)))
 
     log = open(args.out + ".log.jsonl", "a")
@@ -275,7 +304,19 @@ def main():
             for k in grads:
                 grads[k] *= args.clip / info["grad_norm"]
         opt.step(agent.p, grads)
-        if mod is not None:
+        if isinstance(mod, ChannelSchema):
+            mg, ml, mb = channel_grads(mod, st["mrecs"])
+            mn = np.sqrt(sum((g ** 2).sum() for g in mg.values()))
+            if mn > args.clip:
+                for k in mg:
+                    mg[k] *= args.clip / mn
+            mopt.step(mod.p, mg)
+            info["sl_loss"] = ml
+            info["bits"] = st["bits"]
+            if args.rate_target > 0:                     # regulate the cost towards the target rate
+                mod.beta = float(np.clip(mod.beta * np.exp(args.rate_eta * (st["bits"] - args.rate_target)
+                                                            / args.rate_target), 1e-7, 10.0))
+        elif mod is not None:
             mg, ml = module_grads(mod, st["mrecs"], 1.0)
             mn = np.sqrt(sum((g ** 2).sum() for g in mg.values()))
             if mn > args.clip:
@@ -286,13 +327,13 @@ def main():
         it += 1
         episodes += args.batch
         acc.append((st["found"].mean(), st["ret"].mean(), info["entropy"], info["vloss"],
-                    info["grad_norm"], info["sl_loss"]))
+                    info["grad_norm"], info["sl_loss"], info.get("bits", 0.0)))
         if it % args.log_every == 0:
             a = np.mean(acc, 0); acc = []
             rec = dict(it=it, episodes=episodes, minutes=round((time.time() - t0) / 60, 2),
                        train_found=round(a[0], 4), train_ret=round(a[1], 4), entropy=round(a[2], 3),
                        vloss=round(a[3], 4), grad_norm=round(a[4], 3), sl_loss=round(a[5], 3),
-                       ent_coef=round(ent, 5))
+                       ent_coef=round(ent, 5), bits=round(a[6], 2), beta=float(getattr(mod, "beta", 0.0)))
             log.write(json.dumps(rec) + "\n"); log.flush()
             print(rec, flush=True)
         if it % args.eval_every == 0:
@@ -303,10 +344,11 @@ def main():
             if ev["found"] > best:
                 best = ev["found"]
                 agent.save(args.out + ".best.npz", it=it, episodes=episodes, eval_found=best,
-                           args=json.dumps(vars(args)))
+                           args=json.dumps(vars(args)), beta=getattr(mod, "beta", 0.0))
             save_ckpt()
     save_ckpt()
-    agent.save(args.out + ".final.npz", it=it, episodes=episodes, args=json.dumps(vars(args)))
+    agent.save(args.out + ".final.npz", it=it, episodes=episodes, args=json.dumps(vars(args)),
+               beta=getattr(mod, "beta", 0.0))
     print("done", it, episodes, flush=True)
 
 
