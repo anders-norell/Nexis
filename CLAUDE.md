@@ -41,6 +41,9 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 - **Alla resultat rapporteras**, även misslyckanden. Ett godkänt resultat visar att mekanismen beter sig
   som AST förutsäger, inget om upplevelse.
 - **Oberoende granskning:** vid varje grind granskar en separat agent kod och resultat mot specen.
+- **Doskontroll (produktägarens lärdom vid grind 4, 23 okt):** innan ett ingrepp eller en kontroll låses ska
+  ett test visa att ingreppet ändrar ungefär lika mycket indata i kontrollen som i huvudvillkoret. Sprint 4:s
+  Blandat-kontroll för H2 (a) var nästan tom (0,76 mot 6,1 ändrade rutor) utan att tester eller granskning såg det.
 - **Pusha ofta:** arbetsytan töms mellan sessioner. Allt som inte är pushat går förlorat.
 - **Långa körningar:** kör i bakgrunden (upp till ca 2 h per kommando). Logga till fil, inte bara stdout.
 
@@ -74,7 +77,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 | 2. Kompetens | Baslinjeagent utan schema lär sig söka klart bättre än slumpagenten. | Kompetens visad |
 | 3. Pilot | Tid per körning, spridning mellan frön, kontroll att schemat behövs. Trösklar och körplan föreslås. | Trösklar godkända och låsta |
 | 4. MVP | Baslinje, Fast schema (1a), Blandat schema; frön 10–12 (9 körningar à 1M episoder). Låsta kriterier F, H1, H2, H3a/H3b (alternativ A, grind 3). | Resultat bedömda mot låsta kriterier |
-| 5. H5 | Schemamodul (1b) med lokal matchningsinformation, egen pilot innan H5:s tröskel låses. | Enligt plan |
+| 5. H5 | 5a: diagnostik av H2-asymmetrin, schemamodul (1b) med matchningssignal och flaskhals (dosserie), pilot. 5b: huvudkörning. | 5a: H5:s trösklar låsta. 5b: bedömd mot dem |
 | 6. Utbyggnad | Zoom, skalning, övriga ledtrådsnivåer, 1c, fem frön, sedan social fas. | Enligt resultat |
 
 ## Status
@@ -184,7 +187,23 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
     Blandat ±0,02–0,05, 1a fortfarande > 10 SE större. Andra: (a) större på slutcheckpoints; (b) delvis
     mekaniskt (−0,29 per kommando); `eval_mvp.py` cachar per körningsnamn.
   - Grind 4-frågor i specen: godkänna resultatet; sprint 5 (H5) som nästa steg, plan först.
-- `docs/spec_v2.md` uppdaterad 23 okt vid grind 4 (rev 279). Exportera specen dit vid varje grind.
-- **Nästa steg:** vänta på produktägarens beslut vid grind 4 (specen, "Grind 4: dina beslut"). Vid ja till
-  sprint 5 (H5): skriv planen i klartext i specen (vad, varför, vad som händer vid nej), vänta på godkännande,
-  sedan egen pilot för 1b med lokal matchningsinformation innan H5:s tröskel låses. Rör inte sprint 4:s låsta utfall.
+- **Grind 4 godkänd 23 okt 10:48** (produktägaren, i chatten). Hans bedömning, införd i specen: H2 (b) är det
+  starkaste fyndet, men i 1a har schemat aldrig haft fel i träningen, så det visar att schemat behandlas som
+  auktoritet, inte att det är en förenklad modell (H5:s och 1c:s uppgift). H3 är svagare än det ser ut
+  (H3a:s träffhalva = F; återbesök delvis per konstruktion; H3b utanför träningsfördelningen), H2 bär
+  resultatet. Asymmetrin i H2 är oförklarad och ska diagnostiseras före H5-piloten.
+- **Villkor för sprint 5 (produktägaren):** planen ska hantera risken att H5 blir falsk per konstruktion
+  (modul med matchningssignal tränad mot faktisk plats pekar på faktisk plats). Jämför med en variant med
+  flaskhals som måste förenkla, och ta in H2-asymmetrin som underlag.
+- **Plan 5a skriven i specen 23 okt ca 11:15, väntar på produktägarens godkännande. Inget kört.** Avsnitt
+  "Sprint 5: H5" i specen: (1) diagnostik på sprint 4:s agenter, förklaringar E1 minnet av siktet, E2 rutornas
+  värde, E3 rimlighet (lögn som efter en fångst), plus slutcheckpoints och (b) per kommando; (2) bygge:
+  matchningssignal (upptaget + färg, bara till modulen), flaskhals = smal indatakanal m = 1, 2, 4 + utan,
+  ändrat H5-mätvillkor (utesluta med upptaget och färg, ideala betraktaren begränsad likadant), doskontroll;
+  (3) pilot: Baslinje + fyra 1b-nivåer, frö 20–21, 400k, pilotbank 4 000 000 + i, blind för var felen pekar;
+  förutsättning: modul utan flaskhals rätt vid ≥ hälften av upptäckbara H5-händelser; (4) trösklar, granskning,
+  grind 5a. Fyra beslutspunkter: planen, flaskhalsens form, beteendemått som kriterium, ingen 1a med brus.
+  Ordlistan fick matchningssignal, dosserie, doskontroll och utvidgad flaskhals.
+- `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
+- **Nästa steg:** vänta på produktägarens svar på plan 5a i specen. Vid godkännande: steg 1 (diagnostik) först,
+  sedan bygge och pusha innan något tränas. Rör inte sprint 4:s låsta utfall.

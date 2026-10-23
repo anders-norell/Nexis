@@ -1,4 +1,4 @@
-<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 vid grind 4, rev 279. Vid skillnad gäller det levande dokumentet. -->
+<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 efter grind 4-beslutet med plan 5a, rev 284. Vid skillnad gäller det levande dokumentet. -->
 
 # Nexis v2 – spec
 
@@ -6,7 +6,7 @@ Oct 20, 2026 · @Anders Norell
 
 ## Läge just nu
 
-Vi är i fas 1, agentexperimentet. Sprint 3, piloten, är klar och grind 3 godkänd, så trösklarna är låsta. Sprint 4, MVP, är klar och väntar på ditt beslut vid grind 4: F, H2 och H3 klaras, H1 klaras inte, och granskningen godkänner med anmärkningar. Fas 2, GPT-2-proben, körs bara om fas 1 visar effekt.
+Vi är i fas 1, agentexperimentet. Sprint 3, piloten, är klar och grind 3 godkänd, så trösklarna är låsta. Sprint 4, MVP, är klar och grind 4 godkänd 23 okt: F, H2 och H3 klaras, H1 klaras inte. Planen för sprint 5a, H5, väntar på ditt godkännande. Fas 2, GPT-2-proben, körs bara om fas 1 visar effekt.
 
 Begreppen förklaras i [Nexis – ordlista](https://claude.ai/artifact/2syuVpzf2GcAfaP9DgSgjC).
 
@@ -16,8 +16,8 @@ Begreppen förklaras i [Nexis – ordlista](https://claude.ai/artifact/2syuVpzf2
 | 1 | Miljön | Klar, grind 1 godkänd 21 okt |
 | 2 | Kompetens: baslinjeagent utan schema | Klar, grind 2 godkänd 22 okt |
 | 3 | Pilot: arbetspunkt, spridning, trösklar | Klar, grind 3 godkänd 22 okt, trösklar låsta |
-| 4 | MVP: Baslinje, 1a och Blandat; F, H1, H2, H3 | Klar 23 okt: F, H2, H3 klarade, H1 ej. Grind 4 väntar på dig |
-| 5 | H5: schemamodul med lokal matchning, egen pilot | Ej påbörjad |
+| 4 | MVP: Baslinje, 1a och Blandat; F, H1, H2, H3 | Klar, grind 4 godkänd 23 okt: F, H2, H3 klarade, H1 ej |
+| 5 | H5: schemamodul med lokal matchning, egen pilot | Plan 5a väntar på ditt godkännande |
 | 6 | Utbyggnad, sedan 1c och social fas | Ej påbörjad |
 
 ## Syfte och teoretisk grund
@@ -666,10 +666,95 @@ Med en verklig lögn reagerar Blandat svagt och åt olika håll. 1a:s effekt är
 
 **Beslut för produktägaren vid grind 4** (skriv svar: under respektive punkt)
 
-- [ ] Godkänner du resultatet av sprint 4 enligt de låsta kriterierna?
-- [ ] Nästa steg enligt sprintplanen är sprint 5, H5: schemamodul med lokal matchningsinformation och en egen pilot innan H5:s tröskel låses. Jag skriver planen i specen och väntar på ditt godkännande innan något körs. Går det bra?
+- [x] Godkänner du resultatet av sprint 4 enligt de låsta kriterierna?
+- [x] svar (i chatten 23 okt 10:48, infört av Claude): ja, grind 4 godkänd.
+- [x] Nästa steg enligt sprintplanen är sprint 5, H5: schemamodul med lokal matchningsinformation och en egen pilot innan H5:s tröskel låses. Jag skriver planen i specen och väntar på ditt godkännande innan något körs. Går det bra?
+- [x] svar (i chatten 23 okt 10:48, infört av Claude): ja till att planen skrivs, med villkor. Se nedan.
 
 **Tekniska val (Claudes) som rör grinden:** jag föreslår ingen omkörning. De låsta utfallen gäller med de checkpoints som valdes på validering, även om slutcheckpointerna ger större effekt i (a). Tilläggsanalysen ovan redovisas bredvid, inte i stället.
+
+**Beslut 23 okt 2026 kl. 10:48 (produktägaren, i chatten): grind 4 godkänd.** Skäl: proceduren höll hela vägen. Trösklarna var låsta före körning, frön och fröbank var nya, ingen körning gjordes om, och granskaren fick exakt samma H2-siffror med egen kod. F och H2 klaras med mycket stor marginal i alla tre frön.
+
+**Produktägarens bedömning av resultatet:**
+
+- **H2 (b) är det starkaste fyndet.** Agenten litar mer på schemat än på sitt eget minne av vart den siktade. Det är ett litet men verkligt steg mot kärnfrågan. Begränsning: i 1a har schemat aldrig haft fel under träningen, så det är rationellt att lita på det. Visat är att agenten behandlar schemat som auktoritet. Inte visat är att schemat är en förenklad modell. Det är H5:s och 1c:s uppgift.
+- **H3 är svagare än det ser ut.** Halva H3a, träffandelen, är samma jämförelse som F. Återbesöken är delvis givna per konstruktion. H3b bygger på en akut lesion utanför träningsfördelningen. H3 är formellt klarat, men det är H2 som bär resultatet.
+- **Asymmetrin i H2 är det intressantaste fyndet och ännu inte förklarad.** Förklaringen i specen är en av flera möjliga. En billig diagnostik före H5-piloten är väl använd tid.
+- **Lärdom om kontroller.** Blandat-kontrollen för (a) var nästan tom på grund av ett tekniskt val, och varken granskningen vid grind 3 eller testerna fångade det. Framöver ska testerna före låsning kontrollera att ett ingrepp ändrar ungefär lika mycket i kontrollen som i huvudvillkoret.
+
+**Villkor för sprint 5 (produktägaren):** planen ska uttryckligen hantera risken att H5 blir falsk per konstruktion. En schemamodul som får en lokal matchningssignal och tränas mot den faktiska platsen lär sig troligen att peka på den faktiska platsen. Då säger ett nej om H5 ingenting om AST. Planen ska jämföra med en variant där schemat har en flaskhals och måste förenkla, och den ska ta in asymmetrin från H2 som underlag.
+
+**Claudes kommentar:** jag delar bedömningen. H3a:s träffhalva har exakt samma siffror som F mot Baslinjen i tabellen ovan, så den tillför inget eget. Invändningen om att schemat aldrig haft fel gäller också asymmetrin. Även (a) har en motsvarighet i träningen: "siktade dit men täckte det inte" är precis vad en fångst ger. Skillnaden kan alltså ligga i vilka lögner som liknar verkliga fångster. Det prövas som förklaring E3 i sprint 5-planen nedan.
+
+## Sprint 5: H5
+
+### Plan 5a (väntar på produktägarens godkännande)
+
+Sprint 5 ska avgöra om ett schema som måste förenkla anger den avsedda platsen när spotlighten fångas, och inte bara för att det saknar information. Den har två delar. 5a: diagnostik av H2-asymmetrin, bygge och pilot. Den slutar med att H5:s trösklar låses vid grind 5a. 5b: huvudkörning med nya frön, bedömd mot de låsta trösklarna. Planen nedan gäller 5a. Plan 5b skrivs in när 5a är klar. Inget körs förrän du har godkänt planen.
+
+**Varför H5 kan avgöras i förväg (ditt villkor)**
+
+| Schemamodulens information | Vad den troligen lär sig | Vad ett utfall säger om AST |
+| --- | --- | --- |
+| Ingen matchningssignal, som i sprint 3 | Den avsedda platsen, eftersom fångsten inte syns | Inget, H5 är sann per konstruktion |
+| Matchningssignal, ingen flaskhals | Den faktiska platsen, eftersom den tränas mot den | Inget, H5 är falsk per konstruktion |
+| Matchningssignal och flaskhals | Det som är billigast att representera | Det informativa fallet |
+
+Så hanterar planen det:
+
+1. **Varianten utan flaskhals är en förutsättningskontroll, inte H5-provet.** Den ska visa att informationen räcker för att se fångsten. Klarar den inte det är H5 omätbar i den här formen, och vi stannar.
+2. **H5 prövas på varianter med flaskhals, i en dosserie med fyra nivåer som bestäms nu.** Ingen nivå väljs efter resultat.
+3. **Förutsägelsen kan falla åt båda håll.** AST förutsäger att felen vid fångst samlas på den avsedda platsen, alltså på styrsignalen, när kapaciteten minskar. Alternativen är att felen sprids, eller hamnar på iögonfallande objekt som i en modell byggd nerifrån. Alla tre utfallen går att observera.
+4. **Ett beteendemått kopplar H5 till H2 (b).** När schemat felaktigt anger att den avsedda platsen redan är sedd, går agenten då inte tillbaka dit? Då får det förenklade schemat en kostnad i beteendet, vilket är vad AST säger att en förenklad modell ger.
+
+En risk finns kvar, och den tas inte bort av designen. En komprimerad prediktor lutar sig nästan alltid på den starkaste billiga ledtråden, här efferenskopian. Att felen hamnar på den avsedda platsen är därför väntat även utan AST. Det informativa är var i dosserien bytet sker, om felen är samlade eller spridda, och om ett felaktigt men förenklat schema ändå hjälper agenten. Jag skriver det rakt ut, så att ett ja på H5 inte läses som mer än det är.
+
+**Steg**
+
+1. **Diagnostik av asymmetrin i H2, ca 1 timme, ingen träning.** Körs på sprint 4:s 1a- och Blandat-agenter. Den är beskrivande och ändrar inget låst utfall. Tre möjliga förklaringar prövas, var och en med ett prov och en förutsägelse som bestäms nu:
+   - **E1, minnet av siktet väger tyngre.** Agenten minns vart den siktat och litar på det. Prov: (a)-rutorna delas i dem agenten siktade mot och dem som täcktes bara genom fångst. E1 förutsäger större effekt för fångstrutorna.
+   - **E2, rutornas värde.** Täckta rutor har redan visat fel föremål och är inte värda ett nytt besök, vad schemat än säger. Prov: (a)-rutorna delas efter innehåll, målets färg, annan färg eller tom. E2 förutsäger att effekten finns nästan bara för rutor i målets färg.
+   - **E3, rimlighet.** (b) liknar en verklig fångst. I (a) försvinner tre stegs täckning på en gång, något som nästan aldrig händer i träningen. Prov: en variant av (a) där bara steg 3:s fönster blir falskt obesökt, som efter en enda fångst. E3 förutsäger större effekt per ruta än i hela (a).
+   - Dessutom, efter granskningen: (a) och (b) på slutcheckpointerna, och (b) räknat per kommando och bara i episoder där alla tre kommandona hann ges.
+
+   Förklaringarna utesluter inte varandra. Resultatet styr beteendemåttet i steg 3. Stöder det E1, måste beteendemåttet skilja på rutor agenten siktat mot och rutor den bara fångats till.
+2. **Bygge, ca 3 timmar.** Allt pushas innan något tränas.
+   - **Matchningssignal.** För varje ruta i det avsedda fönstret anger den om det foveán visade stämmer med vad periferin visar där, upptaget och färg. Den går bara till schemamodulen, inte till styrningen. Biologiskt motsvarar det en jämförelse mellan förväntad och faktisk syninformation.
+   - **Flaskhals** (rekommenderad form, se beslut nedan). Modulens indata per ruta passerar en smal kanal med m tal, m = 1, 2 eller 4. Dessutom finns en variant utan flaskhals. Modulen måste själv välja vad den behåller av efferenskopia, matchning och periferi.
+   - **Ändring av H5:s mätvillkor (ingår i godkännandet av planen).** "Foveán utesluter avsedd plats" avgörs med upptaget och färg, det agenten kan jämföra mot periferin. Formen ingår inte, eftersom periferin aldrig visar form. Den ideala betraktaren får samma begränsning. Annars ser den mer än agenten kan.
+   - **Doskontroll enligt din lärdom.** Ett test visar att matchningssignalen skiljer sig vid fångst i samma andel fall som den ideala betraktaren kan upptäcka fångsten, och att alla flaskhalsnivåer får exakt samma indata.
+3. **Pilot, ca 1,5 timme träning i bakgrunden.** Fem villkor: Baslinje samt 1b med m = 1, 2, 4 och utan flaskhals. Frö 20 och 21, 400 000 episoder, tio körningar. Testet görs på en egen pilotbank, inte på MVP:s fröbank. Piloten mäter följande, blint för H5:s utfall:
+   - **Förutsättningen:** modulen utan flaskhals lägger sin mest sannolika ruta i det faktiska fönstret vid minst hälften av de H5-händelser där den ideala betraktaren kan se att spotlighten fångats.
+   - **Att flaskhalsen biter:** andelen rätt vid fångst sjunker när m minskar. Det visar hur ofta schemat har fel, inte vart det pekar.
+   - **Schemats nytta:** träffandel för varje nivå, jämförd med Baslinjen.
+   - Antal H5-händelser, spridning mellan frön och tid per körning.
+
+   Vart felen pekar, och beteendemåttet, tittar jag inte på förrän trösklarna är låsta.
+4. **Förslag till trösklar och körplan för 5b, oberoende granskning, grind 5a.** Du godkänner, och trösklarna låses.
+
+**Om svaret blir nej**
+
+| Utfall | Vad det betyder | Vad som händer |
+| --- | --- | --- |
+| Förutsättningen klaras inte | Matchningssignalen räcker inte för att se fångsten | H5 är omätbar i den här formen. Jag föreslår en annan signal, du beslutar |
+| Flaskhalsen biter inte på någon nivå | Uppgiften är för lätt att komprimera | Rapporteras. Jag föreslår smalare nivåer, du beslutar innan något körs |
+| Inget schema hjälper agenten | Modulen ger ingen användbar självkunskap, som i sprint 3 | Rapporteras. H5 kan ändå mätas, men tolkningen blir svagare |
+| Diagnostiken stöder ingen av E1–E3 | Asymmetrin är oförklarad | Rapporteras. Beteendemåttet räknas både för siktade och fångade rutor |
+
+**Beslut för produktägaren** (skriv svar: under respektive punkt)
+
+- [ ] Godkänner du plan 5a: diagnostik, bygge, pilot och förslag till trösklar, inklusive ändringen av H5:s mätvillkor?
+- [ ] Flaskhalsens form. Jag rekommenderar en smal indatakanal med m = 1, 2, 4. Den är enkel att bygga och tvingar modulen att välja vad den behåller. Alternativ 1: brus med kostnad på matchningssignalen. Det ligger närmare informationsteori men kräver mer handskriven kod. Alternativ 2: ett schema som bara kan ange en plats och en bredd. Det är närmast AST:s karikatyr av uppmärksamhet, men felen hamnar då mellan platser och blir svåra att tolka.
+- [ ] Ska beteendemåttet bli ett kriterium bredvid H5, med en tröskel som låses vid grind 5a? Måttet: går agenten tillbaka till den avsedda platsen efter en fångst? Jag rekommenderar ja.
+- [ ] Din invändning att schemat i 1a aldrig haft fel. I 1b har schemat ibland fel under träningen, så frågan om agenten litar på ett ofullständigt schema prövas där. Jag föreslår därför ingen egen 1a-variant med brus i schemat. Räcker det?
+
+**Tekniska val (Claudes, kräver inte beslut)**
+
+- Schemamodulen är ett separat nätverk som i sprint 3 (`--schema module`), tränat mot förra stegets faktiska fönster. Ingen gradient går mellan modul och styrning.
+- Piloten använder frö 20 och 21 och 400 000 episoder, som sprint 3:s pilot. 5b får nya frön.
+- Pilotbanken: episod i har frö 4 000 000 + i, 4 000 episoder, samma uppsättning strömmar som MVP:s fröbank. MVP:s fröbank används igen först i 5b.
+- Arbetspunkt och miljö är oförändrade från sprint 4.
+- Diagnostiken i steg 1 räknas parat som H2, med standardfel. Den redovisas utan godkänt eller underkänt.
 
 ## Efter MVP: 1c, social fas och begreppsbildning
 
