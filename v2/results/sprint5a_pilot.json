@@ -335,6 +335,102 @@
     "right_ok": true,
     "wrong_ok": false
    }
+  },
+  "p5_ehalf11.05_s20": {
+   "schema": "channel_e",
+   "seed": 20,
+   "rate_cost": 0.001,
+   "rate_target": 11.05,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.8755,
+    "beta": 0.08027082377506668
+   },
+   "found": 0.87175,
+   "found_se": 0.005286821765011565,
+   "bits_per_step": 10.742070962585776,
+   "acc_all_steps": 0.63392796117832,
+   "n_h5_events": 2541,
+   "acc_at_h5": 0.24714679260133807,
+   "mass_actual_at_h5": 0.1371940841888877,
+   "observer_actual_at_h5": 0.9423974530587114,
+   "dose_groups": {
+    "right_ok": true,
+    "wrong_ok": false
+   }
+  },
+  "p5_ehalf11.05_s21": {
+   "schema": "channel_e",
+   "seed": 21,
+   "rate_cost": 0.001,
+   "rate_target": 11.05,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.89,
+    "beta": 0.07802222844031445
+   },
+   "found": 0.87175,
+   "found_se": 0.005286821765011564,
+   "bits_per_step": 11.437279015647583,
+   "acc_all_steps": 0.6488529014844804,
+   "n_h5_events": 2553,
+   "acc_at_h5": 0.2651782216999608,
+   "mass_actual_at_h5": 0.1468354532729691,
+   "observer_actual_at_h5": 0.9477474301071077,
+   "dose_groups": {
+    "right_ok": true,
+    "wrong_ok": false
+   }
+  },
+  "p5_ehalf5.53_s20": {
+   "schema": "channel_e",
+   "seed": 20,
+   "rate_cost": 0.001,
+   "rate_target": 5.53,
+   "checkpoint": {
+    "it": 1400,
+    "episodes": 358400,
+    "eval_found": 0.8755,
+    "beta": 0.14491294443726144
+   },
+   "found": 0.8675,
+   "found_se": 0.005360591152102537,
+   "bits_per_step": 5.538739310229542,
+   "acc_all_steps": 0.4667076838939021,
+   "n_h5_events": 2572,
+   "acc_at_h5": 0.14618973561430793,
+   "mass_actual_at_h5": 0.08994943822776678,
+   "observer_actual_at_h5": 0.9454061956235348,
+   "dose_groups": {
+    "right_ok": true,
+    "wrong_ok": false
+   }
+  },
+  "p5_ehalf5.53_s21": {
+   "schema": "channel_e",
+   "seed": 21,
+   "rate_cost": 0.001,
+   "rate_target": 5.53,
+   "checkpoint": {
+    "it": 1200,
+    "episodes": 307200,
+    "eval_found": 0.887,
+    "beta": 0.14035939277043896
+   },
+   "found": 0.86475,
+   "found_se": 0.005407343097584986,
+   "bits_per_step": 6.002410820229646,
+   "acc_all_steps": 0.48524482418665793,
+   "n_h5_events": 2658,
+   "acc_at_h5": 0.14145974416854779,
+   "mass_actual_at_h5": 0.0869795362131665,
+   "observer_actual_at_h5": 0.9421771165845891,
+   "dose_groups": {
+    "right_ok": true,
+    "wrong_ok": false
+   }
   }
  },
  "reference": {
