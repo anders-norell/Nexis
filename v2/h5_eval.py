@@ -52,7 +52,8 @@ QS = np.linspace(0.0, 1.0, 41)
 # Proposed after the code review (24 Oct, not yet approved by the product owner):
 DROP_SHARED = True        # cells shared by the intended window and another candidate window belong to no region
 EQUALIZE_DIFFUSE = True   # the null gets the schema's diffuse share, per event, before renormalising
-CLASS_DIFFUSE = True      # ... with the schema's own density per cell class (review R1), not uniform
+CLASS_DIFFUSE = True      # ... with the schema's own density per cell class (colour x visited), not uniform
+NCLS = 6
 PLATEAU = 0.10            # argmax reserve: if the curve is within PLATEAU_TOL of the target over a q-span wider
 PLATEAU_TOL = 0.01        # than this, q is not identified and the reserve counts as impossible
 K_NULL = 400
@@ -60,7 +61,7 @@ N_BOOT = 1000
 
 
 # ------------------------------------------------------------------------------------------- events
-def event_detail(env, b, ir0, ic0, ar0, ac0, who):
+def event_detail(env, b, ir0, ic0, ar0, ac0, who, visited=None):
     """Everything the null model and the region split need for one capture event."""
     cfg, w, C, G = env.cfg, int(env.w[b]), env.cfg.n_colors, env.cfg.G
     origins, sal, objs = [(int(ir0), int(ic0))], [], [None]
@@ -96,12 +97,15 @@ def event_detail(env, b, ir0, ic0, ar0, ac0, who):
     O = Ow & ~Iw & ~A
     frac = np.stack([(masks & R).sum((1, 2)) for R in (I, A, O)], 1) / float(w * w)
     n = int(env.n[b])
-    # cell classes for the schema's diffuse mass (review R1): 0 empty, 1 occupied in another colour, 2 target colour
+    # cell classes for the schema's diffuse mass (reviews R1, F1): colour class 0 empty, 1 occupied in another
+    # colour, 2 target colour; times 2 if covered by the spotlight before the capture step (coverage up to t - 1)
     cls = np.full((G, G), -1)
     col = env.color[b]
-    cls[:n, :n] = np.where(col[:n, :n] < 0, 0, np.where(col[:n, :n] == env.target_color[b], 2, 1))
-    cls_cnt = np.array([[(R & (cls == c)).sum() for c in range(3)] for R in (I, A, O)], float)   # (3 regions, 3)
-    cls_tot = np.array([(cls == c).sum() for c in range(3)], float)
+    cc = np.where(col[:n, :n] < 0, 0, np.where(col[:n, :n] == env.target_color[b], 2, 1))
+    vis = np.zeros((n, n), int) if visited is None else (np.asarray(visited)[:n, :n] > 0).astype(int)
+    cls[:n, :n] = cc + 3 * vis
+    cls_cnt = np.array([[(R & (cls == c)).sum() for c in range(NCLS)] for R in (I, A, O)], float)
+    cls_tot = np.array([(cls == c).sum() for c in range(NCLS)], float)
     return dict(cls=cls, cls_cnt=cls_cnt, cls_tot=cls_tot, origins=origins, objs=objs, sal=np.array(sal), src=src, L=L, masks=masks, I=I, A=A, O=O, frac=frac,
                 w=w, n=n, n_valid=n * n, counts=np.array([I.sum(), A.sum(), O.sum()], float),
                 p_capture=cfg.p_capture, cap=cfg.capture_cap, s_min=cfg.s_min, has_other=bool(O.any()))
@@ -124,8 +128,8 @@ def schema_regions(p, det):
     cell = np.unravel_index(int(np.argmax(np.where(cand, p, -1.0))), p.shape)   # over candidate cells only
     region = "A" if det["A"][cell] else "I" if det["I"][cell] else "O"
     rest = (det["cls"] >= 0) & ~cand & ~(det["masks"][0] & ~det["I"])   # shared cells kept out of the density
-    rm = np.array([p[rest & (det["cls"] == c)].sum() for c in range(3)])
-    rc = np.array([(rest & (det["cls"] == c)).sum() for c in range(3)], float)
+    rm = np.array([p[rest & (det["cls"] == c)].sum() for c in range(NCLS)])
+    rc = np.array([(rest & (det["cls"] == c)).sum() for c in range(NCLS)], float)
     blind = dict(sA=A / tot if tot > 0 else 0.0, s_cand=tot, s_rest=1.0 - tot, s_argA=float(region == "A"),
                  rest_cls_mass=rm, rest_cls_cnt=rc)
     full = dict(sI=I / tot if tot > 0 else 0.0, sO=O / tot if tot > 0 else 0.0, s_argregion=region)
@@ -210,13 +214,36 @@ def build(events, seed_offset=0, raw=None):
     # colour), measured on its non-candidate cells (blind-safe). Null map = (1 - lam) * null + D, D = class density
     # on every valid cell, lam = total mass of D. Uniform density is the special case (CLASS_DIFFUSE = False).
     if EQUALIZE_DIFFUSE:
-        rm = np.array([e["rest_cls_mass"] for e in ev]).reshape(n, 3)
-        rc = np.array([e["rest_cls_cnt"] for e in ev]).reshape(n, 3)
-        flat = rm.sum(1) / np.maximum(rc.sum(1), 1)                       # overall rest density per cell
-        dens = np.where(rc > 0, rm / np.maximum(rc, 1), flat[:, None]) if CLASS_DIFFUSE else \
-            np.repeat(flat[:, None], 3, 1)
-        cls_cnt = np.array([e["det"]["cls_cnt"] for e in ev]).reshape(n, 3, 3)
-        cls_tot = np.array([e["det"]["cls_tot"] for e in ev]).reshape(n, 3)
+        rm = np.array([e["rest_cls_mass"] for e in ev]).reshape(n, NCLS)
+        rc = np.array([e["rest_cls_cnt"] for e in ev]).reshape(n, NCLS)
+        # Class shape pooled over the run's events (sparse classes per event are noisy), level per event: the
+        # event's density is k_e * shape_c with k_e chosen so it reproduces the event's own rest mass.
+        # shape = mass relative to what each event's own flat density would put there (grid sizes differ)
+        flat = rm.sum(1) / np.maximum(rc.sum(1), 1)
+        exp_ = rc * flat[:, None]
+        shape = rm.sum(0) / np.maximum(exp_.sum(0), 1e-12) if CLASS_DIFFUSE else np.ones(NCLS)
+        if CLASS_DIFFUSE and (rc.sum(0) == 0).any():            # a class never seen in the rest: colour class
+            col = (rm[:, :3] + rm[:, 3:]).sum(0) / np.maximum((exp_[:, :3] + exp_[:, 3:]).sum(0), 1e-12)
+            shape = np.where(rc.sum(0) > 0, shape, np.concatenate([col, col]))
+        k = rm.sum(1) / np.maximum((rc * shape[None, :]).sum(1), 1e-12)
+        # the event's own density where it has rest cells of that class; the pooled shape (scaled to the event) only
+        # for classes it has no rest cells of
+        own = rm / np.maximum(rc, 1)
+        dens = np.where(rc > 0, own, k[:, None] * shape[None, :])
+        # A visited class missing from the event's rest takes its unvisited partner's density times the run's
+        # visited/unvisited ratio for that colour (and the reverse), estimated on events that have both.
+        for c in range(3):
+            both = (rc[:, c] > 0) & (rc[:, c + 3] > 0)
+            ratio = rm[both, c + 3].sum() / max((rc[both, c + 3] * own[both, c]).sum(), 1e-12) if both.any() else None
+            if ratio is None:
+                continue
+            m = (rc[:, c + 3] == 0) & (rc[:, c] > 0)
+            dens[m, c + 3] = ratio * own[m, c]
+            if ratio > 0:
+                m = (rc[:, c] == 0) & (rc[:, c + 3] > 0)
+                dens[m, c] = own[m, c + 3] / ratio
+        cls_cnt = np.array([e["det"]["cls_cnt"] for e in ev]).reshape(n, 3, NCLS)
+        cls_tot = np.array([e["det"]["cls_tot"] for e in ev]).reshape(n, NCLS)
         D = (cls_cnt * dens[:, None, :]).sum(2)                           # diffuse mass on I, A, O  (n, 3)
         lam = (cls_tot * dens).sum(1)
         sc = np.where(lam > 1, 1 / np.maximum(lam, 1e-12), 1.0)

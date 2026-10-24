@@ -19,8 +19,10 @@ ok   schema = null at q0=0.3, diffuse share 0.85: q recovered, no difference (ma
 ok   schema = null at q0=0.7, diffuse share 0.0: q recovered, no difference (mass)  q=0.699 diff=+0.0003 se=0.0013 rest=0.03
 ok   schema = null at q0=0.7, diffuse share 0.45: q recovered, no difference (mass)  q=0.699 diff=+0.0001 se=0.0011 rest=0.40
 ok   schema = null at q0=0.7, diffuse share 0.85: q recovered, no difference (mass)  q=0.698 diff=-0.0001 se=0.0007 rest=0.73
-ok   diffuse mass on occupied cells only, q0=0.4: no difference (class densities)  q=0.407 diff=-0.0095 se=0.0024
-ok   diffuse mass on occupied cells only, q0=0.8: no difference (class densities)  q=0.795 diff=-0.0064 se=0.0019
+ok   diffuse mass on occupied cells only, q0=0.4: no difference (class densities)  q=0.399 diff=-0.0008 se=0.0009
+ok   diffuse mass on occupied cells only, q0=0.8: no difference (class densities)  q=0.799 diff=-0.0000 se=0.0009
+ok   spare mass on unvisited target-colour cells, q0=0.4: |diff| < 0.01 (colour x visited classes)  q=0.399 diff=+0.0001 se=0.0011
+ok   spare mass on unvisited target-colour cells, q0=0.8: |diff| < 0.01 (colour x visited classes)  q=0.800 diff=+0.0010 se=0.0010
 ok   object-peaked schema with the null's beliefs: no difference (shared cells dropped)  diff=+0.0000 se=0.0019
 ok   schema = null at q0=0.75, diffuse: q recovered, no difference (argmax, steep part)  q=0.753 diff=-0.0001 se=0.0015
 ok   schema = null at q0=0.9, diffuse: q recovered, no difference (argmax, steep part)  q=0.909 diff=-0.0015 se=0.0019
@@ -28,7 +30,7 @@ ok   argmax on the plateau (q0 = 0.2) is not identified  schema argA=0.831
 ok   errors moved toward intended: passes  diff=+0.117 z=27.1
 ok   errors moved away from intended: fails, negative  diff=-0.140 z=-41.8
 ok   bootstrap resamples episodes (duplicates within episode keep the SE)  se 0.0013 vs 0.0013
-descriptive, untrained (diffuse) schema: {'method': 'mass', 'n_events': 769, 'n_episodes': 239, 'q': 0.675, 'point_clipped': False, 'schema_share': 0.4, 'null_share': 0.417, 'diff': -0.017, 'se': 0.004, 'z': -4.181, 'passed': False, 'boot_clipped_frac': 0.0, 'q_interval': [0.5214684864866913, 0.8289652840844751], 'clip_flag': False, 'schema_rest_mass': 0.854}
+descriptive, untrained (diffuse) schema: {'method': 'mass', 'n_events': 769, 'n_episodes': 239, 'q': 0.677, 'point_clipped': False, 'schema_share': 0.4, 'null_share': 0.421, 'diff': -0.022, 'se': 0.004, 'z': -4.938, 'passed': False, 'boot_clipped_frac': 0.0, 'q_interval': [0.5340389317263053, 0.8139324013271999], 'clip_flag': False, 'schema_rest_mass': 0.854}
 ok   blind run stores no I/O split
 ok   evaluate refuses blind data
 ok   feasibility works on blind data  {'mass': True, 'argmax': True}

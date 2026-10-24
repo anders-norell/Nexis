@@ -98,7 +98,9 @@ def schema_map(e, q0, u=0.0, move=0.0, peaked=False, diffuse_on=None):
         m = -move * cm[I].sum(); cm[I] *= 1 + move; cm[O] += m / O.sum()
     valid = np.zeros_like(cm); valid[:det["n"], :det["n"]] = 1.0
     if diffuse_on == "occupied":              # diffuse mass only on cells with objects (review R1)
-        valid = valid * (det["cls"] >= 1)
+        valid = valid * np.isin(det["cls"], (1, 2, 4, 5))
+    elif diffuse_on == "unvisited_target":    # spare mass on target-colour cells not yet covered (review F1)
+        valid = valid * (det["cls"] == 2)
     return (1 - u) * cm + u * valid / valid.sum()
 
 
@@ -127,6 +129,10 @@ def test_synthetic(events):
         r = run(q0=q0, u=0.65, diffuse_on="occupied")
         check(f"diffuse mass on occupied cells only, q0={q0}: no difference (class densities)",
               abs(r["diff"]) < 2 * r["se"] + 0.005, f"q={r['q']:.3f} diff={r['diff']:+.4f} se={r['se']:.4f}")
+    for q0 in (0.4, 0.8):
+        r = run(q0=q0, u=0.65, diffuse_on="unvisited_target")
+        check(f"spare mass on unvisited target-colour cells, q0={q0}: |diff| < 0.01 (colour x visited classes)",
+              abs(r["diff"]) < 0.01, f"q={r['q']:.3f} diff={r['diff']:+.4f} se={r['se']:.4f}")
     r = run(q0=0.5, u=0.45, peaked=True)
     check("object-peaked schema with the null's beliefs: no difference (shared cells dropped)",
           abs(r["diff"]) < 2 * r["se"] + 0.005, f"diff={r['diff']:+.4f} se={r['se']:.4f}")

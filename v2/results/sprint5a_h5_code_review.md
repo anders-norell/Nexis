@@ -187,3 +187,85 @@ On a narrow curve the matched q is sensitive to small changes. The bootstrap re-
 **R4. Minor: the lock's hashes leave inputs out.**
 
 The hashes do not cover `env.py`, `bank.py`, `pilot_5a.py` (`load`), `agent_rl.py` or `schema_channel.py`, or the ten checkpoint files (`*.final.npz`). Any of these changes the events. *Fix:* add them to `FILES`.
+
+## Final check (commit 174ac46)
+
+**Verdict: not lockable as implemented. One more small change is needed (F1).** Once F1 is fixed and passes its test, the thresholds can be locked without another review round, as long as the lock text states the points listed below.
+
+I verified the following:
+- `test_h5_eval.py` passes 32/32, and my output is identical to the committed file.
+- **R1 implementation:**
+  - The class densities are measured on non-candidate valid cells, with shared cells excluded.
+  - D is the class density times each region's class counts, and λ is the total diffuse mass.
+  - The null map is (1 − λ)·null + D, renormalised over I + A + O.
+  - Blind-safe: only cells outside I ∪ A ∪ O are used.
+  - A schema equal to the null plus uniform noise comes out at +0.0008 (q0 = 0.4) and +0.0003 (q0 = 0.8). My earlier occupied-cells case comes out at −0.011 / −0.007, down from −0.14 / −0.11.
+- **R2:** to be stated in the lock text. With the class-matched diffuse part, my object-peaked case now gives +0.003 / −0.000.
+- **R3:** `q_interval` and `clip_flag` (clipping above 5 %) are in place.
+- **R4:** the lock now hashes all the code inputs and the ten final checkpoints.
+- **`measure`:**
+  - The argmax sensitivity run is used only where feasibility found argmax identified for that run.
+  - A judged level becomes "osäker" only when both seeds have a sensitivity result and the two verdicts differ.
+  - The sensitivity run uses its own bootstrap seeds (2000 + i).
+
+### F1. Major: the cell classes ignore whether a cell has been visited, which biases toward pass
+
+A learned schema may well put its spare mass where the spotlight usually goes next, which is unvisited target-colour cells.
+
+I tested a synthetic schema: the null's beliefs, plus 65 % diffuse mass on target-colour cells not yet covered by the spotlight. The result is **+0.090 (z = 7.8) at q0 = 0.4 and +0.101 (z = 15.5, q clipped at 1.0) at q0 = 0.8**. That is a false pass.
+
+The cause is in how the null's diffuse part is estimated:
+- The density of the target-colour class is estimated over *all* target-colour rest cells, and the visited ones carry no mass, which dilutes the estimate.
+- The intended window was not covered at the capture step, so its target-colour cell gets more diffuse mass in the schema than the null is given.
+
+Such a schema puts mass on the intended window only because that window is "a plausible next place", not because the schema falls back on intent. H5 must not credit it.
+
+*Fix:*
+- Split each class by visited status, giving 6 classes: {empty, other colour, target colour} × {covered before the capture step, not covered}.
+- Use the spotlight's actual coverage up to step t − 1 (`env.visits` **before** the step, not after). Then the intended and actual windows are classified the same way as at the time the agent aimed.
+- Fall back to the colour-only density when a class has no rest cells.
+- Add my case as a test, with the requirement |diff| < 0.01 at q0 = 0.4 and 0.8.
+
+### What the lock text must state
+
+1. **Scope:**
+   - H5 on 1b is a descriptive test run once on the pilot's E runs: seeds 20–21, final checkpoints, MVP bank 2 000 000 + i, i < 4 000.
+   - Levels 22.1 and 11.05 bits are judged. 5.53 bits, 44.2 bits (the reference) and the no-cost variant are reported only.
+   - There is no overall verdict across levels, and 5b is not run.
+2. **Events:**
+   - Captures where the fovea excludes the intended window by occupied and colour, the capture does not find the target and the episode keeps running.
+   - The map is read at step t + 1.
+   - Only events where some other candidate window has cells outside I ∪ A count.
+3. **Regions:**
+   - I is the intended window minus cells shared with any other candidate window.
+   - A is the actual window minus the intended window.
+   - O is the other candidate windows minus I and A.
+   - Shared cells count for neither the schema nor the null.
+4. **Null model:**
+   - The restricted ideal observer, weakened by mixing at rate q.
+   - The glimpse is replaced by the content of a window drawn from the **capture prior, including "no capture" (the intended window) with probability 1 − Σp**.
+   - Each salience value is replaced by a draw from U(s_min, 1).
+   - K = 400 draws, using the same random numbers across q.
+   - The window posterior is spread evenly over each window's cells.
+   - It gets a diffuse part equal to the schema's own density per cell class, measured on the schema's non-candidate cells. The classes are colour × visited (after F1).
+   - Both maps are renormalised over I + A + O.
+5. **Matching:**
+   - Primary: q matched on the mean renormalised mass on A.
+   - Reserve: argmax over candidate cells, using the plateau rule (within 0.01 of the target over a q-span wider than 0.10 means q is not identified).
+   - Otherwise the level is "ej bedömbar".
+   - The same method is used for both seeds of a level.
+6. **Criterion:**
+   - Measure: the share of candidate error mass on I, as a ratio of sums.
+   - SE from a bootstrap over episodes (1 000 resamples) with q re-matched in each resample.
+   - Pass: schema share > null share by more than 2 SE, per seed. A judged level is "klarad" if both seeds pass.
+   - Argmax matching is reported as a sensitivity analysis. If it gives a different verdict, the level is "osäker".
+   - Runs with more than 5 % of resamples clipped, or a wide q interval, are reported as weakly identified.
+7. **Known residual biases (synthetic tests):**
+   - About −0.004 toward fail from object-peaked maps.
+   - About −0.007 to −0.011 toward fail from diffuse mass on occupied cells.
+   - Any diffuse structure the cell classes do not capture can bias either way. That is why the sensitivity rule exists.
+8. **The bar:** the null's share on I at the matched q, for each run and both methods, from the blind feasibility file. It should be quoted as numbers, so the product owner sees how high the bar is.
+9. **Interpretation (condition c):**
+   - A "klarad" result is what compression predicts. It is consistent with AST but not specific to it.
+   - The schema barely helps the agent (0–1 pp), so H5 here concerns a model of attention that is hardly used for control.
+10. **Hashes:** SHA-256 hashes of the code, the feasibility JSON and the checkpoints, all verified by `measure`. The feasibility file must be regenerated after F1, before the lock.

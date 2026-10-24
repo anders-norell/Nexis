@@ -163,7 +163,7 @@ def _block(agent, seeds, intervention, blind, overrides, record=False, detail=Fa
                                   behaviour_eligible=bool(unseen_tc.any()), _ma=ma, _mi=mi)
                 if detail:
                     pending[b]["det"] = event_detail(env, b, ir0[b], ic0[b], r0[b], c0[b],
-                                                     int(info["capturer"][b]))
+                                                     int(info["capturer"][b]), visited=vis[b])
         prev_actual = newcur
         vis = np.maximum(vis, newcur)
         t += 1
