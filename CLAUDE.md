@@ -296,6 +296,16 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   (44), 0,56–0,57 (22), 0,52–0,53 (11), 0,48 (5,5). **Inget H5-utfall är beräknat.** Efter produktägarens ja:
   `python3 h5_5a.py lock "<svar>"` och sedan `python3 h5_5a.py measure` (ca 30 min) → `results/sprint5a_h5.json`.
   Ändras någon kod efter låsning vägrar measure.
+- **Grind 5a steg 2, produktägarens beslut 24 okt 15:56:** ändringarna 1–5 ja; låsning ja med tre villkor i låstexten
+  (reservsnedvridning anges ärligt; ändring 5 noteras bara vid teckenbyte eller > 2 SE; klarar varianten utan kostnad
+  tillskrivs arkitekturen). Motiv för körningen: 1b blir referens för 1c med samma låsta instrument. Därefter direkt
+  till 1c: prob vars prior inte gynnar avsikten, diskret avläsning, minst tre frön.
+- **H5 låst 24 okt (commit 988b8ae, `v2/results/h5_lock.json`) och körd en gång (`results/sprint5a_h5.json`): ej klarad
+  på någon nivå.** Schemats andel av felmassan på avsett 0,13–0,34, nollmodellens 0,48–0,61, skillnad −0,13 till −0,46,
+  17–71 SE. Argmax-känslighet samma utslag (ingen "osäker"); utan reservhändelser inget teckenbyte, ingen skillnad
+  > 2 SE; varianten utan kostnad klarar inte heller. Tolkning: felen går till andra iögonfallande föremål; andelen
+  stiger med minskad kapacitet men massan utanför kandidaterna stiger lika (0,39 → 0,76), troligen diffusitet, inte
+  avsikt. Resultatgranskning: `v2/results/sprint5a_h5_result_review.md`.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
-- **Nästa steg:** vänta på produktägarens ja till ändringarna 1–5 och låsningen (specen "Grind 5a, steg 2"). Rör inte sprint 4:s låsta utfall. Titta inte på vart
-  schemats fel pekar förrän H5:s trösklar är låsta.
+- **Nästa steg:** produktägaren bedömer H5-resultatet (grind 5a avslutas). Nästa sprint är 1c, plan skrivs i specen och
+  godkänns före körning. Rör inte sprint 4:s eller H5:s låsta utfall.
