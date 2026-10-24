@@ -68,7 +68,7 @@ def _step_channel(agent, kind, env, obs, t, idx, hm, arng, donor):
     if kind == "1c":
         xm, mm = mod.features(env, obs, t)
         src = donor[idx] if mod.shuffle else idx
-        hms, zz, bits, _ = mod.forward(xm[src], mm[src], hm[idx], eps, open_=t > 0)
+        hms, zz, bits, _ = mod.forward(xm[src], mm[src], hm[idx], eps, open_=t > 0, cm=mm[idx])
         hm[idx] = hms
         z[idx] = zz
         z = z * obs["action_mask"]
@@ -327,36 +327,56 @@ def test_arrays(probe, events):
 
 
 def blind_summary(probe, res, seed=0):
-    """Everything that may be seen before the lock: about the actual window only."""
+    """Everything that may be seen before the lock: about the actual window only. Review point 4: with two
+    candidates the mass on the intended window is 1 - the mass on the actual window, so before the lock every
+    capture-step quantity (accuracy, mass on actual, (c), feasibility of q) is computed only over events with
+    at least three candidates. The full (c) over all H5 events is computed by measure() after the lock."""
     ev = res["events"]
     P, K, y = test_arrays(probe, ev)
     E = len(ev)
     pA = P[np.arange(E), y]
     cap = np.array([e["captured"] for e in ev])
     h5 = np.array([e["h5"] for e in ev])
+    k3 = K >= 3
     epi = np.array([e["seed"] for e in ev])
     argA = P.argmax(1) == y
-    out = dict(n_events=E, n_capture=int(cap.sum()), n_h5=int(h5.sum()),
+    cap3, h53 = cap & k3, h5 & k3
+    out = dict(n_events=E, n_capture=int(cap.sum()), n_h5=int(h5.sum()), n_h5_k2=int((h5 & ~k3).sum()),
+               n_h5_k3=int(h53.sum()), blind_subset="capture steps: K >= 3 only",
                acc_nocapture=float(argA[~cap].mean()) if (~cap).any() else None,
-               acc_capture=float(argA[cap].mean()) if cap.any() else None,
-               mass_actual_capture=float(pA[cap].mean()) if cap.any() else None)
-    if not h5.any():
+               acc_capture_k3=float(argA[cap3].mean()) if cap3.any() else None,
+               mass_actual_capture_k3=float(pA[cap3].mean()) if cap3.any() else None)
+    if not h53.any():
         return out
-    pAh, Kh, eh = pA[h5], K[h5], epi[h5]
+    pAh, Kh, eh = pA[h53], K[h53], epi[h53]
     diff = pAh - 1.0 / Kh
     bd = _boot(eh, lambda w: (diff * w).sum() / w.sum(), seed=seed)
     se = float(bd.std(ddof=1))
-    out["c"] = dict(mass_actual=float(pAh.mean()), uniform=float((1 / Kh).mean()), diff=float(diff.mean()),
-                    se=se, z=float(diff.mean() / se) if se > 0 else float("nan"), passed=bool(diff.mean() > 2 * se),
-                    n_episodes=int(len(np.unique(eh))))
-    curves = np.array([null_curves(e) for e, k in zip(ev, h5) if k])          # (n_h5, nq, 3)
+    out["c_k3"] = dict(mass_actual=float(pAh.mean()), uniform=float((1 / Kh).mean()), diff=float(diff.mean()),
+                       se=se, z=float(diff.mean() / se) if se > 0 else float("nan"),
+                       passed=bool(diff.mean() > 2 * se), n_episodes=int(len(np.unique(eh))))
+    curves = np.array([null_curves(e) for e, k in zip(ev, h53) if k])
     nA = curves[..., 1].mean(0)
     nI = curves[..., 0].mean(0)
     q = solve_q(nA, float(pAh.mean()))
-    out["feasibility"] = dict(probe_mass_actual=float(pAh.mean()), null_q0=float(nA[0]), null_q1=float(nA[-1]),
-                              q=q, possible=q is not None,
-                              bar_null_mass_intended=interp(nI, q) if q is not None else None)
+    out["feasibility_k3"] = dict(probe_mass_actual=float(pAh.mean()), null_q0=float(nA[0]), null_q1=float(nA[-1]),
+                                 q=q, possible=q is not None,
+                                 bar_null_mass_intended=interp(nI, q) if q is not None else None)
     return out
+
+
+def c_all(probe, res, seed=0):
+    """(c) over all H5 events (K = 2 included). Only after the lock (review point 4)."""
+    _check_lock()
+    ev = res["events"]
+    P, K, y = test_arrays(probe, ev)
+    h5 = np.array([e["h5"] for e in ev])
+    pA = P[np.arange(len(ev)), y][h5]
+    diff = pA - 1.0 / K[h5]
+    epi = np.array([e["seed"] for e in ev])[h5]
+    se = float(_boot(epi, lambda w: (diff * w).sum() / w.sum(), seed=seed).std(ddof=1))
+    return dict(mass_actual=float(pA.mean()), uniform=float((1 / K[h5]).mean()), diff=float(diff.mean()), se=se,
+                z=float(diff.mean() / se) if se > 0 else float("nan"), passed=bool(diff.mean() > 2 * se))
 
 
 def bits_summary(res):

@@ -106,11 +106,14 @@ class Module1c:
         columns at 0. 'with': the same plus matching signal and alarm, i.e. 1b-E's input."""
         return self.net.features(env, obs, t, None)
 
-    def forward(self, x, m, hp, eps, open_=True):
-        """x (B,N,dx), m (B,N), hp (B,N,d), eps (B,N). Returns h, z (B,N), bits (B,), cache.
+    def forward(self, x, m, hp, eps, open_=True, cm=None):
+        """x (B,N,dx), m (B,N) the network's mask, hp (B,N,d), eps (B,N). cm (B,N): the channel's mask, i.e. the
+        cells z and the bits live on (default m). The capacity baseline runs the network on the donor's input and
+        mask but sends the channel on the own episode's cells (review point 3). Returns h, z, bits (B,), cache.
         With open_=False (t = 0) the channel sends nothing: z = 0, bits = 0, no gradient through it."""
         p = self.p
         h, _, _, _, ncache = self.net.step(x, m, hp)
+        m = m if cm is None else cm
         mu = h @ p["c_wmu"] + p["c_bmu"][0]
         ls_raw = h @ p["c_wls"] + p["c_bls"][0]
         ls = np.clip(ls_raw, LS_MIN, LS_MAX)
@@ -159,6 +162,14 @@ def make_agent_1c(cfg, d=16, dh=32, seed=0, alarm=False, shuffle=False, dtype=np
     ag.module = Module1c(cfg, d=d, dh=dh, seed=10_000 + seed, alarm=alarm, shuffle=shuffle, dtype=dtype)
     ag.variant = "1c_cap" if shuffle else ("1c_e" if alarm else "1c")
     return ag
+
+
+def derangement(rng, B):
+    """donor[b] != b for B > 1: a random cycle through the batch."""
+    p = rng.permutation(B)
+    donor = np.empty(B, int)
+    donor[p] = np.roll(p, -1)
+    return donor
 
 
 def schema_from_z(z, B, G):

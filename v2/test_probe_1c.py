@@ -152,16 +152,16 @@ def test_measures(res):
             pb.fit(tr["events"], iters=600)
             bl = P.blind_summary(pb, te)
             m = P.measure(pb, te)
-            print(f"     {mode:9s} assessable {m['assessable']} (c) {bl['c']['mass_actual']:.2f} vs {bl['c']['uniform']:.2f} z {bl['c']['z']:.1f};"
+            print(f"     {mode:9s} assessable {m['assessable']} (c) {bl['c_k3']['mass_actual']:.2f} vs {bl['c_k3']['uniform']:.2f} z {bl['c_k3']['z']:.1f};"
                   f" q {m['q']}; om probe {m['om']['probe_mass_intended']:.3f} null {m['om']['null_mass_intended']:.3f}"
                   f" diff {m['om']['diff']:+.3f} ({m['om']['z']:+.1f} SE); var {m['var']['diff']:+.3f}")
             if mode == "actual":
                 check("synthetic veridical channel: (c) passes; 'om' not assessable (probe beats the observer)",
-                      bl["c"]["passed"] and not m["assessable"] and not m["om"]["passed"])
+                      bl["c_k3"]["passed"] and not m["assessable"] and not m["om"]["passed"])
             if mode == "noise":
-                check("synthetic empty channel: (c) fails, 'om' does not pass", not bl["c"]["passed"] and not m["om"]["passed"])
+                check("synthetic empty channel: (c) fails, 'om' does not pass", not bl["c_k3"]["passed"] and not m["om"]["passed"])
             if mode == "intended":      # no information about capture at all: (c) must fail, so H5 is not judged
-                check("synthetic intention-only channel: (c) fails", not bl["c"]["passed"])
+                check("synthetic intention-only channel: (c) fails", not bl["c_k3"]["passed"])
             if mode == "ast":
                 check("synthetic AST-like channel (errs towards intention): 'om' passes", m["om"]["passed"])
             if mode == "anti":

@@ -340,4 +340,13 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   `v2/run_sprint6.sh` (faser A, B L, U, C, D). Tester: `test_1c.py` (FD för policy och modul genom kanalen),
   `test_probe_1c.py` (rollblindhet, nollmodell, syntetiska kanaler). Ca 15 000 ep/min → ca 27 min per pilotkörning.
   Syntetiskt: tom kanal ger "om" −9,5 SE (nollmodellen lutar mot avsett vid högt q); AST-lik kanal (40 % fel, alla mot
-  avsett) +4 SE. **Väntar på oberoende granskning. Piloten startas inte före den.** Sedan: `sh run_sprint6.sh A`.
+  avsett) +4 SE.
+- **Granskning av bygget 25 okt: godkänd med anmärkningar** (`v2/results/sprint6_build_review.md`). Rättat direkt:
+  (3) kapacitetsbaslinjens kanal och bitar på egna rutor (`forward(..., cm=)`), (8) givare = derangering, (4) blind
+  sammanfattning bara över händelser med K ≥ 3 (vid K = 2 är massa på avsett = 1 − massa på faktiskt); full (c) via
+  `c_all()` efter låsning, (5) bitar mot nivån (±20 %) och förutsättning (b) i piloten (`pilot_1c.py b L e|u`),
+  (6) nivåregeln väntar tills fas A är utvärderad, (7) kapacitetsbaslinjen följer det villkor som avgjorde nivån
+  (`run_sprint6.sh B L e|u`, cap/capu). **Öppet till produktägaren före grind 6a:** (1) "om" ej kalibrerat för kanal
+  utan rollinformation (+2 till +4,7 SE vid träffsäkerhet 0,6–0,7, −10,7 vid 0,5) → kalibreringstest eller
+  rollbyteskontroll; (2) kanalen vid t bär styrkommandot → prob bara på t+1 som känslighetsanalys eller primärt.
+  Repot är en grund klon: låskontroll via sha256 i `h5_lock.json`, inte git-commits. Fas A startad 25 okt (se nedan).

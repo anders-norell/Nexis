@@ -8,7 +8,7 @@ import numpy as np
 from env import EnvConfig, SearchEnv
 from agent_rl import PriorityMapAgent, matching_signal, alarm_signal
 from schema_channel import ChannelSchema
-from schema_1c import make_agent_1c, schema_from_z, module_grads_1c, LN2
+from schema_1c import make_agent_1c, schema_from_z, module_grads_1c, LN2, derangement
 from train_1c import rollout, a2c_grads_1c, critic_diagnostic
 
 FAILS = []
@@ -31,7 +31,7 @@ def record(agent, B=4, seed=3):
     G = CFG.G
     obs = env.reset(B)
     h, hm = agent.init_state(B), mod.init_state(B)
-    donor = rng.permutation(B)
+    donor = derangement(rng, B)
     steps = []
     t = 0
     while not env.done.all():
@@ -41,10 +41,10 @@ def record(agent, B=4, seed=3):
         eps = rng.normal(0, 1, (len(idx), G * G))
         x0, m = agent.features(env, obs, t, None)
         valid = obs["action_mask"]
-        steps.append(dict(idx=idx, xm=xm[src], mm=mm[src], eps=eps, x0=x0[idx], m=m[idx], valid=valid[idx],
+        steps.append(dict(idx=idx, xm=xm[src], mm=mm[src], cm=mm[idx], eps=eps, x0=x0[idx], m=m[idx], valid=valid[idx],
                           open=t > 0))
         # act with the agent's own policy so the episode is realistic
-        hms, z, _, _ = mod.forward(xm[src], mm[src], hm[idx], eps, open_=t > 0)
+        hms, z, _, _ = mod.forward(xm[src], mm[src], hm[idx], eps, open_=t > 0, cm=mm[idx])
         hm[idx] = hms
         x = x0[idx].copy()
         x[..., agent.zcol] = z * valid[idx]
@@ -67,7 +67,7 @@ def forward_all(agent, steps, B):
     recs, mrecs = [], []
     for s in steps:
         idx = s["idx"]
-        hms, z, bits, mc = mod.forward(s["xm"], s["mm"], hm[idx], s["eps"], open_=s["open"])
+        hms, z, bits, mc = mod.forward(s["xm"], s["mm"], hm[idx], s["eps"], open_=s["open"], cm=s["cm"])
         hm[idx] = hms
         x = s["x0"].copy()
         x[..., agent.zcol] = z * s["valid"]
@@ -243,6 +243,16 @@ def test_rollout_and_doses():
         changed.append(diff.sum() / max(mm[idx].sum(), 1))
         obs, *_ = env.step(rng.integers(0, G * G, 200))
         t += 1
+    d = derangement(np.random.default_rng(0), 256)
+    check("donors form a derangement (no episode is its own donor)", not (d == np.arange(256)).any()
+          and np.array_equal(np.sort(d), np.arange(256)))
+    ag2 = make_agent_1c(CFG, seed=1, alarm=True, shuffle=True)
+    env2 = SearchEnv(CFG, seed=12)
+    _, st2 = rollout(ag2, env2, 128, np.random.default_rng(12))
+    ag3 = make_agent_1c(CFG, seed=1, alarm=True)
+    _, st3 = rollout(ag3, SearchEnv(CFG, seed=12), 128, np.random.default_rng(12))
+    check("capacity baseline: channel and bits on the own cells (bits comparable to 'with')",
+          abs(st2["bits"] - st3["bits"]) < 0.15 * st3["bits"], f"{st2['bits']:.1f} vs {st3['bits']:.1f}")
     check("capacity baseline dose: donor input differs on most valid cells", np.mean(changed) > 0.5,
           f"share of valid cells with different input: {np.mean(changed):.2f}")
 

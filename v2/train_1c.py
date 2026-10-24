@@ -17,7 +17,7 @@ import time
 import numpy as np
 from env import SearchEnv
 from train_rl import Adam, env_config
-from schema_1c import make_agent_1c, schema_from_z, module_grads_1c
+from schema_1c import make_agent_1c, schema_from_z, module_grads_1c, derangement
 
 
 def rollout(agent, env, B, rng, greedy=False, keep=True, test_shuffle=False):
@@ -29,7 +29,7 @@ def rollout(agent, env, B, rng, greedy=False, keep=True, test_shuffle=False):
     obs = env.reset(B)
     h = agent.init_state(B)
     hm = mod.init_state(B)
-    donor = rng.permutation(B)
+    donor = derangement(rng, B)
     recs, mrecs = [], []
     ret = np.zeros(B)
     t = 0
@@ -43,7 +43,7 @@ def rollout(agent, env, B, rng, greedy=False, keep=True, test_shuffle=False):
         if mod.shuffle:
             donor_running += int((~env.done[src]).sum()); donor_n += len(idx)
         eps = rng.normal(0, 1, (len(idx), G * G))
-        hms, z, bits, mcache = mod.forward(xm[src], mm[src], hm[idx], eps, open_=t > 0)
+        hms, z, bits, mcache = mod.forward(xm[src], mm[src], hm[idx], eps, open_=t > 0, cm=mm[idx])
         hm[idx] = hms
         zf = np.zeros((B, G * G))
         zf[idx] = z

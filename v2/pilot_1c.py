@@ -2,6 +2,7 @@
 
   python3 pilot_1c.py eval      evaluate every finished c6_* run (final checkpoint) -> results/sprint6_pilot.json
   python3 pilot_1c.py level     apply the level rule and print the next phase
+  python3 pilot_1c.py b L e|u   precondition (b) in the pilot: 1c vs the matched capacity baseline at level L
   python3 pilot_1c.py ref1b     the same probe (blind part) on 1b-E's pilot runs p5_ehalf* (seeds 20, 21)
 
 Per run, on the pilot bank (episode i: seed 4 000 000 + i, i < 4 000, streams as in bank.py):
@@ -10,9 +11,10 @@ Per run, on the pilot bank (episode i: seed 4 000 000 + i, i < 4 000, streams as
   collapse flag (under 1 bit per step); the critic's share of the gradient into the module, from the
   training log (mean over the last quarter of training); for the capacity baseline the share of steps whose
   donor is still running; for 1c with alarm a sanity check with the channel shuffled at test time;
-  the probe (trained on the probe bank, seeds 7 000 000 + i, balanced) and its blind summary: accuracy with
-  and without capture, (c) mass on the actual window vs uniform at H5 events, whether q can be matched and
-  the bar (null's mass on the intended window at that q).
+  whether the run reaches its level (achieved bits within 20 % of the target);
+  the probe (trained on the probe bank, seeds 7 000 000 + i, balanced) and its blind summary: accuracy
+  without capture, and at capture steps with at least three candidates only (review point 4: with two the
+  mass on the intended window is 1 - mass on actual) accuracy, (c) and whether q can be matched with the bar.
 
 Level rule (product owner, 24 Oct 23:45): the lowest level (fewest bits) at which 1c with alarm gives a
 benefit > 2 SE in both pilot seeds. "Without" runs at the same level. If "with" has no benefit at any level,
@@ -36,6 +38,7 @@ PILOT_BANK, N_PILOT = 4_000_000, 4000
 LEVELS = ("44.2", "22.1", "11.05")
 SEEDS = (40, 41)
 COLLAPSE_BITS = 1.0
+TARGET_TOL = 0.20                  # achieved bits within 20 % of the level (review point 5)
 
 
 def load(path):
@@ -96,6 +99,10 @@ def evaluate(name, res, force=False):
     if kind != "off":
         out["bits"] = P.bits_summary(r)
         out["collapse"] = bool(out["bits"]["bits_per_step"] < COLLAPSE_BITS)
+        tgt = a.get("rate_target") or 0.0
+        if tgt > 0:                                  # review point 5: does the run reach its level?
+            ratio = out["bits"]["bits_per_step"] / tgt
+            out["bits_vs_target"] = dict(target=tgt, ratio=ratio, within_20pct=bool(abs(ratio - 1) <= TARGET_TOL))
         pb, info = P.train_probe(ag, kind)
         out["probe"] = dict(**info, **P.blind_summary(pb, r))
         if kind == "1c" and a.get("alarm") and not a.get("shuffle"):
@@ -120,25 +127,53 @@ def benefit(res, name, seed, base="off"):
 
 
 def level_rule(res):
-    out = {}
+    """Waits until every needed run is evaluated (review point 6). A level counts for a condition only if the
+    benefit is > 2 SE in both seeds AND both runs reach the level (bits within 20 %)."""
+    out, reach = {}, {}
     for cond in ("e", "u"):
         for L in LEVELS:
             out[f"{cond}{L}"] = [benefit(res, f"c6_{cond}{L}", s) for s in SEEDS]
-    pick = lambda cond: next((L for L in reversed(LEVELS)
-                              if all(b is not None and b["passed"] for b in out[f"{cond}{L}"])), None)
-    le = pick("e")
-    lu = pick("u")
-    decision = dict(benefits=out, level_with=le, level_without=lu)
-    if le is not None:
-        decision.update(level=le, decided_by="with", next=f"sh run_sprint6.sh B {le}")
-    elif all(all(b is not None for b in out[f"u{L}"]) for L in LEVELS):
-        decision.update(level=lu, decided_by="without" if lu else None,
-                        next=f"sh run_sprint6.sh B {lu}" if lu else "collapse check, then sh run_sprint6.sh C")
-    else:
+            reach[f"{cond}{L}"] = [res["runs"].get(f"c6_{cond}{L}_s{s}", {}).get("bits_vs_target", {}).get("within_20pct")
+                                   for s in SEEDS]
+    ok = lambda key: all(b is not None and b["passed"] for b in out[key]) and all(reach[key])
+    have = lambda cond: all(b is not None for L in LEVELS for b in out[f"{cond}{L}"])
+    pick = lambda cond: next((L for L in reversed(LEVELS) if ok(f"{cond}{L}")), None)
+    decision = dict(benefits=out, reaches_level=reach)
+    if not have("e"):
+        decision.update(level=None, next="wait: phase A not finished or not evaluated")
+    elif pick("e") is not None:
+        L = pick("e")
+        decision.update(level=L, decided_by="with", next=f"sh run_sprint6.sh B {L} e")
+    elif not have("u"):
         decision.update(level=None, next="sh run_sprint6.sh U (no benefit for 'with' at any level)")
+    elif pick("u") is not None:
+        L = pick("u")
+        decision.update(level=L, decided_by="without", next=f"sh run_sprint6.sh B {L} u")
+    else:
+        decision.update(level=None, next="no benefit: collapse check (field 'collapse'), then sh run_sprint6.sh C, "
+                                         "then D (phases C and D are judged by hand with benefit())")
     res["level_rule"] = decision
     json.dump(res, open(OUT, "w"), indent=1)
     return decision
+
+
+def precondition_b(res, level, cond="e"):
+    """Precondition (b) in the pilot (review point 5): 1c minus the matched capacity baseline at the same level,
+    per seed (unpaired SE), and whether the capacity baseline reaches the level."""
+    cap = f"cap{level}" if cond == "e" else f"capu{level}"
+    rows = {}
+    for s in SEEDS:
+        a, b = res["runs"].get(f"c6_{cond}{level}_s{s}"), res["runs"].get(f"c6_{cap}_s{s}")
+        if a is None or b is None:
+            rows[s] = None
+            continue
+        d = a["found"] - b["found"]
+        se = float(np.sqrt(a["found_se"] ** 2 + b["found_se"] ** 2))
+        rows[s] = dict(diff=d, se=se, z=d / se, passed=bool(d > 2 * se),
+                       cap_bits_vs_target=b.get("bits_vs_target"), cap_donor_running=b["log"].get("donor_running"))
+    res["precondition_b"] = dict(level=level, cond=cond, per_seed=rows)
+    json.dump(res, open(OUT, "w"), indent=1)
+    return res["precondition_b"]
 
 
 def main():
@@ -149,6 +184,8 @@ def main():
             evaluate(os.path.basename(p)[:-len(".final.npz")], res)
     elif what == "level":
         print(json.dumps(level_rule(res), indent=1))
+    elif what == "b":                      # python3 pilot_1c.py b <level> <e|u>
+        print(json.dumps(precondition_b(res, sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "e"), indent=1))
     elif what == "ref1b":
         for L in LEVELS:
             for s in (20, 21):
