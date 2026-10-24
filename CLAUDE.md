@@ -328,5 +328,16 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   nytta, (c) proben > likformig > 2 SE alla frön; nollmodellen likformig prior över kandidaterna; 1b-E vid vald nivå
   frö 30–32 som jämförelse (avgör AST-specificitet); "var" beskrivande; bitar med/utan fångst i piloten; kritikerns
   gradient redovisas; vid utebliven nytta: kollapskontroll → 0,0001 → dubbel fångstrisk → stopp.
-- **Nästa steg: sprint 6 (1c) startar i en ny tråd.** Steg 1 = bygge och tester på otränade agenter, push före träning.
-  Rör inte sprint 4:s eller H5:s låsta utfall.
+- **Sprint 6 (1c) steg 1 (bygge) klart 25 okt, inget tränat.** Bara nya filer (låsta 5a-filer orörda):
+  `v2/schema_1c.py` (Policy1c: baslinjens policy + gradient in i kanalkolumnen; Module1c: GRU + brusig kanal, ingen
+  avkodare/förlust, kostnad = direkt straff beta·bitar reglerat mot mål; utan larm = exakt policyns tensor, med = exakt
+  1b-E:s; shuffle = matchad kapacitetsbaslinje, givare = annan episod i batchen), `v2/train_1c.py` (A2C, modulen tränas
+  bara via policyns förlust genom z; loggar bitar efter fångst/ej fångst, kritikerns andel av modulgradienten),
+  `v2/probe_1c.py` (rollblind prob 8 särdrag ur kanalen vid t+1 och t per kandidatfönster, MLP, balanserad probbank
+  7 000 000 + i; nollmodell likformig prior + glimt efter fångstprior, q matchat på massa på faktiskt; (c) blint;
+  "om"/"var" bara via `measure()` som kräver `results/h5_1c_lock.json`; ej matchbart q = ej bedömbar),
+  `v2/pilot_1c.py` (eval / level / ref1b → `results/sprint6_pilot.json`, final-checkpoints, pilotbank 4 000 000 + i),
+  `v2/run_sprint6.sh` (faser A, B L, U, C, D). Tester: `test_1c.py` (FD för policy och modul genom kanalen),
+  `test_probe_1c.py` (rollblindhet, nollmodell, syntetiska kanaler). Ca 15 000 ep/min → ca 27 min per pilotkörning.
+  Syntetiskt: tom kanal ger "om" −9,5 SE (nollmodellen lutar mot avsett vid högt q); AST-lik kanal (40 % fel, alla mot
+  avsett) +4 SE. **Väntar på oberoende granskning. Piloten startas inte före den.** Sedan: `sh run_sprint6.sh A`.
