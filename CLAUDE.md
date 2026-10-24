@@ -307,5 +307,16 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   stiger med minskad kapacitet men massan utanför kandidaterna stiger lika (0,39 → 0,76), troligen diffusitet, inte
   avsikt. Resultatgranskning: `v2/results/sprint5a_h5_result_review.md`.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
-- **Nästa steg:** produktägaren bedömer H5-resultatet (grind 5a avslutas). Nästa sprint är 1c, plan skrivs i specen och
-  godkänns före körning. Rör inte sprint 4:s eller H5:s låsta utfall.
+- **Grind 5a stängd 24 okt kväll** (produktägaren, från resultattråden): H5-resultatet godkänt som referens för 1c.
+  Hans tolkning: följer av konstruktionen (facit + larm → gissar bland iögonfallande; flaskhals → diffus karta), säger
+  inget om AST (1b inget styrschema), stärker 1c. Krav på 1c i specen: bara belöning, nytta mätt; larm som faktor
+  med/utan; avsikten inte gratis (nolläge, probens prior); diskret avläsning, ≥ 3 frön; fel i "om" och "var", låst före.
+- **1c-plan skriven i specen 24 okt ("Sprint 6: 1c ... – plan"), väntar på godkännande. Inget byggt eller kört.**
+  Modul som 1b men utan facit, tränad bara via policyns gradient genom kanalen; informationskostnad som energikostnad
+  i belöningen; larmfaktor (utan = bara policyns indata, med = + matchningssignal + larm); prob på frusen agent väljer
+  bland kandidatfönster, balanserad bank, ingen konstant för avsett; mått nytta (förutsättning > 2 SE alla frön),
+  H5 "om" och "var" mot 5a:s nollmodell; referens: samma prob på 1b:s pilotkörningar. Pilot frö 40–41, 400k;
+  huvudkörning frö 30–32, 9 körningar. Fem beslutspunkter.
+- `docs/spec_v2.md` ej exporterad vid grind 5a: docs-exporten kommer bara inline som base64 och kan inte skrivas till
+  repot från sessionen. Det levande dokumentet gäller.
+- **Nästa steg:** vänta på produktägarens svar på 1c-planen. Rör inte sprint 4:s eller H5:s låsta utfall.
