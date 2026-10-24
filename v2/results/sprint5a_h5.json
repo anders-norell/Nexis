@@ -309,6 +309,132 @@
     "clip_flag": false,
     "schema_rest_mass": 0.6544954900804295
    }
+  },
+  "p5_ehalf5.53_s20": {
+   "method": "mass",
+   "n_events": 1998,
+   "n_episodes": 838,
+   "q": 0.6384448125497943,
+   "point_clipped": false,
+   "schema_share": 0.3116495874070532,
+   "null_share": 0.4791296782142362,
+   "diff": -0.167480090807183,
+   "se": 0.007477491195324155,
+   "z": -22.39789876475042,
+   "passed": false,
+   "boot_clipped_frac": 0.0,
+   "q_interval": [
+    0.5895254048304145,
+    0.6883405818493016
+   ],
+   "clip_flag": false,
+   "schema_rest_mass": 0.7577050667080267,
+   "hit": 0.872,
+   "bits_per_step": 5.292062069603883,
+   "n_h5_events_all": 2369,
+   "sensitivity_argmax": {
+    "method": "argmax",
+    "n_events": 1998,
+    "n_episodes": 838,
+    "q": 0.7525561362272455,
+    "point_clipped": false,
+    "schema_share": 0.3116495874070532,
+    "null_share": 0.48984456333402354,
+    "diff": -0.17819497592697037,
+    "se": 0.007146422651985607,
+    "z": -24.93484986890043,
+    "passed": false,
+    "boot_clipped_frac": 0.0,
+    "q_interval": [
+     0.7420940816776233,
+     0.7627500393008777
+    ],
+    "clip_flag": false,
+    "schema_rest_mass": 0.7577050667080267
+   },
+   "sensitivity_no_fallback": {
+    "method": "mass",
+    "n_events": 903,
+    "n_episodes": 586,
+    "q": 0.6474933446228456,
+    "point_clipped": false,
+    "schema_share": 0.3219404250509183,
+    "null_share": 0.4822323175104953,
+    "diff": -0.16029189245957698,
+    "se": 0.010457415623532952,
+    "z": -15.328059840986187,
+    "passed": false,
+    "boot_clipped_frac": 0.0,
+    "q_interval": [
+     0.5805168078821472,
+     0.7160776861069803
+    ],
+    "clip_flag": false,
+    "schema_rest_mass": 0.7572806092030792
+   }
+  },
+  "p5_ehalf5.53_s21": {
+   "method": "mass",
+   "n_events": 1972,
+   "n_episodes": 850,
+   "q": 0.6867900342237359,
+   "point_clipped": false,
+   "schema_share": 0.34335439457701844,
+   "null_share": 0.4763593856790495,
+   "diff": -0.13300499110203107,
+   "se": 0.0076957305749123,
+   "z": -17.282958363384076,
+   "passed": false,
+   "boot_clipped_frac": 0.0,
+   "q_interval": [
+    0.6427215599301583,
+    0.7329905984231074
+   ],
+   "clip_flag": false,
+   "schema_rest_mass": 0.7432804852290474,
+   "hit": 0.8675,
+   "bits_per_step": 5.7649499627780445,
+   "n_h5_events_all": 2341,
+   "sensitivity_argmax": {
+    "method": "argmax",
+    "n_events": 1972,
+    "n_episodes": 850,
+    "q": 0.751557723815812,
+    "point_clipped": false,
+    "schema_share": 0.34335439457701844,
+    "null_share": 0.4828829630058629,
+    "diff": -0.13952856842884448,
+    "se": 0.007297963082072721,
+    "z": -19.11883725084787,
+    "passed": false,
+    "boot_clipped_frac": 0.0,
+    "q_interval": [
+     0.7407360318340236,
+     0.7605438124941282
+    ],
+    "clip_flag": false,
+    "schema_rest_mass": 0.7432804852290474
+   },
+   "sensitivity_no_fallback": {
+    "method": "mass",
+    "n_events": 883,
+    "n_episodes": 597,
+    "q": 0.6827122165166452,
+    "point_clipped": false,
+    "schema_share": 0.36112348292511437,
+    "null_share": 0.48687405272791834,
+    "diff": -0.12575056980280397,
+    "se": 0.010117849165512923,
+    "z": -12.428587118241456,
+    "passed": false,
+    "boot_clipped_frac": 0.0,
+    "q_interval": [
+     0.6214316883764642,
+     0.7441306570441609
+    ],
+    "clip_flag": false,
+    "schema_rest_mass": 0.7429338269365733
+   }
   }
  },
  "levels": {
@@ -321,6 +447,11 @@
    "judged": true,
    "method": "mass",
    "verdict": "ej klarad"
+  },
+  "5.53": {
+   "judged": false,
+   "method": "mass",
+   "verdict": "redovisas (ej klarad)"
   }
  }
 }
