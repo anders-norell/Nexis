@@ -1,0 +1,195 @@
+{
+ "lock": {
+  "approval": "Produkt\u00e4garen 24 okt 15:56: \u00e4ndringarna 1-5 ja; l\u00e5sning ja med tre villkor i l\u00e5stexten (specen, Grind 5a steg 2): (1) kvarvarande snedvridning i reservh\u00e4ndelser kan vara stor, -0,10 till -0,12 i stressfallet mot underk\u00e4nt, farlig klass 2,6-3,9 % av h\u00e4ndelserna; (2) \u00e4ndring 5 \u00e4r ett annat urval med ca 1,4x SE: bara teckenbyte eller skillnad > 2 SE noteras, l\u00e4ses som k\u00e4nsligt f\u00f6r reservskattningen; (3) klarar varianten utan kostnad provet som 22 och 11 bitar tillskrivs resultatet modulens arkitektur, inte komprimeringen. K\u00f6rs en g\u00e5ng som referens f\u00f6r 1c.",
+  "sha256": {
+   "h5_eval.py": "c5b408b6ac11876e4901d08303190b90bc8e5f4000de4898cf3ec95d23c88daa",
+   "h5_5a.py": "ff7dac64bf8519e4ca63a321ba4d68e08165ef35c0016226598d0e41032d0d2e",
+   "h5_bank.py": "19c89ab767c3edd819020c2093f62ab106239eca7bf0b555e75cd56d1ac3343a",
+   "h5.py": "f4e65c0ec6090b541df6b17a9410327df381d6eb65355f2607069070246f7706",
+   "env.py": "93085fceb0e5f895501030a9be8ecad038bad9aa990018d2b0bd99efaafe47d0",
+   "bank.py": "f6431a3af1c1a0da1b0456d9a0c46e59f7bec0d753e4712533a8a542fa4297c5",
+   "pilot_5a.py": "252fd27d8f70225736084d3441257413c5dde1f43f15dc7339c672a2babe4a56",
+   "agent_rl.py": "f2d647c4e4fc1ce5033614cfbf760eda8115465a9a7efd2db404cd3dfaf8fea9",
+   "schema_channel.py": "ca81e13cd66e44a91c4886a73c8d26d811a1965fab8891d04d49201ee10f0bce",
+   "results/sprint5a_h5_feasibility.json": "fb3f6729fc69311087d13fff86c3d6054027c6a1cd38fb08a185ddd029bd7f0b",
+   "results/p5_ehalf11.05_s20.final.npz": "022ca4e3f9b0c6aa33f0bc3119c1026d5fc8c07697d126fcc72d4465a4d5fd19",
+   "results/p5_ehalf11.05_s21.final.npz": "c84bdf8f6056d7f17871a56013272a4394b27020ed9aaebaa4c058f837903635",
+   "results/p5_ehalf22.1_s20.final.npz": "eb8e07af7bdd714e839b595ebf3d3dcfdb20c16a4a32cc9dced7990ca83c0a69",
+   "results/p5_ehalf22.1_s21.final.npz": "c6f834b1df73ec215903288e67a45d8b082d05544a60950e55e4fcaf86cd0b3b",
+   "results/p5_ehalf44.2_s20.final.npz": "e288f880614af19d7032cda340ffbfff3f73cb9e1a799a87fbff296f69126ac2",
+   "results/p5_ehalf44.2_s21.final.npz": "b6977726148d06f3d6cf47ffc1f16a4fdfc28696694aa680ea278c03a83cb66e",
+   "results/p5_ehalf5.53_s20.final.npz": "382ad4d23f4679785d35a4b90b61fac9ec19258145e03fadf635ae377b36c124",
+   "results/p5_ehalf5.53_s21.final.npz": "86f362bfdb294d23c70e24c5da5c0544f0a19a48de6075bfa7cea54f277a3321",
+   "results/p5_eref1e-4_s20.final.npz": "804018b88233e4d33b14f8f564d9bb9bfe23d5d9055af53dcd8a1e901602c46f",
+   "results/p5_eref1e-4_s21.final.npz": "9c92b0b1d671b24a0cac0c96c3ce3ddf7e542186cd9c14a5b506d9eb52994270"
+  },
+  "params": {
+   "QS": 41,
+   "K_NULL": 400,
+   "N_BOOT": 1000,
+   "boot_seeds": [
+    1000,
+    1001
+   ],
+   "DROP_SHARED": true,
+   "EQUALIZE_DIFFUSE": true,
+   "CLASS_DIFFUSE": true,
+   "PLATEAU": 0.1,
+   "PLATEAU_TOL": 0.01,
+   "seeds": [
+    20,
+    21
+   ],
+   "judged": [
+    "22.1",
+    "11.05"
+   ],
+   "reported": [
+    "5.53",
+    "44.2 (referens)",
+    "utan kostnad (0,0001)"
+   ],
+   "bank": [
+    2000000,
+    4000
+   ],
+   "checkpoint": "final"
+  },
+  "criterion": "per seed: schema share > null share by more than 2 bootstrap SE; a judged level is 'klarad' if both seeds pass; no overall verdict across levels"
+ },
+ "runs": {
+  "p5_ehalf22.1_s20": {
+   "method": "mass",
+   "n_events": 1914,
+   "n_episodes": 838,
+   "q": 0.6441875304266849,
+   "point_clipped": false,
+   "schema_share": 0.15994778290988587,
+   "null_share": 0.5628704011773117,
+   "diff": -0.4029226182674258,
+   "se": 0.007821690525284444,
+   "z": -51.513495319833446,
+   "passed": false,
+   "boot_clipped_frac": 0.0,
+   "q_interval": [
+    0.6227218224632431,
+    0.6656157132754299
+   ],
+   "clip_flag": false,
+   "schema_rest_mass": 0.4939921942485857,
+   "hit": 0.87575,
+   "bits_per_step": 22.62637610824101,
+   "n_h5_events_all": 2297,
+   "sensitivity_argmax": {
+    "method": "argmax",
+    "n_events": 1914,
+    "n_episodes": 838,
+    "q": 0.7262967268824898,
+    "point_clipped": false,
+    "schema_share": 0.15994778290988587,
+    "null_share": 0.5761611861021538,
+    "diff": -0.41621340319226796,
+    "se": 0.007216955939320422,
+    "z": -57.67160097577931,
+    "passed": false,
+    "boot_clipped_frac": 0.0,
+    "q_interval": [
+     0.7171499079837214,
+     0.7368755142656316
+    ],
+    "clip_flag": false,
+    "schema_rest_mass": 0.4939921942485857
+   },
+   "sensitivity_no_fallback": {
+    "method": "mass",
+    "n_events": 841,
+    "n_episodes": 574,
+    "q": 0.6360970630188991,
+    "point_clipped": false,
+    "schema_share": 0.16775060038104533,
+    "null_share": 0.5765088286427223,
+    "diff": -0.408758228261677,
+    "se": 0.009721885821813148,
+    "z": -42.04515829064149,
+    "passed": false,
+    "boot_clipped_frac": 0.0,
+    "q_interval": [
+     0.6089144469744374,
+     0.6659733804563508
+    ],
+    "clip_flag": false,
+    "schema_rest_mass": 0.4914179545993158
+   }
+  },
+  "p5_ehalf22.1_s21": {
+   "method": "mass",
+   "n_events": 1911,
+   "n_episodes": 836,
+   "q": 0.6481890959860479,
+   "point_clipped": false,
+   "schema_share": 0.1652096810484907,
+   "null_share": 0.5719794056495232,
+   "diff": -0.4067697246010325,
+   "se": 0.007955671262938268,
+   "z": -51.129529006054014,
+   "passed": false,
+   "boot_clipped_frac": 0.0,
+   "q_interval": [
+    0.625352643450801,
+    0.669405674027206
+   ],
+   "clip_flag": false,
+   "schema_rest_mass": 0.47966859099063996,
+   "hit": 0.87875,
+   "bits_per_step": 22.229373407825744,
+   "n_h5_events_all": 2297,
+   "sensitivity_argmax": {
+    "method": "argmax",
+    "n_events": 1911,
+    "n_episodes": 836,
+    "q": 0.7284582671277691,
+    "point_clipped": false,
+    "schema_share": 0.1652096810484907,
+    "null_share": 0.5846003853691191,
+    "diff": -0.41939070432062836,
+    "se": 0.007468844249538462,
+    "z": -56.15202169285357,
+    "passed": false,
+    "boot_clipped_frac": 0.0,
+    "q_interval": [
+     0.7180496073884742,
+     0.7394459673395235
+    ],
+    "clip_flag": false,
+    "schema_rest_mass": 0.47966859099063996
+   },
+   "sensitivity_no_fallback": {
+    "method": "mass",
+    "n_events": 854,
+    "n_episodes": 581,
+    "q": 0.6397817566302525,
+    "point_clipped": false,
+    "schema_share": 0.18367384302715575,
+    "null_share": 0.5796129720472886,
+    "diff": -0.39593912902013284,
+    "se": 0.009926213082944764,
+    "z": -39.88823589737723,
+    "passed": false,
+    "boot_clipped_frac": 0.0,
+    "q_interval": [
+     0.6120466398918103,
+     0.6687228675350531
+    ],
+    "clip_flag": false,
+    "schema_rest_mass": 0.4990350223269926
+   }
+  }
+ },
+ "levels": {
+  "22.1": {
+   "judged": true,
+   "method": "mass",
+   "verdict": "ej klarad"
+  }
+ }
+}
