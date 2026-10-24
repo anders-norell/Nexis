@@ -82,7 +82,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 
 ## Status
 
-- **Senast uppdaterad:** 23 okt 2026
+- **Senast uppdaterad:** 24 okt 2026
 - **Sprint 0 (spec):** klar. Spec v2 godkänd i huvudsak av produktägaren.
 - **Sprint 1 (miljö):** **klar, grind 1 godkänd 21 okt 2026** (produktägaren delegerade bedömningen till Claude).
   Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent; den styrda kan spåra
@@ -284,6 +284,18 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   glimt efter förhandssannolikhet, cellkarta, matchning med reserv, bootstrap över episoder), `v2/h5_5a.py`
   (`feasibility` blind; `measure` vägrar utan `results/h5_lock.json`, som skrivs först efter produktägarens låsning),
   `v2/test_h5_eval.py` (otränade agenter och syntetiska scheman). Testbank för H5: MVP-banken 2 000 000 + i.
+- **Kodgranskning 24 okt** (`v2/results/sprint5a_h5_code_review.md`, tre omgångar, blind): första versionen lutade mot
+  underkänt per konstruktion (schemats diffusa massa på kandidatrutor). Rättat, men **väntar på produktägarens ja**
+  (specen "Grind 5a, steg 2", fem ändringar): (1) nollmodellen får schemats diffusa andel per händelse, fördelad efter
+  schemats täthet per rutklass färg × besökt (mätt utanför kandidaterna; reserv: körningens visited/unvisited-kvot,
+  sedan samlad form); (2) delade rutor ut; (3) reserven över kandidatrutor + platåregel; (4) känslighet med argmax-
+  matchning, olika utslag → "osäker"; (5) känslighet utan reservhändelser (55 % av händelserna). Alla syntetiska
+  prov ≈ 0. Granskaren: låsbart.
+- **Genomförbarhet (blind, slutgiltig, `results/sprint5a_h5_feasibility.json`; tidigare versioner _v1/_v2):** massmatchning
+  går på alla nivåer i båda fröna, q 0,62–0,71; ribban (nollmodellens andel på avsett) 0,59 (utan kostnad), 0,59–0,61
+  (44), 0,56–0,57 (22), 0,52–0,53 (11), 0,48 (5,5). **Inget H5-utfall är beräknat.** Efter produktägarens ja:
+  `python3 h5_5a.py lock "<svar>"` och sedan `python3 h5_5a.py measure` (ca 30 min) → `results/sprint5a_h5.json`.
+  Ändras någon kod efter låsning vägrar measure.
 - `docs/spec_v2.md` uppdaterad 23 okt vid grind 4-beslutet (se rubrikraden i filen för rev). Exportera specen dit vid varje grind.
-- **Nästa steg:** vänta på produktägarens svar vid grind 5a. Rör inte sprint 4:s låsta utfall. Titta inte på vart
+- **Nästa steg:** vänta på produktägarens ja till ändringarna 1–5 och låsningen (specen "Grind 5a, steg 2"). Rör inte sprint 4:s låsta utfall. Titta inte på vart
   schemats fel pekar förrän H5:s trösklar är låsta.
