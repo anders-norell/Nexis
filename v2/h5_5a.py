@@ -107,11 +107,15 @@ def measure():
             other = "argmax" if method == "mass" else None
             if other and feas["runs"][run][other]["possible"]:
                 r["sensitivity_argmax"] = H.evaluate(d, other, seed=2000 + i)
+            # sensitivity (code review, F1 check): without events whose density came from a fallback
+            keep = ~d["fallback"]
+            if method and keep.sum() >= 100:
+                r["sensitivity_no_fallback"] = H.evaluate(H.subset(d, keep), method, seed=3000 + i)
             out["runs"][run] = r
             res.append(r)
             sens.append(r.get("sensitivity_argmax"))
             print(run, json.dumps({k: (v if not isinstance(v, float) else round(v, 4)) for k, v in r.items()
-                                   if k != "sensitivity_argmax"}), flush=True)
+                                   if not k.startswith("sensitivity")}), flush=True)
         if method is None:
             verdict = "ej bedömbar"
         else:

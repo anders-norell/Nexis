@@ -251,6 +251,14 @@ def build(events, seed_offset=0, raw=None):
     else:
         D, lam = np.zeros((n, 3)), np.zeros(n)
     out["lam"] = lam
+    # events whose candidate cells contain a class absent from their own rest (density from a fallback; review)
+    if n:
+        cc = np.array([e["det"]["cls_cnt"].sum(0) for e in ev]).reshape(n, NCLS)
+        rcc = np.array([e["rest_cls_cnt"] for e in ev]).reshape(n, NCLS)
+        out["fallback"] = ((cc > 0) & (rcc == 0)).any(1)
+        out["fallback_unvisited_target"] = (cc[:, 2] > 0) & (rcc[:, 2] == 0)
+    else:
+        out["fallback"] = out["fallback_unvisited_target"] = np.zeros(0, bool)
     mixed = (1 - lam)[:, None, None] * nr + D[:, None, :]
     mixed = mixed / np.maximum(mixed.sum(2, keepdims=True), 1e-12)
     out["nI"], out["nA"], out["nO"], out["n_argA"] = mixed[..., 0], mixed[..., 1], mixed[..., 2], na
@@ -314,6 +322,8 @@ def feasibility(d):
         res[m] = dict(bar=bar, schema=float(t), null_q0=float(c[0]), null_q1=float(c[-1]),
                       null_min=float(c.min()), null_max=float(c.max()), q=q, possible=q is not None)
     res["schema_rest_mass"] = float(d["s_rest"].mean())
+    res["fallback_share"] = float(d["fallback"].mean())
+    res["fallback_unvisited_target_share"] = float(d["fallback_unvisited_target"].mean())
     return res
 
 
@@ -327,6 +337,17 @@ def level_method(feas_per_seed):
 
 def share(I, O, w):
     return float((I * w).sum() / max(((I + O) * w).sum(), 1e-12))
+
+
+def subset(d, keep):
+    """The same run restricted to events `keep` (for the sensitivity without fallback events)."""
+    out = {}
+    for k, v in d.items():
+        if k == "_raw":
+            continue
+        out[k] = v[keep] if isinstance(v, np.ndarray) and v.shape[:1] == (d["n"],) else v
+    out["n"] = int(keep.sum())
+    return out
 
 
 def evaluate(d, method, n_boot=N_BOOT, seed=0):

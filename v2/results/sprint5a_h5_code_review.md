@@ -269,3 +269,45 @@ Such a schema puts mass on the intended window only because that window is "a pl
    - A "klarad" result is what compression predicts. It is consistent with AST but not specific to it.
    - The schema barely helps the agent (0–1 pp), so H5 here concerns a model of attention that is hardly used for control.
 10. **Hashes:** SHA-256 hashes of the code, the feasibility JSON and the checkpoints, all verified by `measure`. The feasibility file must be regenerated after F1, before the lock.
+
+## F1 check (commit bcd5698)
+
+**Verdict: lockable.** The F1 fix is correct and blind-safe. The new fallback has a residual risk, but it is small on the data I could test, its direction there is toward fail, and it is confined to identifiable events. Two reporting items (below) should go into the lock text. No further code change is needed before the lock.
+
+### What I verified
+
+- **Tests:** `test_h5_eval.py` passes 34/34, and my output is identical to the committed file.
+- **Coverage timing:** `h5_bank` passes `vis` to `event_detail` before `vis = np.maximum(vis, newcur)`. The classes therefore use coverage up to step t − 1, as F1 asked.
+- **Six classes:** {empty, other colour, target colour} × {covered, not covered}. Region counts and rest-cell masses are computed per class.
+- **Blindness:** every input to the density comes from rest cells: valid cells outside I ∪ A ∪ O, with the dropped shared cells excluded. That includes the run-level pooled quantities: the class shape, the colour fallback and the visited/unvisited ratio per colour. None of them uses mass on I, A or O, so they reveal nothing about the I/O split. Blind-safe.
+- **Fallback order:**
+  1. The event's own density, where the event has rest cells of the class.
+  2. Otherwise, for a missing visited or unvisited class, the partner's density times the run's ratio. The ratio is a ratio of sums over events that have both classes, so it is consistent. Division is guarded for a ratio of 0, and the step is skipped if no event has both classes.
+  3. Otherwise the pooled shape, scaled so that it reproduces the event's own rest mass (k_e).
+
+  The logic matches the description and has no off-by-one between classes c and c + 3.
+
+### My check on the fallback
+
+The fallback matters only for events where some class appears in a candidate window but not in that event's rest cells. The case most likely to cause bias is "the remaining unvisited target-colour cells lie only in the intended window". A schema that spreads a fixed amount of "next place" mass over all unvisited target-colour cells then puts all of it on I. The pooled per-cell density cannot represent that concentration.
+
+On random-agent events (2 262 events, pre-step coverage, 65 % "next place" diffuse mass on unvisited target-colour cells):
+
+| Events | Diff | SE |
+| --- | --- | --- |
+| All | −0.0009 (q0 = 0.4), −0.0003 (q0 = 0.8) | about 0.001 |
+| Stress events only (n = 10, 0.44 % of events) | −0.12 (q0 = 0.4), −0.10 (q0 = 0.8) | about 0.05 |
+
+On the stress events the bias goes **toward fail**: the schema's mass on A drops, so the matched q and the bar rise. Mixed into all events, the case has no effect, because it is rare for a random agent.
+
+A trained searcher will meet "the last unvisited target cells are where I aimed" more often late in episodes. The share of such events in the trained runs is unknown, and I did not compute it, because it needs trained-agent episodes. It can be computed blind, from environment state and coverage alone, with no schema quantity involved.
+
+The run-level ratio and the shape are estimated once on all events and are not re-estimated inside the bootstrap. This slightly understates the SE. It is negligible with about 1 900 events.
+
+### The lock text should add
+
+1. **Fallback share:** for each run, the share of events that use any fallback, i.e. a class present in I, A or O but absent from the event's own rest cells. Report it separately for the target-colour unvisited class. This is blind-safe, from environment state only, and should be computed when the final feasibility file is read.
+2. **Descriptive sensitivity:** the H5 result recomputed without the fallback events, reported alongside the main result. It does not change the verdict, unless the product owner prefers that a different verdict there makes the level "osäker".
+3. **Residual biases (synthetic tests):**
+   - All layouts tested come out at about 0: uniform ±0.0004, occupied −0.0008 to 0.0000, unvisited target colour +0.0001 to +0.0010, object-peaked about 0.
+   - In events that need the fallback, the bias can be large. In the one layout I tested, it went toward fail.
