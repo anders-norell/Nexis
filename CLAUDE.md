@@ -319,4 +319,14 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   huvudkörning frö 30–32, 9 körningar. Fem beslutspunkter.
 - `docs/spec_v2.md` ej exporterad vid grind 5a: docs-exporten kommer bara inline som base64 och kan inte skrivas till
   repot från sessionen. Det levande dokumentet gäller.
-- **Nästa steg:** vänta på produktägarens svar på 1c-planen. Rör inte sprint 4:s eller H5:s låsta utfall.
+- **1c-plan godkänd med villkor 24 okt 23:45** (specen, "Sprint 6 (1c), produktägarens svar"; villkoren gäller före
+  planen där de skiljer sig): "utan" = exakt policyns tensorer, "med" = exakt 1b-E:s indata; rollblind prob (samma
+  poängfunktion per kandidatfönster ur kanalens värden, ingen uppgift om avsett), ser kanalen vid t och t−1;
+  kostnad = direkt straff (kapacitetsgräns), reglerad mot nivå ur 44/22/11, regel: lägsta nivå där "med" ger nytta
+  > 2 SE i båda pilotfröna (40, 41), annars "utan" avgör; förutsättningar (a) nytta > 2 SE alla frön, (b) matchad
+  kapacitetsbaslinje (samma parametrar och kanalbredd, kanalen tränad på blandad indata från start) ger inte samma
+  nytta, (c) proben > likformig > 2 SE alla frön; nollmodellen likformig prior över kandidaterna; 1b-E vid vald nivå
+  frö 30–32 som jämförelse (avgör AST-specificitet); "var" beskrivande; bitar med/utan fångst i piloten; kritikerns
+  gradient redovisas; vid utebliven nytta: kollapskontroll → 0,0001 → dubbel fångstrisk → stopp.
+- **Nästa steg: sprint 6 (1c) startar i en ny tråd.** Steg 1 = bygge och tester på otränade agenter, push före träning.
+  Rör inte sprint 4:s eller H5:s låsta utfall.
