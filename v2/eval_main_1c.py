@@ -16,16 +16,19 @@ Criteria (locked; every comparison per seed, unpaired SE over test episodes as i
   (c) self-reference  primary probe's mass on the actual window minus 1 / K at H5 events (all K), > 2 SE in all seeds
                    (bootstrap over episodes)
   H5 "om"          only for a 1c condition that passes (a), (b) and (c): role-swap control of the primary probe
-                   (mass on the intended window minus on the decoy at H5 events with a decoy) for the TRAINED agent
-                   minus the same control for the UNTRAINED agent of the same architecture and seed (decision 25 Oct
-                   14:21: an untrained channel passes the intended window's input on, +0.004 to +0.011), > 2 SE in
-                   all three seeds (SE = root of the sum of the two bootstrap variances)
-  AST-specific     only if "om" passes for 1c with alarm: its trained-minus-untrained control minus 1b-E's,
-                   > 2 SE in all three seeds (SE = root of the sum of the four bootstrap variances)
+                   (probe trained on capture steps only; mass on the intended window minus on the decoy, another
+                   wrong salient candidate, at H5 events with a decoy), > 2 SE in all three seeds (bootstrap over
+                   episodes). Calibrated (test_probe_1c.py): no synthetic channel without role information passes,
+                   passive transmission of the intended window's input comes out negative.
+  AST-specific     only if "om" passes for 1c with alarm: its control minus 1b-E's, > 2 SE in all three seeds
+                   (SE = root of the sum of the two bootstrap variances)
+  Reported: the same control for an untrained shadow module (same architecture and seed, run on the same episodes,
+  its channel not fed to the policy) and the trained-minus-shadow difference, paired per event.
 Reported, not judged: the null-adjusted "om" and the control with the null, the sensitivity probe's control, the split
 by whether command t + 1 aims at the intended window again (a yes is read as AST only if the no-repeat group points
 the same way), "var", bits after capture / no capture, test-time shuffled channel, the critic's share.
 """
+import hashlib
 import json
 import os
 import sys
@@ -56,6 +59,29 @@ def diff(a, b):
     return dict(diff=d, se=se, z=d / se, passed=bool(d > 2 * se))
 
 
+def checkpoint_ok(path, a, meta, cond):
+    """Pre-lock review finding 3: the run must be the decided one (capture risk, cost, length, seed)."""
+    errs = []
+    if abs(a["p_capture"] - 0.5) > 1e-9:
+        errs.append("p_capture")
+    if int(meta.get("episodes", 0)) < 1_000_000:
+        errs.append(f"episodes {meta.get('episodes')}")
+    if cond != "off" and abs(a.get("rate_cost", 0) - 0.0001) > 1e-12:
+        errs.append("rate_cost")
+    if cond != "off" and a.get("rate_target", 0) not in (0, 0.0):
+        errs.append("rate_target")
+    if cond == "cap1e-4" and not (a.get("shuffle") and a.get("alarm")):
+        errs.append("capacity flags")
+    if cond == "e1e-4" and not (a.get("alarm") and not a.get("shuffle")):
+        errs.append("alarm flags")
+    if cond == "u1e-4" and (a.get("alarm") or a.get("shuffle")):
+        errs.append("no-alarm flags")
+    if cond == "1bE" and a.get("schema") != "channel_e":
+        errs.append("1b-E schema")
+    if errs:
+        raise RuntimeError(f"{path}: not the decided run: {errs}")
+
+
 def load_untrained(path):
     """The same architecture, configuration and seed as the run, at its initial weights (not loaded)."""
     z = np.load(path)
@@ -79,24 +105,30 @@ def control_diff(x, y):
 
 
 def evaluate_run(n, res):
-    if n in res["runs"]:
+    path = os.path.join(RES, n + ".final.npz")
+    sha = hashlib.sha256(open(path, "rb").read()).hexdigest()
+    if n in res["runs"] and res["runs"][n].get("checkpoint_sha256") == sha:     # review finding 4
         return res["runs"][n]
-    ag, a, kind = load(os.path.join(RES, n + ".final.npz"))
+    ag, a, kind = load(path)
+    z = np.load(path)
+    meta = {k[2:]: z[k] for k in z.files if k.startswith("m_")}
+    checkpoint_ok(path, a, meta, n.split("mL-")[1].rsplit("_s", 1)[0])
     seeds = bank_seeds(N_BANK, BANK)
-    r = P.collect(ag, kind, seeds, with_events=kind != "off")
-    out = dict(kind=kind, **P.found_summary(r), log=log_summary(n))
+    shadow = load_untrained(path)[0].module if kind != "off" else None
+    r = P.collect(ag, kind, seeds, with_events=kind != "off", shadow=shadow)
+    out = dict(kind=kind, checkpoint_sha256=sha, **P.found_summary(r), log=log_summary(n))
     if kind != "off":
         out["bits"] = P.bits_summary(r)
-        pbs, info = P.train_probes(ag, kind)
+        pbs, info = P.train_probes(ag, kind, shadow=shadow)
         out["probe_info"] = info
         out["c_all"] = P.c_all(pbs["primary"], r)
         out["h5_primary"] = P.measure(pbs["primary"], r)
         out["h5_sens"] = P.measure(pbs["sens"], r)
-        ua, ukind = load_untrained(os.path.join(RES, n + ".final.npz"))
-        ur = P.collect(ua, ukind, seeds)
-        upbs, _ = P.train_probes(ua, ukind)
-        out["untrained_h5_primary"] = P.measure(upbs["primary"], ur)
-        out["om_vs_untrained"] = control_diff(out["h5_primary"]["control"], out["untrained_h5_primary"]["control"])
+        out["shadow_h5_primary"] = P.measure(pbs["shadow_primary"], r, fk="F_sh")
+        out["trained_minus_shadow"] = P.measure_pair(pbs["primary"], pbs["shadow_primary"], r)
+        out["event_counts"] = dict(h5=len([e for e in r["events"] if e["h5"]]),
+                                   h5_with_decoy=len([e for e in r["events"] if e["h5"] and e["decoy"] is not None]),
+                                   per_episode=len([e for e in r["events"] if e["h5"]]) / N_BANK)
         if kind == "1c" and not ag.module.shuffle:
             out["test_shuffle_found"] = P.found_summary(P.collect(ag, kind, seeds, test_shuffle=True,
                                                                   with_events=False))["found"]
@@ -117,18 +149,17 @@ def judge(res):
         b = [diff(R[name(c, s)], R[name("cap1e-4", s)]) for s in SEEDS]
         cc = [R[name(c, s)]["c_all"] for s in SEEDS]
         pre = all(x["passed"] for x in a) and all(x["passed"] for x in b) and all(x["passed"] for x in cc)
-        ctrl = [R[name(c, s)]["om_vs_untrained"] for s in SEEDS]
-        J[c] = dict(a=a, b=b, c=cc, preconditions=pre, om_vs_untrained=ctrl,
-                    om_control_trained=[R[name(c, s)]["h5_primary"]["control"] for s in SEEDS],
-                    om_control_untrained=[R[name(c, s)]["untrained_h5_primary"]["control"] for s in SEEDS],
+        ctrl = [R[name(c, s)]["h5_primary"]["control"] for s in SEEDS]
+        J[c] = dict(a=a, b=b, c=cc, preconditions=pre, om_control=ctrl,
+                    trained_minus_shadow=[R[name(c, s)]["trained_minus_shadow"] for s in SEEDS],
                     om_passed=bool(pre and all(x["passed"] for x in ctrl)),
                     norepeat=[R[name(c, s)]["h5_primary"]["split"]["norepeat"]["control"] for s in SEEDS],
                     sens_control=[R[name(c, s)]["h5_sens"]["control"] for s in SEEDS])
     if "e1e-4" in J and have("1bE"):
         sp = []
         for s in SEEDS:
-            x, y = R[name("e1e-4", s)]["om_vs_untrained"], R[name("1bE", s)]["om_vs_untrained"]
-            d = x["diff"] - y["diff"]
+            x, y = R[name("e1e-4", s)]["h5_primary"]["control"], R[name("1bE", s)]["h5_primary"]["control"]
+            d = x["value"] - y["value"]
             se = float(np.sqrt(x["se"] ** 2 + y["se"] ** 2))
             sp.append(dict(diff=d, se=se, z=d / se if se > 0 else float("nan"), passed=bool(d > 2 * se)))
         J["ast_specific"] = dict(per_seed=sp, judged=J["e1e-4"]["om_passed"],

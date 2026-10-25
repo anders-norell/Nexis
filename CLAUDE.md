@@ -379,4 +379,14 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   klarar rollbyteskontrollen** (1500 ep: 1c med larm +0,011 / +5,2 SE, utan larm +0,004 / +3,3, 1b-E +0,010 / +5,1,
   kapacitetsbaslinjen 0,000 / +0,5): kanalen för passivt vidare den remappade foveán och matchningssignalen, som ligger på
   avsedda rutor. Förslag till produktägaren: kriteriet = tränad minus otränad agent (samma arkitektur och frö) > 2 SE.
-  Väntar på beslut före låsning.
+  Produktägaren sa ja 14:21 (tränad minus otränad).
+- **Granskning före låsning 25 okt: EJ LÅSBAR** (`v2/results/sprint6_main_prelock_review.md`). (1) Låtsasfönstret är alltid
+  iögonfallande, det avsedda aldrig: med balanserad probträning lär sig proben "det icke-iögonfallande är det faktiska" av
+  stegen utan fångst, så en kanal som bara kodar iögonfallande klarar kontrollen (+54 SE). (2) Otränad referens byter tecken
+  mellan frön, annan händelsefördelning. (3–4) låsning/kontroll av checkpoint, cache. **Åtgärdat (väntar på produktägaren):**
+  proben tränas bara på fångststeg (`probe_1c.training_set`, avviker från villkoret "balanserad bank"), låtsasfönstret =
+  annan felaktig iögonfallande kandidat; kalibrering: ingen kanal utan rollinformation klarar (noll, markör, fel kandidater,
+  iögonfallande, styrsignal, passiv avsiktsindata: z −59 till +0,8), AST-lik +17–22 SE. Därmed åter kriterium = tränad
+  agents kontroll > 2 SE; otränad skuggmodul (samma arkitektur/frö, samma episoder, kanalen ej till policyn) redovisas parat.
+  `eval_main_1c.py` kontrollerar checkpoint (fångstrisk, kostnad, ≥ 1 M ep, flaggor) och cachar per sha256;
+  `run_sprint6.sh` i låsningen. Ej låst, ej startat.

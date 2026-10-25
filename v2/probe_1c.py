@@ -62,11 +62,12 @@ BLOCK = 500
 
 
 # ---------------------------------------------------------------------------------------- channel runs
-def _step_channel(agent, kind, env, obs, t, idx, hm, arng, donor):
-    """The channel z_t (B, N) of the agent at step t (0 outside idx), and the policy's schema input."""
+def _step_channel(agent, kind, env, obs, t, idx, hm, arng, donor, mod=None):
+    """The channel z_t (B, N) at step t (0 outside idx). mod: a module other than the agent's (the untrained shadow
+    module, decision 25 Oct after the pre-lock review); its noise is drawn from arng too (the shadow's own streams)."""
     G = agent.cfg.G
     B = env.B
-    mod = agent.module
+    mod = agent.module if mod is None else mod
     eps = np.stack([arng[b].normal(0, 1, G * G) for b in idx]) if len(idx) else np.zeros((0, G * G))
     z = np.zeros((B, G * G))
     if kind == "1c":
@@ -111,6 +112,10 @@ def candidates_at(env, b, ir0, ic0):
     return origins, pr
 
 
+def _overlap(o, p, w):
+    return abs(o[0] - p[0]) < w and abs(o[1] - p[1]) < w
+
+
 def window_features(Z1, Z0, origins, w, n):
     """(K, NF) features per candidate from the channel at t + 1 (Z1) and t (Z0), both (G, G)."""
     m1, m0 = Z1[:n, :n].mean(), Z0[:n, :n].mean()
@@ -121,17 +126,21 @@ def window_features(Z1, Z0, origins, w, n):
     return out
 
 
-def collect(agent, kind, seeds, block=BLOCK, test_shuffle=False, with_events=True):
+def collect(agent, kind, seeds, block=BLOCK, test_shuffle=False, with_events=True, shadow=None):
     """Run the frozen agent on bank episodes. kind: '1c', '1b' or 'off'. Returns found, bits split by
     whether the previous command was captured, and the probe's events."""
     out = dict(found=[], bits_sum=np.zeros(2), bits_n=np.zeros(2), events=[])
     for s in range(0, len(seeds), block):
-        _block(agent, kind, seeds[s:s + block], out, test_shuffle, with_events)
+        _block(agent, kind, seeds[s:s + block], out, test_shuffle, with_events, shadow)
     out["found"] = np.concatenate(out["found"])
     return out
 
 
-def _block(agent, kind, seeds, out, test_shuffle, with_events):
+def _block(agent, kind, seeds, out, test_shuffle, with_events, shadow=None):
+    """shadow: an untrained module of the same architecture (and seed) run alongside on the same episodes. It sees
+    the same inputs as the agent's module, its channel is never fed to the policy, and its noise comes from separate
+    streams (episode seed, 99), so the episodes are exactly those of the agent alone. Events then also carry the
+    shadow channel's features (F_sh): a paired reference for what an untrained channel passes on."""
     cfg = agent.cfg
     G = cfg.G
     B = len(seeds)
@@ -142,6 +151,10 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events):
     h = agent.init_state(B)
     mod = getattr(agent, "module", None)
     hm = mod.init_state(B) if kind != "off" else None
+    if shadow is not None:
+        srng = [np.random.default_rng([int(s_), 99]) for s_ in seeds]
+        hsh = shadow.init_state(B)
+        zsh_prev = np.zeros((B, G * G))
     donor = (np.arange(B) + 1) % B                  # bank convention: next episode in the block, cyclic
     union = np.zeros((B, G, G))
     zprev = np.zeros((B, G * G))
@@ -170,13 +183,20 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events):
                 cur = cur.reshape(B, G, G)
                 union = np.maximum(union, cur)
                 schema = np.stack([cur, union], -1)
+            if shadow is not None:
+                zsh, _, _ = _step_channel(agent, kind, env, obs, t, idx, hsh, srng, donor, mod=shadow)
             for b, ev in list(pending.items()):
                 n = ev["n"]
                 ev["F"] = window_features(z[b].reshape(G, G), zprev[b].reshape(G, G), ev["origins"], ev["w"], n)
+                if shadow is not None:
+                    ev["F_sh"] = window_features(zsh[b].reshape(G, G), zsh_prev[b].reshape(G, G), ev["origins"],
+                                                 ev["w"], n)
                 out["events"].append(ev)
                 recent[b] = ev
             pending = {}
             zprev = z
+            if shadow is not None:
+                zsh_prev = zsh
         x, m = agent.features(env, obs, t, schema)
         hs, logp, _, _, _ = agent.step(x[idx], m[idx], h[idx])
         h[idx] = hs
@@ -203,8 +223,9 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events):
                 cap = bool(info["captured"][b])
                 content = [restricted(env._fovea(b, o[0], o[1], w), cfg.n_colors) for o in origins]
                 L = np.array([[np.array_equal(ci, ck) for ck in content] for ci in content], float)
-                # decoy for the role-swap control (decision 25 Oct): a wrong candidate, not the intended window,
-                # whose content differs from the glimpse, as the intended window's does at H5 events
+                # decoy for the role-swap control: another wrong candidate (a salient object's window, not the actual
+                # one) whose content differs from the glimpse, as the intended window's does at H5 events. With the
+                # probe trained on capture steps only this is calibrated (test_probe_1c.py)
                 dec = [j for j in range(1, len(origins)) if j != act and L[act, j] == 0] if cap else []
                 drng = np.random.default_rng([int(seeds[b]), t, 71])
                 pending[b] = dict(seed=int(seeds[b]), t=t, w=w, n=int(env.n[b]), origins=origins, prior=pr,
@@ -216,16 +237,22 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events):
     out["found"].append(env.found.copy())
 
 
+def _window_cover(G, r0, c0, w):
+    m = np.zeros((G, G), int)
+    m[r0:r0 + w, c0:c0 + w] = 1
+    return m
+
+
 # ------------------------------------------------------------------------------------------------ probe
-def pack(events):
-    """Padded arrays: F (E, Kmax, NF), mask (E, Kmax), actual (E,)."""
+def pack(events, fk="F"):
+    """Padded arrays: F (E, Kmax, NF), mask (E, Kmax), actual (E,). fk: 'F' (the agent's channel) or 'F_sh'."""
     E = len(events)
     K = max(len(e["origins"]) for e in events)
     F = np.zeros((E, K, NF))
     M = np.zeros((E, K))
     for i, e in enumerate(events):
         k = len(e["origins"])
-        F[i, :k] = e["F"]
+        F[i, :k] = e[fk]
         M[i, :k] = 1
     return F, M, np.array([e["actual"] for e in events])
 
@@ -272,8 +299,8 @@ class Probe:
             g[k] = g[k] + 2 * l2 * self.p[k]
         return L, g
 
-    def fit(self, events, iters=1500, lr=0.01, seed=0):
-        F, M, y = pack(events)
+    def fit(self, events, iters=1500, lr=0.01, seed=0, fk="F"):
+        F, M, y = pack(events, fk)
         rows = F[M > 0][:, self.cols]
         self.mu, self.sd = rows.mean(0), rows.std(0) + 1e-6
         m = {k: np.zeros_like(v) for k, v in self.p.items()}
@@ -285,6 +312,15 @@ class Probe:
                 v2[k] = 0.999 * v2[k] + 0.001 * g[k] ** 2
                 self.p[k] -= lr * (m[k] / (1 - 0.9 ** i)) / (np.sqrt(v2[k] / (1 - 0.999 ** i)) + 1e-8)
         return float(L)
+
+
+def training_set(events):
+    """Probe training set (pre-lock review 25 Oct, calibration): the capture steps only. With equally many steps
+    without capture (the first design), the probe learns 'the actual window is the non-salient one' from the steps
+    without capture, where the actual window is the intended one; any channel that tells salient from non-salient
+    windows then passes the role-swap control (+54 SE in the calibration). Trained on capture steps, where the
+    actual window is always a salient object's, no channel without role information passes."""
+    return [e for e in events if e["captured"]]
 
 
 def balanced(events, seed=0):
@@ -303,38 +339,40 @@ def train_probe(agent, kind, seeds=None, seed=0, cols=None):
     return pbs["p"], info["p"]
 
 
-def train_probes(agent, kind, seeds=None, seed=0, which=None):
-    """Several probes on one probe-bank run. which: name -> cols (default primary and sensitivity)."""
+def train_probes(agent, kind, seeds=None, seed=0, which=None, shadow=None):
+    """Several probes on one probe-bank run. which: name -> cols (default primary and sensitivity). With a shadow
+    module, also 'shadow_primary': the primary probe trained the same way on the shadow channel (F_sh)."""
     which = which or {"primary": COLS_PRIMARY, "sens": COLS_SENS}
     seeds = seeds or [PROBE_BANK + i for i in range(N_PROBE)]
-    tr = collect(agent, kind, seeds)
-    ev = balanced(tr["events"], seed)
+    tr = collect(agent, kind, seeds, shadow=shadow)
+    ev = training_set(tr["events"])
+    jobs = [(name, cols, "F") for name, cols in which.items()]
+    if shadow is not None:
+        jobs.append(("shadow_primary", COLS_PRIMARY, "F_sh"))
     pbs, info = {}, {}
-    for name, cols in which.items():
+    for name, cols, fk in jobs:
         pb = Probe(seed=seed, cols=cols)
-        info[name] = dict(n_train=len(ev), train_loss=pb.fit(ev, seed=seed), cols=pb.cols)
+        info[name] = dict(n_train=len(ev), train_loss=pb.fit(ev, seed=seed, fk=fk), cols=pb.cols, features=fk)
         pbs[name] = pb
     return pbs, info
 
 
 # ------------------------------------------------------------------------------------------- null model
 def null_curves(ev, K=K_NULL):
-    """Null's mean mass on (intended, actual, others, decoy) at each q in QS for one event, common random numbers.
-    decoy = 0 when the event has none."""
+    """Null's mean mass on (intended, actual, others) at each q in QS for one event, common random numbers."""
     rng = np.random.default_rng([ev["seed"], ev["t"], 61])
     pr = ev["prior"] / ev["prior"].sum()
     Ug = rng.random(K)
     srcdraw = np.minimum((rng.random(K)[:, None] >= np.cumsum(pr)[None, :]).sum(1), len(pr) - 1)
     L = ev["L"]
     a = ev["actual"]
-    d = ev.get("decoy")
-    out = np.zeros((len(QS), 4))
+    out = np.zeros((len(QS), 3))
     for i, q in enumerate(QS):
         src = np.where(Ug < q, srcdraw, a)
         post = L[src]                                  # uniform prior x likelihood
         post = post / post.sum(1, keepdims=True)
         avg = post.mean(0)
-        out[i] = [avg[0], avg[a], 1.0 - avg[0] - avg[a], avg[d] if d is not None else 0.0]
+        out[i] = [avg[0], avg[a], 1.0 - avg[0] - avg[a]]
     return out
 
 
@@ -424,7 +462,7 @@ def found_summary(res):
 # ------------------------------------------------------------------------------------- locked measures
 def lock_hashes():
     files = ("probe_1c.py", "schema_1c.py", "train_1c.py", "env.py", "bank.py", "h5.py", "h5_eval.py", "agent_rl.py",
-             "train_rl.py", "schema_channel.py", "eval_main_1c.py", "pilot_1c.py")
+             "train_rl.py", "schema_channel.py", "eval_main_1c.py", "pilot_1c.py", "run_sprint6.sh")
     return {f: hashlib.sha256(open(os.path.join(HERE, f), "rb").read()).hexdigest() for f in files}
 
 
@@ -445,39 +483,39 @@ def _check_lock():
     return lk
 
 
-def measure(probe, res, seed=0):
+def measure(probe, res, seed=0, fk="F"):
     """'om' (judged through the role-swap control) and 'var' (descriptive). Only after the lock (gate 6a).
 
-    Decisions 25 Oct 02:40 (product owner, on Claude's recommendation):
+    Decisions 25 Oct (product owner, on Claude's recommendations; pre-lock review 25 Oct):
       om          probe's mass on the intended window minus the null's, at H5 events, q matched on mass on the
                   actual window over all H5 events. Reported, not the criterion.
-      control     the probe's mass on the intended window minus its mass on a decoy (a random wrong candidate,
-                  not intended, content differing from the glimpse, as the intended window's at H5 events), on H5
-                  events that have one. Criterion: > 2 SE in every seed (q plays no role here). A role-blind probe on a
-                  channel without role information puts the same mass on both in expectation.
-                  The first version, om(intended) - om(decoy) with the null subtracted on both sides, is reported as
-                  control_with_null: the synthetic calibration (test_probe_1c.py, 25 Oct) showed it is biased
-                  negative by the null's base-rate preference for the intended window (-8 to -44 SE for channels
-                  without role information).
-      split       om and the control separately for events where command t + 1 aims at the intended window again
-                  and where it does not (descriptive; a yes is read as AST only if the no-repeat group points the
-                  same way).
-    The primary probe reads only t + 1; the sensitivity probe (t + 1 and t) is measured with the same function."""
+      control     at H5 events with a decoy: the probe's mass on the intended window minus on the decoy, another
+                  wrong candidate (a salient object's window) whose content differs from the glimpse; probe trained
+                  on capture steps only (training_set). Calibration (test_probe_1c.py, 25 Oct): no channel without
+                  role information passes (noise, marker, wrong candidates, salience, steering signal at t, passive
+                  intended-window input: z between -57 and +0.7); AST-like channels +18 to +20 SE. A channel that
+                  codes salience or passes the intended window's input on comes out negative (conservative).
+                  measure_pair gives the trained minus the untrained shadow channel (reported).
+      split       the control separately for events where command t + 1 aims at the intended window again and where
+                  it does not (descriptive; a yes is read as AST only if the no-repeat group points the same way).
+    fk: 'F' the agent's channel, 'F_sh' the shadow's (with a probe trained on F_sh)."""
     _check_lock()
-    ev = res["events"]
-    P, K, y = test_arrays(probe, ev)
-    h5 = np.array([e["h5"] for e in ev])
-    idx = np.nonzero(h5)[0]
-    pA = P[idx, y[idx]]
-    pI = P[idx, 0]
+    ev = [e for e in res["events"] if e["h5"]]
+    if fk == "F_sh":
+        assert all("F_sh" in e for e in ev), "no shadow features: collect with shadow="
+    F, M, y = pack(ev, fk)
+    P = probe.probs(F, M)
+    hasd = np.array([e["decoy"] is not None for e in ev])
+    pD = np.array([P[i, e["decoy"]] if e["decoy"] is not None else 0.0 for i, e in enumerate(ev)])
+    n = len(ev)
+    pA = P[np.arange(n), y]
+    pI = P[:, 0]
     pO = 1.0 - pA - pI
-    dec = np.array([ev[i]["decoy"] if ev[i]["decoy"] is not None else -1 for i in idx])
-    hasd = dec >= 0
-    pD = np.where(hasd, P[idx, np.maximum(dec, 0)], 0.0)
-    other = np.array([ev[i]["has_other"] for i in idx])
-    rep_ = np.array([ev[i].get("next_overlap", False) for i in idx])
-    epi = np.array([ev[i]["seed"] for i in idx])
-    curves = np.array([null_curves(ev[i]) for i in idx])
+    ctl = P[:, 0] - pD
+    other = np.array([e["has_other"] for e in ev])
+    rep_ = np.array([e.get("next_overlap", False) for e in ev])
+    epi = np.array([e["seed"] for e in ev])
+    curves = np.array([null_curves(e) for e in ev])
 
     def wavg(arr, w):
         return (arr * w).sum() / max(w.sum(), 1e-12)
@@ -489,12 +527,9 @@ def measure(probe, res, seed=0):
         clipped = q is None
         q = clip_q(nA, tA) if clipped else q
         nIq = np.array([interp(c, q) for c in curves[..., 0]])
-        nDq = np.array([interp(c, q) for c in curves[..., 3]])
         res_ = dict(q=q, clipped=clipped, om=wavg(pI - nIq, w))
-        for name, g in (("all", np.ones_like(hasd)), ("repeat", rep_), ("norepeat", ~rep_)):
-            wd = w * hasd * g
-            res_[f"ctrl_{name}"] = wavg(pI - pD, wd)
-            res_[f"ctrlnull_{name}"] = wavg((pI - nIq) - (pD - nDq), wd)
+        for name, g in (("all", np.ones(n, bool)), ("repeat", rep_), ("norepeat", ~rep_)):
+            res_[f"ctrl_{name}"] = wavg(ctl, w * hasd * g)
             res_[f"om_{name}"] = wavg(pI - nIq, w * g)
         wo = w * other
         nAo = (curves[..., 1] * wo[:, None]).sum(0)
@@ -503,7 +538,7 @@ def measure(probe, res, seed=0):
         res_["var_n"] = interp(nAo, q) / max(interp(nAo, q) + interp(nOo, q), 1e-12)
         return res_
 
-    pt = once(np.ones(len(idx)))
+    pt = once(np.ones(n))
     uniq, inv = np.unique(epi, return_inverse=True)
     rng = np.random.default_rng(seed)
     boots, clipped = [], 0
@@ -514,14 +549,40 @@ def measure(probe, res, seed=0):
     se = lambda k: float(np.std([b[k] for b in boots], ddof=1))
     stat = lambda k: dict(value=float(pt[k]), se=se(k), z=float(pt[k] / se(k)) if se(k) > 0 else float("nan"))
     ctrl = stat("ctrl_all")
-    return dict(probe_cols=probe.cols, n_h5=int(len(idx)), n_with_decoy=int(hasd.sum()),
+    return dict(probe_cols=probe.cols, features=fk, n_h5=int(n), n_with_decoy=int(hasd.sum()),
                 n_repeat=int((hasd & rep_).sum()), n_norepeat=int((hasd & ~rep_).sum()),
                 n_episodes=int(len(uniq)), q=pt["q"], assessable=not pt["clipped"], boot_clipped_frac=clipped / N_BOOT,
                 om=dict(probe_mass_intended=float(pI.mean()), **stat("om")),
-                control=dict(**ctrl, passed=bool(ctrl["value"] > 2 * ctrl["se"])),   # no null, so q plays no role
-                control_with_null=stat("ctrlnull_all"),
+                control=dict(**ctrl, passed=bool(ctrl["value"] > 2 * ctrl["se"])),
                 split=dict(repeat=dict(om=stat("om_repeat"), control=stat("ctrl_repeat")),
                            norepeat=dict(om=stat("om_norepeat"), control=stat("ctrl_norepeat"))),
                 var=dict(n=int(other.sum()), probe_share_actual=float(pt["var_p"]),
                          null_share_actual=float(pt["var_n"]), diff=float(pt["var_p"] - pt["var_n"]),
                          se=float(np.std([b["var_p"] - b["var_n"] for b in boots], ddof=1))))
+
+
+def measure_pair(probe, probe_sh, res, seed=0):
+    """The judged 'om' (pre-lock review, finding 2): the trained channel's control minus the untrained shadow
+    channel's, on the same H5 events and decoys, paired per event, bootstrap over episodes; also by next-command
+    group. Only after the lock."""
+    _check_lock()
+    ev = [e for e in res["events"] if e["h5"] and e["decoy"] is not None]
+    dj = np.array([e["decoy"] for e in ev])
+    Pt = probe.probs(*pack(ev, "F")[:2])
+    Ps = probe_sh.probs(*pack(ev, "F_sh")[:2])
+    pDt, pDs = Pt[np.arange(len(ev)), dj], Ps[np.arange(len(ev)), dj]
+    d = (Pt[:, 0] - pDt) - (Ps[:, 0] - pDs)
+    rep_ = np.array([e.get("next_overlap", False) for e in ev])
+    epi = np.array([e["seed"] for e in ev])
+    out = dict(n=int(len(ev)), n_episodes=int(len(np.unique(epi))))
+    for name, g in (("all", np.ones(len(ev), bool)), ("repeat", rep_), ("norepeat", ~rep_)):
+        if not g.any():
+            out[name] = None
+            continue
+        val = float(d[g].mean())
+        bs = _boot(epi[g], lambda w: (d[g] * w).sum() / w.sum(), seed=seed)
+        se = float(bs.std(ddof=1))
+        out[name] = dict(value=val, se=se, z=val / se if se > 0 else float("nan"), n=int(g.sum()),
+                         trained=float((Pt[g, 0] - pDt[g]).mean()), untrained=float((Ps[g, 0] - pDs[g]).mean()))
+    out["passed"] = bool(out["all"] is not None and out["all"]["value"] > 2 * out["all"]["se"])
+    return out

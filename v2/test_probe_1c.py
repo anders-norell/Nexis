@@ -104,48 +104,72 @@ def test_null(res):
     check("null mass on actual falls with q (on average)", c[:, -1, 1].mean() < c[:, 0, 1].mean())
 
 
-def synth(res, mode, rng, r=0.6):
-    """Synthetic channel at t + 1 (Z1; Z0 is noise unless stated):
+def synth_maps(e, mode, rng, r, G):
+    """Synthetic channel maps (Z1 at t + 1, Z0 at t) for one event:
       actual    marks the actual window              (veridical)
       noise     nothing
       intended  always the intended window           (no capture information)
       marker    the actual window with prob r, else nothing             (no role information)
       wrong     the actual window with prob r, else a random wrong candidate, intended included (no role info)
+      salient   every salient candidate window, never the intended window (codes salience only; review finding 1)
       ast       the actual window with prob r, else the intended window (AST-like)
       anti      the actual window with prob r, else another wrong place, never the intended window
-      steer     like marker at t + 1, and the intended window marked in Z0 (the command signal at t)"""
+      steer     like marker at t + 1, and the intended window marked in Z0 (the command signal at t)
+      passive   noise plus a weak mark (+0.3) on the intended window (passive transmission of intended-window input)"""
+    Z1 = rng.normal(0, 1, (G, G)); Z0 = rng.normal(0, 1, (G, G))
+    w = e["w"]
+    a, Kc = e["actual"], len(e["origins"])
+    hit = rng.random() < r
+    wrong = [i for i in range(Kc) if i != a]
+    ks = []
+    if mode == "actual":
+        ks = [a]
+    elif mode == "intended":
+        ks = [0]
+    elif mode in ("marker", "steer"):
+        ks = [a] if hit else []
+    elif mode == "wrong":
+        ks = [a if hit else wrong[rng.integers(len(wrong))]]
+    elif mode == "salient":
+        ks = list(range(1, Kc))
+    elif mode == "ast":
+        ks = [a if hit else 0]
+    elif mode == "anti":
+        others = [i for i in wrong if i != 0]
+        ks = [a if (hit or not others) else others[rng.integers(len(others))]]
+    for k in ks:
+        r0, c0 = e["origins"][k]
+        Z1[r0:r0 + w, c0:c0 + w] += 3.0
+    if mode == "steer":
+        r0, c0 = e["origins"][0]
+        Z0[r0:r0 + w, c0:c0 + w] += 3.0
+    if mode == "passive":
+        r0, c0 = e["origins"][0]
+        Z1[r0:r0 + w, c0:c0 + w] += 0.3
+    return Z1, Z0
+
+
+def synth(res, mode, rng, r=0.6, shadow_mode=None):
+    """Events with the synthetic channel as F / Fd (and, with shadow_mode, a second channel as F_sh / Fd_sh)."""
     G = CFG.G
     out = []
     for e in res["events"]:
         e = dict(e)
-        Z1 = rng.normal(0, 1, (G, G)); Z0 = rng.normal(0, 1, (G, G))
-        w = e["w"]
-        a, Kc = e["actual"], len(e["origins"])
-        hit = rng.random() < r
-        wrong = [i for i in range(Kc) if i != a]
-        k = None
-        if mode == "actual":
-            k = a
-        elif mode == "intended":
-            k = 0
-        elif mode in ("marker", "steer"):
-            k = a if hit else None
-        elif mode == "wrong":
-            k = a if hit else wrong[rng.integers(len(wrong))]
-        elif mode == "ast":
-            k = a if hit else 0
-        elif mode == "anti":
-            others = [i for i in wrong if i != 0]
-            k = a if (hit or not others) else others[rng.integers(len(others))]
-        if k is not None:
-            r0, c0 = e["origins"][k]
-            Z1[r0:r0 + w, c0:c0 + w] += 3.0
-        if mode == "steer":
-            r0, c0 = e["origins"][0]
-            Z0[r0:r0 + w, c0:c0 + w] += 3.0
-        e["F"] = P.window_features(Z1, Z0, e["origins"], w, e["n"])
+        for fk, fdk, md in (("F", "Fd", mode), ("F_sh", "Fd_sh", shadow_mode)):
+            if md is None:
+                continue
+            Z1, Z0 = synth_maps(e, md, rng, r, G)
+            e[fk] = P.window_features(Z1, Z0, e["origins"], e["w"], e["n"])
         out.append(e)
     return dict(events=out, found=res["found"])
+
+
+def test_decoys(res):
+    ev = [e for e in res["events"] if e["h5"]]
+    have = [e for e in ev if e["decoy"] is not None]
+    check("decoy is a wrong salient candidate, not intended, not actual, content differs from the glimpse",
+          all(e["decoy"] not in (0, e["actual"]) and e["L"][e["actual"], e["decoy"]] == 0 for e in have),
+          f"{len(have)} of {len(ev)} H5 events have one")
 
 
 def test_measures(res):
@@ -164,10 +188,10 @@ def test_measures(res):
         P.write_lock("synthetic test")
         cases = [("actual", 1.0), ("noise", 0.0), ("intended", 0.0)] + \
                 [("marker", r) for r in (0.5, 0.6, 0.7, 0.8)] + [("wrong", r) for r in (0.5, 0.6, 0.7)] + \
-                [("ast", 0.6), ("ast", 0.7), ("anti", 0.6), ("steer", 0.6)]
+                [("salient", 0.6), ("passive", 0.0), ("ast", 0.6), ("ast", 0.7), ("anti", 0.6), ("steer", 0.6)]
         for mode, r in cases:
             s = synth(res, mode, rng, r)
-            tr = P.balanced(s["events"][:half])
+            tr = P.training_set(s["events"][:half])
             te = dict(events=s["events"][half:], found=res["found"])
             out = {}
             for name, cols in (("primary", P.COLS_PRIMARY), ("sens", P.COLS_SENS)):
@@ -176,27 +200,38 @@ def test_measures(res):
                 out[name] = (P.blind_summary(pb, te), P.measure(pb, te))
             bl, m = out["primary"]
             ms = out["sens"][1]
-            print(f"     {mode:8s} r={r:.1f} assessable {m['assessable']!s:5s} (c_k3) z {bl['c_k3']['z']:+6.1f}; "
-                  f"om {m['om']['value']:+.3f} ({m['om']['z']:+5.1f} SE); control {m['control']['value']:+.3f} "
-                  f"({m['control']['z']:+5.1f} SE, n {m['n_with_decoy']}); with null {m['control_with_null']['z']:+5.1f}; "
-                  f"sens control {ms['control']['z']:+5.1f} SE")
-            noinfo = mode in ("noise", "marker", "wrong", "steer")
-            if mode == "intended":      # carries the intention but nothing about capture: (c) fails, H5 not judged
-                check("intention-only channel: (c) fails, so H5 is not judged", not bl["c_k3"]["passed"])
+            print(f"     {mode:8s} r={r:.1f} (c_k3) z {bl['c_k3']['z']:+6.1f}; om {m['om']['value']:+.3f} "
+                  f"({m['om']['z']:+5.1f} SE); control {m['control']['value']:+.3f} ({m['control']['z']:+5.1f} SE, "
+                  f"n {m['n_with_decoy']}); sens control {ms['control']['z']:+5.1f} SE")
+            noinfo = mode in ("noise", "marker", "wrong", "steer", "salient", "passive")
+            if mode == "intended":      # no capture information: the probe learns 'marked = not actual'
+                check("intention-only channel: control does not pass", not m["control"]["passed"])
             if noinfo:
-                check(f"calibration: no role information ({mode}, r={r}) -> control |z| < 2 or not assessable (primary)",
-                      (not m["assessable"]) or abs(m["control"]["z"]) < 2)
-                check(f"calibration: ({mode}, r={r}) does not pass", not m["control"]["passed"])
+                check(f"calibration: no role information ({mode}, r={r}) -> control does not pass (z < 2)",
+                      m["control"]["z"] < 2)
             if mode == "actual":
-                check("veridical channel: (c) passes, not assessable, does not pass",
-                      bl["c_k3"]["passed"] and not m["assessable"] and not m["control"]["passed"])
+                check("veridical channel: (c) passes, control does not", bl["c_k3"]["passed"] and not m["control"]["passed"])
             if mode == "ast":
                 check(f"AST-like channel (r={r}): control passes", m["control"]["passed"])
             if mode == "anti":
-                check("channel erring elsewhere: control fails", not m["control"]["passed"])
+                check("channel erring elsewhere: control does not pass", not m["control"]["passed"])
             if mode == "steer":
-                check("command signal at t does not reach the primary probe (|z| < 2)", abs(m["control"]["z"]) < 2)
-                check("... but it does reach the sensitivity probe (t + 1 and t): control > 2 SE", ms["control"]["z"] > 2)
+                check("steering signal at t does not pass in the sensitivity probe either", ms["control"]["z"] < 2)
+        # paired comparison with a shadow channel (the judged quantity)
+        for tm, sm, expect in (("ast", "passive", True), ("passive", "passive", False), ("salient", "noise", False)):
+            s = synth(res, tm, rng, 0.6, shadow_mode=sm)
+            tr = P.training_set(s["events"][:half])
+            te = dict(events=s["events"][half:], found=res["found"])
+            pt = P.Probe(seed=0); pt.fit(tr, iters=600)
+            ps = P.Probe(seed=0); ps.fit(tr, iters=600, fk="F_sh")
+            mp = P.measure_pair(pt, ps, te)
+            a = mp["all"]
+            print(f"     pair {tm:8s} vs shadow {sm:8s}: {a['value']:+.3f} ({a['z']:+5.1f} SE, n {a['n']}); "
+                  f"trained {a['trained']:+.3f}, untrained {a['untrained']:+.3f}")
+            if expect:     # reported only, not judged
+                check(f"paired (reported): {tm} vs shadow {sm} > 2 SE", mp["passed"])
+            else:
+                check(f"paired (reported): {tm} vs shadow {sm} does not pass", not mp["passed"])
     finally:
         P.LOCK = old
 
@@ -208,5 +243,6 @@ if __name__ == "__main__":
     test_null(r)
     ag1c = make_agent_1c(CFG, seed=3, alarm=True)
     big = P.collect(ag1c, "1c", [8_100_000 + i for i in range(2000)])     # larger sample for the calibration
+    test_decoys(big)
     test_measures(big)
     print("\nALL OK" if not FAILS else f"\n{len(FAILS)} FAILED: {FAILS}")
