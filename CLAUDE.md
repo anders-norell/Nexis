@@ -350,3 +350,12 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   utan rollinformation (+2 till +4,7 SE vid träffsäkerhet 0,6–0,7, −10,7 vid 0,5) → kalibreringstest eller
   rollbyteskontroll; (2) kanalen vid t bär styrkommandot → prob bara på t+1 som känslighetsanalys eller primärt.
   Repot är en grund klon: låskontroll via sha256 i `h5_lock.json`, inte git-commits. Fas A startad 25 okt (se nedan).
+- **Beslut 25 okt 02:40 (produktägaren, Claudes rekommendationer):** (1) rollbyteskontroll som kriterium för "om",
+  (2) proben läser primärt bara t+1 (4 särdrag, `COLS_PRIMARY`), t+1 och t som känslighet, "om" uppdelat på om
+  kommando t+1 siktar på avsett igen (tolkningsvillkor). **Kalibreringen (test_probe_1c.py, 2 000 episoder) visade att
+  kontrollen i formen om(äkta) − om(låtsas) med nollmodellen på båda sidor är skev** (−8 till −44 SE för kanaler utan
+  rollinformation). Byggt som probens massa på avsett minus på låtsasfönstret (ej nollmodell); då |z| < 2 för alla
+  kanaler utan rollinformation, AST-lik +19–26 SE, "fel åt annat håll" −17, styrsignal vid t når bara känslighetsproben.
+  Avvikelsen från beslutets ordalydelse ska godkännas av produktägaren före 6a.
+- **Pilot:** fas A och U utan nytta (med larm bäst +1,3 p vid 44 bitar, z 1,7–1,8), ingen kollaps → fas C (kostnad
+  0,0001) startad 25 okt 02:34; därefter D om ingen nytta.

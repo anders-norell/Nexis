@@ -9,8 +9,9 @@ skipped. The channel is read at t + 1 (the module has then seen the glimpse of s
 5a) and at t (the step before): "t and t - 1" in the conditions.
 
 The probe gives every candidate the same score function, computed only from the channel's values on that
-candidate's cells: mean, max and min of z at t + 1 and at t, and the window mean minus the grid mean at both
-times (8 features, standardised with the training set's mean and SD over all candidate rows). A small MLP
+candidate's cells. Primary (decision 25 Oct): mean, max, min of z at t + 1 and window mean minus grid mean at
+t + 1 (4 features; z at t is what the policy steered by, so it would give the intention partly for free).
+Sensitivity: the same at t + 1 and at t (8 features, standardised with the training set's mean and SD over all candidate rows). A small MLP
 (8 -> 16 tanh -> 1) maps them to a score; a softmax over the event's candidates gives the probe's
 distribution. It is never told which candidate is the intended window, and the candidate order plays no role
 (tested). Trained by cross-entropy on the actual window, on its own bank (probe bank, seeds 7 000 000 + i),
@@ -30,7 +31,8 @@ not assessable). Common random numbers per event (episode seed, step).
 Measures
 --------
   (c) blind:   mass on the actual window at H5 events minus the uniform 1 / K, > 2 SE (bootstrap over episodes)
-  "om" locked: mass on the intended window ("no capture") at H5 events, probe minus null at matched q
+  "om" locked: mass on the intended window ("no capture") at H5 events, probe minus null at matched q;
+               judged through the role-swap control (decision 25 Oct, see measure())
   "var" locked, descriptive: among capture places (events with another salient candidate), the share on the
                actual window, sum pA / sum (pA + pO), probe and null
 Blind mode reports only quantities about the actual window: mass, accuracy, (c), whether q can be matched
@@ -54,6 +56,8 @@ N_PROBE = 4000
 K_NULL = 400
 N_BOOT = 1000
 NF = 8
+COLS_PRIMARY = [0, 1, 2, 6]   # decision 25 Oct 02:40: primary read-out only from the channel at t + 1
+COLS_SENS = list(range(NF))   # sensitivity analysis: t + 1 and t
 BLOCK = 500
 
 
@@ -143,6 +147,7 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events):
     zprev = np.zeros((B, G * G))
     prev_cap = np.zeros(B, bool)
     pending = {}
+    recent = {}                                     # b -> event read out at this step, waiting for command t + 1
     t = 0
     while not env.done.all():
         idx = np.nonzero(~env.done)[0]
@@ -169,6 +174,7 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events):
                 n = ev["n"]
                 ev["F"] = window_features(z[b].reshape(G, G), zprev[b].reshape(G, G), ev["origins"], ev["w"], n)
                 out["events"].append(ev)
+                recent[b] = ev
             pending = {}
             zprev = z
         x, m = agent.features(env, obs, t, schema)
@@ -180,6 +186,11 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events):
             a[b] = int((logp[j] - np.log(-np.log(u))).argmax())
         obs, r, done, info = env.step(a)
         prev_cap = info["captured"] & info["active"]
+        for b, ev in recent.items():                # does command t + 1 aim at the intended window of t again?
+            r0, c0 = ev["origins"][0]
+            nr, nc = info["intended"][b]
+            ev["next_overlap"] = bool(abs(int(nr) - r0) < ev["w"] and abs(int(nc) - c0) < ev["w"])
+        recent = {}
         if kind != "off" and with_events:
             ir0, ic0 = info["intended"].T
             ar0, ac0 = info["actual"].T
@@ -192,10 +203,15 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events):
                 cap = bool(info["captured"][b])
                 content = [restricted(env._fovea(b, o[0], o[1], w), cfg.n_colors) for o in origins]
                 L = np.array([[np.array_equal(ci, ck) for ck in content] for ci in content], float)
+                # decoy for the role-swap control (decision 25 Oct): a wrong candidate, not the intended window,
+                # whose content differs from the glimpse, as the intended window's does at H5 events
+                dec = [j for j in range(1, len(origins)) if j != act and L[act, j] == 0] if cap else []
+                drng = np.random.default_rng([int(seeds[b]), t, 71])
                 pending[b] = dict(seed=int(seeds[b]), t=t, w=w, n=int(env.n[b]), origins=origins, prior=pr,
                                   actual=act, captured=cap, L=L,
                                   h5=cap and excludes_intended_restricted(env, b, ir0[b], ic0[b]),
-                                  has_other=cap and len(origins) >= 3)
+                                  has_other=cap and len(origins) >= 3,
+                                  decoy=int(dec[drng.integers(len(dec))]) if dec else None)
         t += 1
     out["found"].append(env.found.copy())
 
@@ -217,14 +233,16 @@ def pack(events):
 class Probe:
     """Role-blind scorer: the same MLP on every candidate's features, softmax over the event's candidates."""
 
-    def __init__(self, nh=16, seed=0):
+    def __init__(self, nh=16, seed=0, cols=None):
         rng = np.random.default_rng(seed)
-        self.p = dict(W=rng.normal(0, 1 / np.sqrt(NF), (NF, nh)), b=np.zeros(nh),
+        self.cols = list(COLS_PRIMARY if cols is None else cols)
+        nf = len(self.cols)
+        self.p = dict(W=rng.normal(0, 1 / np.sqrt(nf), (nf, nh)), b=np.zeros(nh),
                       v=rng.normal(0, 1 / np.sqrt(nh), nh))
-        self.mu, self.sd = np.zeros(NF), np.ones(NF)
+        self.mu, self.sd = np.zeros(nf), np.ones(nf)
 
     def scores(self, F):
-        Fs = (F - self.mu) / self.sd
+        Fs = (F[..., self.cols] - self.mu) / self.sd
         a = np.tanh(Fs @ self.p["W"] + self.p["b"])
         return a @ self.p["v"], (Fs, a)
 
@@ -256,7 +274,7 @@ class Probe:
 
     def fit(self, events, iters=1500, lr=0.01, seed=0):
         F, M, y = pack(events)
-        rows = F[M > 0]
+        rows = F[M > 0][:, self.cols]
         self.mu, self.sd = rows.mean(0), rows.std(0) + 1e-6
         m = {k: np.zeros_like(v) for k, v in self.p.items()}
         v2 = {k: np.zeros_like(v) for k, v in self.p.items()}
@@ -279,31 +297,44 @@ def balanced(events, seed=0):
     return pick(cap) + pick(nocap)
 
 
-def train_probe(agent, kind, seeds=None, seed=0):
+def train_probe(agent, kind, seeds=None, seed=0, cols=None):
+    """The primary probe (channel at t + 1 only) unless cols says otherwise."""
+    pbs, info = train_probes(agent, kind, seeds, seed, {"p": cols})
+    return pbs["p"], info["p"]
+
+
+def train_probes(agent, kind, seeds=None, seed=0, which=None):
+    """Several probes on one probe-bank run. which: name -> cols (default primary and sensitivity)."""
+    which = which or {"primary": COLS_PRIMARY, "sens": COLS_SENS}
     seeds = seeds or [PROBE_BANK + i for i in range(N_PROBE)]
     tr = collect(agent, kind, seeds)
     ev = balanced(tr["events"], seed)
-    pb = Probe(seed=seed)
-    L = pb.fit(ev, seed=seed)
-    return pb, dict(n_train=len(ev), train_loss=L)
+    pbs, info = {}, {}
+    for name, cols in which.items():
+        pb = Probe(seed=seed, cols=cols)
+        info[name] = dict(n_train=len(ev), train_loss=pb.fit(ev, seed=seed), cols=pb.cols)
+        pbs[name] = pb
+    return pbs, info
 
 
 # ------------------------------------------------------------------------------------------- null model
 def null_curves(ev, K=K_NULL):
-    """Null's mean mass on (intended, actual, others) at each q in QS for one event, common random numbers."""
+    """Null's mean mass on (intended, actual, others, decoy) at each q in QS for one event, common random numbers.
+    decoy = 0 when the event has none."""
     rng = np.random.default_rng([ev["seed"], ev["t"], 61])
     pr = ev["prior"] / ev["prior"].sum()
     Ug = rng.random(K)
     srcdraw = np.minimum((rng.random(K)[:, None] >= np.cumsum(pr)[None, :]).sum(1), len(pr) - 1)
     L = ev["L"]
     a = ev["actual"]
-    out = np.zeros((len(QS), 3))
+    d = ev.get("decoy")
+    out = np.zeros((len(QS), 4))
     for i, q in enumerate(QS):
         src = np.where(Ug < q, srcdraw, a)
         post = L[src]                                  # uniform prior x likelihood
         post = post / post.sum(1, keepdims=True)
         avg = post.mean(0)
-        out[i] = [avg[0], avg[a], 1.0 - avg[0] - avg[a]]
+        out[i] = [avg[0], avg[a], 1.0 - avg[0] - avg[a], avg[d] if d is not None else 0.0]
     return out
 
 
@@ -414,49 +445,82 @@ def _check_lock():
 
 
 def measure(probe, res, seed=0):
-    """'om' (judged) and 'var' (descriptive). Only after the lock (gate 6a)."""
+    """'om' (judged through the role-swap control) and 'var' (descriptive). Only after the lock (gate 6a).
+
+    Decisions 25 Oct 02:40 (product owner, on Claude's recommendation):
+      om          probe's mass on the intended window minus the null's, at H5 events, q matched on mass on the
+                  actual window over all H5 events. Reported, not the criterion.
+      control     the probe's mass on the intended window minus its mass on a decoy (a random wrong candidate,
+                  not intended, content differing from the glimpse, as the intended window's at H5 events), on H5
+                  events that have one. Criterion: > 2 SE in every seed, and q matchable. A role-blind probe on a
+                  channel without role information puts the same mass on both in expectation.
+                  The first version, om(intended) - om(decoy) with the null subtracted on both sides, is reported as
+                  control_with_null: the synthetic calibration (test_probe_1c.py, 25 Oct) showed it is biased
+                  negative by the null's base-rate preference for the intended window (-8 to -44 SE for channels
+                  without role information).
+      split       om and the control separately for events where command t + 1 aims at the intended window again
+                  and where it does not (descriptive; a yes is read as AST only if the no-repeat group points the
+                  same way).
+    The primary probe reads only t + 1; the sensitivity probe (t + 1 and t) is measured with the same function."""
     _check_lock()
     ev = res["events"]
     P, K, y = test_arrays(probe, ev)
-    E = len(ev)
     h5 = np.array([e["h5"] for e in ev])
     idx = np.nonzero(h5)[0]
     pA = P[idx, y[idx]]
     pI = P[idx, 0]
     pO = 1.0 - pA - pI
+    dec = np.array([ev[i]["decoy"] if ev[i]["decoy"] is not None else -1 for i in idx])
+    hasd = dec >= 0
+    pD = np.where(hasd, P[idx, np.maximum(dec, 0)], 0.0)
     other = np.array([ev[i]["has_other"] for i in idx])
+    rep_ = np.array([ev[i].get("next_overlap", False) for i in idx])
     epi = np.array([ev[i]["seed"] for i in idx])
     curves = np.array([null_curves(ev[i]) for i in idx])
 
+    def wavg(arr, w):
+        return (arr * w).sum() / max(w.sum(), 1e-12)
+
     def once(w):
-        nI = (curves[..., 0] * w[:, None]).sum(0) / w.sum()
         nA = (curves[..., 1] * w[:, None]).sum(0) / w.sum()
-        tA = (pA * w).sum() / w.sum()
+        tA = wavg(pA, w)
         q = solve_q(nA, tA)
         clipped = q is None
         q = clip_q(nA, tA) if clipped else q
-        om = (pI * w).sum() / w.sum() - interp(nI, q)
+        nIq = np.array([interp(c, q) for c in curves[..., 0]])
+        nDq = np.array([interp(c, q) for c in curves[..., 3]])
+        res_ = dict(q=q, clipped=clipped, om=wavg(pI - nIq, w))
+        for name, g in (("all", np.ones_like(hasd)), ("repeat", rep_), ("norepeat", ~rep_)):
+            wd = w * hasd * g
+            res_[f"ctrl_{name}"] = wavg(pI - pD, wd)
+            res_[f"ctrlnull_{name}"] = wavg((pI - nIq) - (pD - nDq), wd)
+            res_[f"om_{name}"] = wavg(pI - nIq, w * g)
         wo = w * other
         nAo = (curves[..., 1] * wo[:, None]).sum(0)
         nOo = (curves[..., 2] * wo[:, None]).sum(0)
-        var_p = (pA * wo).sum() / max(((pA + pO) * wo).sum(), 1e-12)
-        var_n = interp(nAo, q) / max(interp(nAo, q) + interp(nOo, q), 1e-12)
-        return om, var_p, var_n, q, clipped
+        res_["var_p"] = (pA * wo).sum() / max(((pA + pO) * wo).sum(), 1e-12)
+        res_["var_n"] = interp(nAo, q) / max(interp(nAo, q) + interp(nOo, q), 1e-12)
+        return res_
 
-    om, vp, vn, q0, cl0 = once(np.ones(len(idx)))
+    pt = once(np.ones(len(idx)))
     uniq, inv = np.unique(epi, return_inverse=True)
     rng = np.random.default_rng(seed)
-    b_om, b_var, clipped = [], [], 0
+    boots, clipped = [], 0
     for _ in range(N_BOOT):
         cnt = np.bincount(rng.integers(0, len(uniq), len(uniq)), minlength=len(uniq))
-        o, a, b, _, c = once(cnt[inv].astype(float))
-        b_om.append(o); b_var.append(a - b); clipped += c
-    se_om, se_var = float(np.std(b_om, ddof=1)), float(np.std(b_var, ddof=1))
-    # 5a's rule: q must be matchable on the point estimate, else the run is not assessable (e.g. a probe that is
-    # more accurate on the actual window than the unweakened observer: the null then never errs towards I)
-    return dict(n_h5=int(len(idx)), n_episodes=int(len(uniq)), q=q0, point_clipped=cl0, assessable=not cl0,
-                boot_clipped_frac=clipped / N_BOOT,
-                om=dict(probe_mass_intended=float(pI.mean()), null_mass_intended=float(pI.mean() - om), diff=float(om), se=se_om, z=float(om / se_om) if se_om > 0 else float("nan"),
-                        passed=bool((not cl0) and om > 2 * se_om)),
-                var=dict(n=int(other.sum()), probe_share_actual=float(vp), null_share_actual=float(vn),
-                         diff=float(vp - vn), se=se_var))
+        b = once(cnt[inv].astype(float))
+        boots.append(b); clipped += b["clipped"]
+    se = lambda k: float(np.std([b[k] for b in boots], ddof=1))
+    stat = lambda k: dict(value=float(pt[k]), se=se(k), z=float(pt[k] / se(k)) if se(k) > 0 else float("nan"))
+    ctrl = stat("ctrl_all")
+    return dict(probe_cols=probe.cols, n_h5=int(len(idx)), n_with_decoy=int(hasd.sum()),
+                n_repeat=int((hasd & rep_).sum()), n_norepeat=int((hasd & ~rep_).sum()),
+                n_episodes=int(len(uniq)), q=pt["q"], assessable=not pt["clipped"], boot_clipped_frac=clipped / N_BOOT,
+                om=dict(probe_mass_intended=float(pI.mean()), **stat("om")),
+                control=dict(**ctrl, passed=bool((not pt["clipped"]) and ctrl["value"] > 2 * ctrl["se"])),
+                control_with_null=stat("ctrlnull_all"),
+                split=dict(repeat=dict(om=stat("om_repeat"), control=stat("ctrl_repeat")),
+                           norepeat=dict(om=stat("om_norepeat"), control=stat("ctrl_norepeat"))),
+                var=dict(n=int(other.sum()), probe_share_actual=float(pt["var_p"]),
+                         null_share_actual=float(pt["var_n"]), diff=float(pt["var_p"] - pt["var_n"]),
+                         se=float(np.std([b["var_p"] - b["var_n"] for b in boots], ddof=1))))
