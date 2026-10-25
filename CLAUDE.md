@@ -406,3 +406,13 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   probens massa på avsett och faktiskt redovisas (AST-lik ca −0,8).
 - **GRIND 6a: H5 för 1c LÅST 25 okt ca 21:00** (`v2/results/h5_1c_lock.json`, commit 857e103), före all utvärdering av
   huvudkörningen. Efter träningen: `python3 eval_main_1c.py run` → `results/sprint6_main.json` (vägrar om koden ändrats).
+- **Huvudkörningen klar och utvärderad 25 okt 23:30** (`v2/results/sprint6_main.json`): **förutsättningarna klaras inte,
+  H5 bedöms inte för 1c.** Träff: baslinje 79,0/78,6/78,9 %, 1c med larm 80,9/81,3/80,5 (frö 32 z 1,75 → (a) faller),
+  1c utan larm 78,2/79,0/77,9 (kanal kollapsad 2–4 bitar), kapacitetsbaslinje 78,5/78,3/79,0 (0,5–2,4 bitar), 1b-E
+  81,3/81,2/81,5 (139–149 bitar). H5 beskrivande: avsett får mindre massa än låtsasfönster och matchat fönster (−17 till
+  −95 SE), korrelation avsett–faktiskt −0,2.
+- **Resultatgranskning: bedömningen korrekt** (`v2/results/sprint6_main_result_review.md`). Negativa H5-värden = avsikten är
+  avläsbar och proben (tränad på fångststeg) lär sig "avsikt = inte här"; inget belägg för AST eller emot; nollmodells-"om"
+  oanvändbart (−35 SE även för tom kanal); (b) kontrollerar parametrar, inte information (kapacitetsbaslinjen kollapsar);
+  vinsten kommer från jämförarsignalen (larmet), inte från en självmodell; sammanvägt +2,0 p (z ≈ 3,9), kriteriet har låg
+  styrka. Föreslagen nästa kontroll: larmet direkt till policyn utan modul. **Grind 6 väntar på produktägaren.**
