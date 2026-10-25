@@ -1,0 +1,62 @@
+{
+ "approval": "Produktägaren 25 okt: huvudkörning godkänd 12:53/14:21, matchat kontrollfönster och sammansatt kriterium godkänt 20:10 ('kör på'). Tredje oberoende granskningen 25 okt: låsbar med anmärkningar (v2/results/sprint6_main_prelock_review3.md), anmärkning 4–5 åtgärdade före låsning. Kriterier enligt eval_main_1c.py: förutsättningar (a) nytta mot baslinje, (b) mot kapacitetsbaslinjen (1c utan larm jämförs med kapacitetsbaslinjen med larm, konservativt), (c) prob > likformig; H5 'om' = avsett > låtsasfönster OCH avsett > matchat fönster, båda > 2 SE i alla tre frön, prob på kanalen vid t+1 tränad på fångststeg. TOLKNING (granskning 3, fynd 1): ett ja betyder att kanalen bär avsedd plats vid fångst, inte i sig att schemat har fel; en kanal som markerar både avsett och faktiskt fönster klarar också. Korrelationen mellan probens massa på avsett och på faktiskt redovisas (AST-lik ca −0,8, båda-markerande ca 0 till +0,35). Ett täckningsminne via efferenskopian klarar och läses som förenligt med AST, inte specifikt. AST-specificitet = 1c med larm minus 1b-E > 2 SE för båda kontrollerna i alla frön; 1b-E:s och 1c:s otränade referenser är nästan identiska, så jämförelsen är i praktiken tränad mot tränad. Redovisas: känslighetsprob (t+1 och t), uppdelning på nytt sikte (ett ja tolkas som AST bara om gruppen utan nytt sikte pekar åt samma håll), händelser där avsett varken överlappar faktiskt eller innehåller iögonfallande, otränad skuggmodul parat, nollmodellsjusterat 'om', 'var', bitar.",
+ "sha256": {
+  "probe_1c.py": "f12a5c7f75b652cbf37666f32214b904dd57ba0d9ea8fea88dab50cd703c17d9",
+  "schema_1c.py": "a1b8682975eb0048c5fff3adda1af3b0013a4802f90f4c642ccef9a208e2990e",
+  "train_1c.py": "d759731297bef8c934fe1c576d2d531dd74fcdaa2ed7555eec3150b56b6dc7d6",
+  "env.py": "93085fceb0e5f895501030a9be8ecad038bad9aa990018d2b0bd99efaafe47d0",
+  "bank.py": "f6431a3af1c1a0da1b0456d9a0c46e59f7bec0d753e4712533a8a542fa4297c5",
+  "h5.py": "f4e65c0ec6090b541df6b17a9410327df381d6eb65355f2607069070246f7706",
+  "h5_eval.py": "c5b408b6ac11876e4901d08303190b90bc8e5f4000de4898cf3ec95d23c88daa",
+  "agent_rl.py": "f2d647c4e4fc1ce5033614cfbf760eda8115465a9a7efd2db404cd3dfaf8fea9",
+  "train_rl.py": "96c8d0fd6fd76c10bad8e35e3ee914779bc2df098097bf8a308780a62ad3104c",
+  "schema_channel.py": "ca81e13cd66e44a91c4886a73c8d26d811a1965fab8891d04d49201ee10f0bce",
+  "eval_main_1c.py": "fea329ecd715bd5e5ba76fcfdd3c08ceb4505edcd9de606cc84767a02e57ceef",
+  "pilot_1c.py": "2a7ff0481df001c00c752a7c67e0959871d713620d358dc29022c11788f25567",
+  "run_sprint6.sh": "ea6c4f2a4c2b338fbde672c4641d65aad8be66ce6180039af9e3f88cc9d29c20",
+  "test_probe_1c.py": "0cd903f5fa15207cacc1e844d21cbad7d79c2879de843d55e9d8381f94fbf8dd"
+ },
+ "params": {
+  "seeds": [
+   30,
+   31,
+   32
+  ],
+  "conditions": [
+   "off",
+   "e1e-4",
+   "u1e-4",
+   "cap1e-4",
+   "1bE"
+  ],
+  "p_capture": 0.5,
+  "cost": 0.0001,
+  "episodes": 1000000,
+  "test_bank": [
+   2000000,
+   4000
+  ],
+  "probe_bank": [
+   7000000,
+   4000
+  ],
+  "n_boot": 1000,
+  "primary_cols": [
+   0,
+   1,
+   2,
+   6
+  ],
+  "sens_cols": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  "checkpoint": "final"
+ }
+}
