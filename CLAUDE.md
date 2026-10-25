@@ -400,5 +400,9 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   avsett > låtsasfönster OCH avsett > matchat fönster, båda > 2 SE alla frön (`measure()["criterion"]`). Kalibrering
   (2 000 ep): inga kanaler utan rollinformation klarar (inkl. dämpad, obesökt iögonfallande, prioritet, täckning, fel
   kandidater); AST-lik klarar (+16–22 SE), även blandad med iögonfallande; täckningsminne via efferenskopian klarar
-  (AST-förenligt, ej AST-specifikt — det avgör 1b-E-jämförelsen, nu för båda kontrollerna). Väntar på tredje granskning
-  före låsning.
+  (AST-förenligt, ej AST-specifikt — det avgör 1b-E-jämförelsen, nu för båda kontrollerna).
+- **Tredje granskningen: låsbar med anmärkningar** (`v2/results/sprint6_main_prelock_review3.md`); anmärkningar åtgärdade.
+  Viktigast för tolkningen: en kanal som markerar både avsett och faktiskt fönster klarar kriteriet; korrelationen mellan
+  probens massa på avsett och faktiskt redovisas (AST-lik ca −0,8).
+- **GRIND 6a: H5 för 1c LÅST 25 okt ca 21:00** (`v2/results/h5_1c_lock.json`, commit 857e103), före all utvärdering av
+  huvudkörningen. Efter träningen: `python3 eval_main_1c.py run` → `results/sprint6_main.json` (vägrar om koden ändrats).
