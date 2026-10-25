@@ -1,0 +1,19 @@
+{
+ "note": "Förregistrering av huvudkörningens körplan och förutsättningar (a)-(c), skriven före träning 25 okt. H5 'om' låses separat (results/h5_1c_lock.json) innan det beräknas.",
+ "approved": "Produktägaren 25 okt 12:53 och 14:21 ('kör på'): huvudkörning fångstrisk 0,5, kostnad 0,0001, 1 M episoder, frö 30-32, villkor baslinje, 1c med/utan larm, kapacitetsbaslinje (med larm), 1b-E.",
+ "criteria": {
+  "a": "1c minus baslinje, träffandel, > 2 SE (oparat) i alla tre frön, MVP-banken 2 000 000 + i, 4 000 ep, slutcheckpoint",
+  "b": "1c minus kapacitetsbaslinjen > 2 SE i alla tre frön (1c utan larm jämförs med kapacitetsbaslinjen med larm, konservativt)",
+  "c": "primära probens massa på faktiskt fönster minus 1/K vid H5-händelser > 2 SE i alla frön (bootstrap över episoder); probens träningsmängd låses med H5"
+ },
+ "sha256": {
+  "train_1c.py": "d759731297bef8c934fe1c576d2d531dd74fcdaa2ed7555eec3150b56b6dc7d6",
+  "schema_1c.py": "a1b8682975eb0048c5fff3adda1af3b0013a4802f90f4c642ccef9a208e2990e",
+  "train_rl.py": "96c8d0fd6fd76c10bad8e35e3ee914779bc2df098097bf8a308780a62ad3104c",
+  "agent_rl.py": "f2d647c4e4fc1ce5033614cfbf760eda8115465a9a7efd2db404cd3dfaf8fea9",
+  "schema_channel.py": "ca81e13cd66e44a91c4886a73c8d26d811a1965fab8891d04d49201ee10f0bce",
+  "env.py": "93085fceb0e5f895501030a9be8ecad038bad9aa990018d2b0bd99efaafe47d0",
+  "run_sprint6.sh": "ea6c4f2a4c2b338fbde672c4641d65aad8be66ce6180039af9e3f88cc9d29c20",
+  "bank.py": "f6431a3af1c1a0da1b0456d9a0c46e59f7bec0d753e4712533a8a542fa4297c5"
+ }
+}
