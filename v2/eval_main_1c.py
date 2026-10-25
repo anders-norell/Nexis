@@ -16,10 +16,12 @@ Criteria (locked; every comparison per seed, unpaired SE over test episodes as i
   (c) self-reference  primary probe's mass on the actual window minus 1 / K at H5 events (all K), > 2 SE in all seeds
                    (bootstrap over episodes)
   H5 "om"          only for a 1c condition that passes (a), (b) and (c): role-swap control of the primary probe
-                   (mass on the intended window minus on the decoy at H5 events with a decoy), > 2 SE in all three
-                   seeds (bootstrap over episodes)
-  AST-specific     only if "om" passes for 1c with alarm: its control minus 1b-E's, > 2 SE in all three seeds
-                   (SE = root of the sum of the two bootstrap variances)
+                   (mass on the intended window minus on the decoy at H5 events with a decoy) for the TRAINED agent
+                   minus the same control for the UNTRAINED agent of the same architecture and seed (decision 25 Oct
+                   14:21: an untrained channel passes the intended window's input on, +0.004 to +0.011), > 2 SE in
+                   all three seeds (SE = root of the sum of the two bootstrap variances)
+  AST-specific     only if "om" passes for 1c with alarm: its trained-minus-untrained control minus 1b-E's,
+                   > 2 SE in all three seeds (SE = root of the sum of the four bootstrap variances)
 Reported, not judged: the null-adjusted "om" and the control with the null, the sensitivity probe's control, the split
 by whether command t + 1 aims at the intended window again (a yes is read as AST only if the no-repeat group points
 the same way), "var", bits after capture / no capture, test-time shuffled channel, the critic's share.
@@ -31,6 +33,7 @@ import numpy as np
 from bank import bank_seeds
 import probe_1c as P
 from pilot_1c import load, log_summary
+from env import EnvConfig
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RES = os.path.join(HERE, "results")
@@ -53,6 +56,28 @@ def diff(a, b):
     return dict(diff=d, se=se, z=d / se, passed=bool(d > 2 * se))
 
 
+def load_untrained(path):
+    """The same architecture, configuration and seed as the run, at its initial weights (not loaded)."""
+    z = np.load(path)
+    a = json.loads(str(z["m_args"]))
+    cfg = EnvConfig(reveal=a["reveal"], p_capture=a["p_capture"],
+                    windows=tuple(int(x) for x in str(a["windows"]).split(",")))
+    if a["schema"] == "1c":
+        from schema_1c import make_agent_1c
+        ag = make_agent_1c(cfg, d=a["d"], dh=a["dh"], seed=a["seed"], alarm=a["alarm"], shuffle=a["shuffle"])
+        ag.module.beta = a["rate_cost"]
+        return ag, "1c"
+    from agent_rl import make_agent
+    ag = make_agent(cfg, d=a["d"], dh=a["dh"], seed=a["seed"], schema_mode=a["schema"])
+    return ag, "1b"
+
+
+def control_diff(x, y):
+    d = x["value"] - y["value"]
+    se = float(np.sqrt(x["se"] ** 2 + y["se"] ** 2))
+    return dict(diff=d, se=se, z=d / se if se > 0 else float("nan"), passed=bool(d > 2 * se))
+
+
 def evaluate_run(n, res):
     if n in res["runs"]:
         return res["runs"][n]
@@ -67,6 +92,11 @@ def evaluate_run(n, res):
         out["c_all"] = P.c_all(pbs["primary"], r)
         out["h5_primary"] = P.measure(pbs["primary"], r)
         out["h5_sens"] = P.measure(pbs["sens"], r)
+        ua, ukind = load_untrained(os.path.join(RES, n + ".final.npz"))
+        ur = P.collect(ua, ukind, seeds)
+        upbs, _ = P.train_probes(ua, ukind)
+        out["untrained_h5_primary"] = P.measure(upbs["primary"], ur)
+        out["om_vs_untrained"] = control_diff(out["h5_primary"]["control"], out["untrained_h5_primary"]["control"])
         if kind == "1c" and not ag.module.shuffle:
             out["test_shuffle_found"] = P.found_summary(P.collect(ag, kind, seeds, test_shuffle=True,
                                                                   with_events=False))["found"]
@@ -87,16 +117,18 @@ def judge(res):
         b = [diff(R[name(c, s)], R[name("cap1e-4", s)]) for s in SEEDS]
         cc = [R[name(c, s)]["c_all"] for s in SEEDS]
         pre = all(x["passed"] for x in a) and all(x["passed"] for x in b) and all(x["passed"] for x in cc)
-        ctrl = [R[name(c, s)]["h5_primary"]["control"] for s in SEEDS]
-        J[c] = dict(a=a, b=b, c=cc, preconditions=pre, om_control=ctrl,
+        ctrl = [R[name(c, s)]["om_vs_untrained"] for s in SEEDS]
+        J[c] = dict(a=a, b=b, c=cc, preconditions=pre, om_vs_untrained=ctrl,
+                    om_control_trained=[R[name(c, s)]["h5_primary"]["control"] for s in SEEDS],
+                    om_control_untrained=[R[name(c, s)]["untrained_h5_primary"]["control"] for s in SEEDS],
                     om_passed=bool(pre and all(x["passed"] for x in ctrl)),
                     norepeat=[R[name(c, s)]["h5_primary"]["split"]["norepeat"]["control"] for s in SEEDS],
                     sens_control=[R[name(c, s)]["h5_sens"]["control"] for s in SEEDS])
     if "e1e-4" in J and have("1bE"):
         sp = []
         for s in SEEDS:
-            x, y = R[name("e1e-4", s)]["h5_primary"]["control"], R[name("1bE", s)]["h5_primary"]["control"]
-            d = x["value"] - y["value"]
+            x, y = R[name("e1e-4", s)]["om_vs_untrained"], R[name("1bE", s)]["om_vs_untrained"]
+            d = x["diff"] - y["diff"]
             se = float(np.sqrt(x["se"] ** 2 + y["se"] ** 2))
             sp.append(dict(diff=d, se=se, z=d / se if se > 0 else float("nan"), passed=bool(d > 2 * se)))
         J["ast_specific"] = dict(per_seed=sp, judged=J["e1e-4"]["om_passed"],
