@@ -421,6 +421,390 @@
     "minutes": 9.5,
     "beta_late": 0.0
    }
+  },
+  "c6_u11.05_s40": {
+   "kind": "1c",
+   "seed": 40,
+   "alarm": false,
+   "shuffle": false,
+   "rate_target": 11.05,
+   "rate_cost": 0.001,
+   "p_capture": 0.25,
+   "found": 0.8775,
+   "found_se": 0.005183959635259519,
+   "n": 4000,
+   "log": {
+    "critic_share": 0.13971647553617494,
+    "critic_actor_cos": -0.7101906946343075,
+    "module_grad_norm_policy": 0.025119956272399307,
+    "minutes": 16.82,
+    "beta_late": 1.1138590796219879e-07
+   },
+   "bits": {
+    "bits_per_step": 11.480029399387014,
+    "bits_after_nocapture": 11.463861508038583,
+    "bits_after_capture": 11.511915518851072,
+    "n_steps": [
+     9573,
+     4854
+    ]
+   },
+   "collapse": false,
+   "bits_vs_target": {
+    "target": 11.05,
+    "ratio": 1.0389166877273315,
+    "within_20pct": true
+   },
+   "probe": {
+    "n_train": 9266,
+    "train_loss": 1.0906999588728303,
+    "n_events": 11824,
+    "n_capture": 4854,
+    "n_h5": 2504,
+    "n_h5_k2": 390,
+    "n_h5_k3": 2114,
+    "blind_subset": "capture steps: K >= 3 only",
+    "acc_nocapture": 0.3827833572453372,
+    "acc_capture_k3": 0.282793867120954,
+    "mass_actual_capture_k3": 0.2820034891611505,
+    "c_k3": {
+     "mass_actual": 0.2839833128378432,
+     "uniform": 0.2842557552822454,
+     "diff": -0.000272442444402121,
+     "se": 0.0007415701653565939,
+     "z": -0.3673859293828433,
+     "passed": false,
+     "n_episodes": 871
+    },
+    "feasibility_k3": {
+     "probe_mass_actual": 0.2839833128378432,
+     "null_q0": 0.9347997477136548,
+     "null_q1": 0.18223825291706033,
+     "q": 0.8646517698103597,
+     "possible": true,
+     "bar_null_mass_intended": 0.4079340984892806
+    }
+   }
+  },
+  "c6_u11.05_s41": {
+   "kind": "1c",
+   "seed": 41,
+   "alarm": false,
+   "shuffle": false,
+   "rate_target": 11.05,
+   "rate_cost": 0.001,
+   "p_capture": 0.25,
+   "found": 0.868,
+   "found_se": 0.005352008968602352,
+   "n": 4000,
+   "log": {
+    "critic_share": 0.11355753810666874,
+    "critic_actor_cos": -0.14692090382937956,
+    "module_grad_norm_policy": 0.02139835950838658,
+    "minutes": 16.81,
+    "beta_late": 2.574542981587884e-07
+   },
+   "bits": {
+    "bits_per_step": 12.591918834158157,
+    "bits_after_nocapture": 12.429964151365425,
+    "bits_after_capture": 12.913699842515951,
+    "n_steps": [
+     9676,
+     4870
+    ]
+   },
+   "collapse": false,
+   "bits_vs_target": {
+    "target": 11.05,
+    "ratio": 1.1395401659871636,
+    "within_20pct": true
+   },
+   "probe": {
+    "n_train": 9348,
+    "train_loss": 1.0931006044445006,
+    "n_events": 11928,
+    "n_capture": 4870,
+    "n_h5": 2501,
+    "n_h5_k2": 374,
+    "n_h5_k3": 2127,
+    "blind_subset": "capture steps: K >= 3 only",
+    "acc_nocapture": 0.3904788892037404,
+    "acc_capture_k3": 0.2718493481409947,
+    "mass_actual_capture_k3": 0.2827152825889236,
+    "c_k3": {
+     "mass_actual": 0.28494385562889296,
+     "uniform": 0.28498667920388654,
+     "diff": -4.282357499355023e-05,
+     "se": 0.0007652491121070598,
+     "z": -0.05596030667142954,
+     "passed": false,
+     "n_episodes": 875
+    },
+    "feasibility_k3": {
+     "probe_mass_actual": 0.28494385562889296,
+     "null_q0": 0.9367653972731543,
+     "null_q1": 0.18289570600219354,
+     "q": 0.8648065020898225,
+     "possible": true,
+     "bar_null_mass_intended": 0.4096153113838849
+    }
+   }
+  },
+  "c6_u22.1_s40": {
+   "kind": "1c",
+   "seed": 40,
+   "alarm": false,
+   "shuffle": false,
+   "rate_target": 22.1,
+   "rate_cost": 0.001,
+   "p_capture": 0.25,
+   "found": 0.87475,
+   "found_se": 0.0052336038611075645,
+   "n": 4000,
+   "log": {
+    "critic_share": 0.0678347835466845,
+    "critic_actor_cos": -0.6005373712364341,
+    "module_grad_norm_policy": 0.03904549449780212,
+    "minutes": 17.01,
+    "beta_late": 9.616312860409585e-07
+   },
+   "bits": {
+    "bits_per_step": 29.257144090926634,
+    "bits_after_nocapture": 29.430754899045535,
+    "bits_after_capture": 28.91359334998488,
+    "n_steps": [
+     9546,
+     4824
+    ]
+   },
+   "collapse": false,
+   "bits_vs_target": {
+    "target": 22.1,
+    "ratio": 1.323852673797585,
+    "within_20pct": false
+   },
+   "probe": {
+    "n_train": 9114,
+    "train_loss": 1.0878312305603388,
+    "n_events": 11771,
+    "n_capture": 4824,
+    "n_h5": 2471,
+    "n_h5_k2": 375,
+    "n_h5_k3": 2096,
+    "blind_subset": "capture steps: K >= 3 only",
+    "acc_nocapture": 0.47085072693248886,
+    "acc_capture_k3": 0.24798829553767374,
+    "mass_actual_capture_k3": 0.27843345093094385,
+    "c_k3": {
+     "mass_actual": 0.27941546805320183,
+     "uniform": 0.2849475190839695,
+     "diff": -0.005532051030767652,
+     "se": 0.0011012681286747667,
+     "z": -5.023346164956901,
+     "passed": false,
+     "n_episodes": 867
+    },
+    "feasibility_k3": {
+     "probe_mass_actual": 0.27941546805320183,
+     "null_q0": 0.9386132315521625,
+     "null_q1": 0.18324010019083936,
+     "q": 0.8727612643536503,
+     "possible": true,
+     "bar_null_mass_intended": 0.4122908540768428
+    }
+   }
+  },
+  "c6_u22.1_s41": {
+   "kind": "1c",
+   "seed": 41,
+   "alarm": false,
+   "shuffle": false,
+   "rate_target": 22.1,
+   "rate_cost": 0.001,
+   "p_capture": 0.25,
+   "found": 0.86575,
+   "found_se": 0.005390429887773331,
+   "n": 4000,
+   "log": {
+    "critic_share": 0.09718607322688431,
+    "critic_actor_cos": 0.03320063875840201,
+    "module_grad_norm_policy": 0.013336625547920486,
+    "minutes": 17.1,
+    "beta_late": 3.529073527346867e-05
+   },
+   "bits": {
+    "bits_per_step": 12.142730298293632,
+    "bits_after_nocapture": 12.508819058190655,
+    "bits_after_capture": 11.428492467628331,
+    "n_steps": [
+     9595,
+     4918
+    ]
+   },
+   "collapse": false,
+   "bits_vs_target": {
+    "target": 22.1,
+    "ratio": 0.5494448098775399,
+    "within_20pct": false
+   },
+   "probe": {
+    "n_train": 9230,
+    "train_loss": 1.08962303476361,
+    "n_events": 11906,
+    "n_capture": 4918,
+    "n_h5": 2529,
+    "n_h5_k2": 383,
+    "n_h5_k3": 2146,
+    "blind_subset": "capture steps: K >= 3 only",
+    "acc_nocapture": 0.5383514596451059,
+    "acc_capture_k3": 0.21906354515050167,
+    "mass_actual_capture_k3": 0.27605564540248123,
+    "c_k3": {
+     "mass_actual": 0.2772000052895773,
+     "uniform": 0.28393911152531837,
+     "diff": -0.006739106235741118,
+     "se": 0.0008951572309604124,
+     "z": -7.528405069700152,
+     "passed": false,
+     "n_episodes": 872
+    },
+    "feasibility_k3": {
+     "probe_mass_actual": 0.2772000052895773,
+     "null_q0": 0.9393445169307233,
+     "null_q1": 0.18216779279279224,
+     "q": 0.8742389449831002,
+     "possible": true,
+     "bar_null_mass_intended": 0.4134162220970677
+    }
+   }
+  },
+  "c6_u44.2_s40": {
+   "kind": "1c",
+   "seed": 40,
+   "alarm": false,
+   "shuffle": false,
+   "rate_target": 44.2,
+   "rate_cost": 0.001,
+   "p_capture": 0.25,
+   "found": 0.8695,
+   "found_se": 0.00532610903943958,
+   "n": 4000,
+   "log": {
+    "critic_share": 0.12808570935430955,
+    "critic_actor_cos": 0.16324323160810197,
+    "module_grad_norm_policy": 0.02515369981418407,
+    "minutes": 16.63,
+    "beta_late": 2.3804878225942996e-05
+   },
+   "bits": {
+    "bits_per_step": 35.693309994400195,
+    "bits_after_nocapture": 35.82431317687154,
+    "bits_after_capture": 35.43382029113788,
+    "n_steps": [
+     9486,
+     4789
+    ]
+   },
+   "collapse": false,
+   "bits_vs_target": {
+    "target": 44.2,
+    "ratio": 0.8075409500995518,
+    "within_20pct": true
+   },
+   "probe": {
+    "n_train": 9052,
+    "train_loss": 1.0722909917730237,
+    "n_events": 11689,
+    "n_capture": 4789,
+    "n_h5": 2475,
+    "n_h5_k2": 371,
+    "n_h5_k3": 2104,
+    "blind_subset": "capture steps: K >= 3 only",
+    "acc_nocapture": 0.6747826086956522,
+    "acc_capture_k3": 0.15099435305671496,
+    "mass_actual_capture_k3": 0.2641446043886348,
+    "c_k3": {
+     "mass_actual": 0.2664167798323081,
+     "uniform": 0.28457699619771865,
+     "diff": -0.018160216365410525,
+     "se": 0.0011966072093616924,
+     "z": -15.176422324162454,
+     "passed": false,
+     "n_episodes": 856
+    },
+    "feasibility_k3": {
+     "probe_mass_actual": 0.2664167798323081,
+     "null_q0": 0.9391634980988591,
+     "null_q1": 0.18285547370088687,
+     "q": 0.8896337291157068,
+     "possible": true,
+     "bar_null_mass_intended": 0.41982599705081775
+    }
+   }
+  },
+  "c6_u44.2_s41": {
+   "kind": "1c",
+   "seed": 41,
+   "alarm": false,
+   "shuffle": false,
+   "rate_target": 44.2,
+   "rate_cost": 0.001,
+   "p_capture": 0.25,
+   "found": 0.864,
+   "found_se": 0.005419963099505382,
+   "n": 4000,
+   "log": {
+    "critic_share": 0.086701954218873,
+    "critic_actor_cos": -0.01766300581166992,
+    "module_grad_norm_policy": 0.029287523172428612,
+    "minutes": 16.72,
+    "beta_late": 6.117942794049124e-07
+   },
+   "bits": {
+    "bits_per_step": 57.354393015784694,
+    "bits_after_nocapture": 57.07581909552559,
+    "bits_after_capture": 57.90965628488665,
+    "n_steps": [
+     9723,
+     4878
+    ]
+   },
+   "collapse": false,
+   "bits_vs_target": {
+    "target": 44.2,
+    "ratio": 1.2976107017145857,
+    "within_20pct": false
+   },
+   "probe": {
+    "n_train": 9296,
+    "train_loss": 1.0490295186736949,
+    "n_events": 11908,
+    "n_capture": 4878,
+    "n_h5": 2521,
+    "n_h5_k2": 375,
+    "n_h5_k3": 2146,
+    "blind_subset": "capture steps: K >= 3 only",
+    "acc_nocapture": 0.8637268847795163,
+    "acc_capture_k3": 0.07936507936507936,
+    "mass_actual_capture_k3": 0.24143007195670405,
+    "c_k3": {
+     "mass_actual": 0.24439063062622737,
+     "uniform": 0.2852593973283628,
+     "diff": -0.04086876670213549,
+     "se": 0.0015399895121243064,
+     "z": -26.538340930491092,
+     "passed": false,
+     "n_episodes": 876
+    },
+    "feasibility_k3": {
+     "probe_mass_actual": 0.24439063062622737,
+     "null_q0": 0.9391115253184216,
+     "null_q1": 0.18279609350729983,
+     "q": 0.91880027839768,
+     "possible": true,
+     "bar_null_mass_intended": 0.434838828392665
+    }
+   }
   }
  },
  "level_rule": {
@@ -468,16 +852,46 @@
     }
    ],
    "u44.2": [
-    null,
-    null
+    {
+     "diff": -0.0010000000000000009,
+     "se": 0.00751996509300409,
+     "z": -0.1329793406794285,
+     "passed": false
+    },
+    {
+     "diff": -0.0007500000000000284,
+     "se": 0.007656066834543699,
+     "z": -0.09796152727090558,
+     "passed": false
+    }
    ],
    "u22.1": [
-    null,
-    null
+    {
+     "diff": 0.004249999999999976,
+     "se": 0.007454733186036909,
+     "z": 0.5701075939190473,
+     "passed": false
+    },
+    {
+     "diff": 0.0010000000000000009,
+     "se": 0.0076351878660580455,
+     "z": 0.13097254678505885,
+     "passed": false
+    }
    ],
    "u11.05": [
-    null,
-    null
+    {
+     "diff": 0.006999999999999895,
+     "se": 0.007419964622557172,
+     "z": 0.9434007244076936,
+     "passed": false
+    },
+    {
+     "diff": 0.003249999999999975,
+     "se": 0.007608111419728289,
+     "z": 0.42717565775555416,
+     "passed": false
+    }
    ]
   },
   "reaches_level": {
@@ -494,19 +908,19 @@
     true
    ],
    "u44.2": [
-    null,
-    null
+    true,
+    false
    ],
    "u22.1": [
-    null,
-    null
+    false,
+    false
    ],
    "u11.05": [
-    null,
-    null
+    true,
+    true
    ]
   },
   "level": null,
-  "next": "sh run_sprint6.sh U (no benefit for 'with' at any level)"
+  "next": "no benefit: collapse check (field 'collapse'), then sh run_sprint6.sh C, then D (phases C and D are judged by hand with benefit())"
  }
 }
