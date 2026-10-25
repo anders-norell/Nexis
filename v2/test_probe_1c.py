@@ -115,7 +115,15 @@ def synth_maps(e, mode, rng, r, G):
       ast       the actual window with prob r, else the intended window (AST-like)
       anti      the actual window with prob r, else another wrong place, never the intended window
       steer     like marker at t + 1, and the intended window marked in Z0 (the command signal at t)
-      passive   noise plus a weak mark (+0.3) on the intended window (passive transmission of intended-window input)"""
+      passive   noise plus a weak mark (+0.3) on the intended window (passive transmission of intended-window input)
+    Channels built from the environment's maps (second pre-lock review, finding A; need collect(store_maps=True)):
+      damped    salient objects, damped where the spotlight actually was
+      unvis_sal salient objects on cells not yet covered
+      priority  target colour and salience on cells not yet covered (where to look next)
+      visited   the true coverage (cells actually covered, this step included)
+      effcov    coverage as the efference copy has it: covered before, plus the actual AND the intended window
+                (a memory of where one aimed; AST-consistent, reported, expected to pass)
+      astsal    ast (r) plus the salience map (the review's mixed case)"""
     Z1 = rng.normal(0, 1, (G, G)); Z0 = rng.normal(0, 1, (G, G))
     w = e["w"]
     a, Kc = e["actual"], len(e["origins"])
@@ -146,6 +154,24 @@ def synth_maps(e, mode, rng, r, G):
     if mode == "passive":
         r0, c0 = e["origins"][0]
         Z1[r0:r0 + w, c0:c0 + w] += 0.3
+    if mode in ("damped", "unvis_sal", "priority", "visited", "effcov", "astsal"):
+        mp = e["maps"]
+        vis_after = np.maximum(mp["vis_before"], mp["actual"])
+        if mode == "damped":
+            Z1 += 3.0 * mp["sal"] * (1 - mp["actual"])
+        elif mode == "unvis_sal":
+            Z1 += 3.0 * mp["sal"] * (1 - vis_after)
+        elif mode == "priority":
+            Z1 += 3.0 * np.minimum(mp["tcol"] + mp["sal"], 1) * (1 - vis_after)
+        elif mode == "visited":
+            Z1 += 3.0 * vis_after
+        elif mode == "effcov":
+            Z1 += 3.0 * np.maximum(vis_after, mp["intended"])
+        elif mode == "astsal":
+            k = a if hit else 0
+            r0, c0 = e["origins"][k]
+            Z1[r0:r0 + w, c0:c0 + w] += 3.0
+            Z1 += 1.5 * mp["sal"]
     return Z1, Z0
 
 
@@ -160,6 +186,8 @@ def synth(res, mode, rng, r=0.6, shadow_mode=None):
                 continue
             Z1, Z0 = synth_maps(e, md, rng, r, G)
             e[fk] = P.window_features(Z1, Z0, e["origins"], e["w"], e["n"])
+            if e["matched"] is not None:
+                e["Fm" if fk == "F" else "Fm_sh"] = P.window_features(Z1, Z0, [e["matched"]], e["w"], e["n"])
         out.append(e)
     return dict(events=out, found=res["found"])
 
@@ -188,7 +216,9 @@ def test_measures(res):
         P.write_lock("synthetic test")
         cases = [("actual", 1.0), ("noise", 0.0), ("intended", 0.0)] + \
                 [("marker", r) for r in (0.5, 0.6, 0.7, 0.8)] + [("wrong", r) for r in (0.5, 0.6, 0.7)] + \
-                [("salient", 0.6), ("passive", 0.0), ("ast", 0.6), ("ast", 0.7), ("anti", 0.6), ("steer", 0.6)]
+                [("salient", 0.6), ("passive", 0.0), ("ast", 0.6), ("ast", 0.7), ("anti", 0.6), ("steer", 0.6),
+                 ("damped", 0.0), ("unvis_sal", 0.0), ("priority", 0.0), ("visited", 0.0), ("effcov", 0.0),
+                 ("astsal", 0.6)]
         for mode, r in cases:
             s = synth(res, mode, rng, r)
             tr = P.training_set(s["events"][:half])
@@ -200,23 +230,20 @@ def test_measures(res):
                 out[name] = (P.blind_summary(pb, te), P.measure(pb, te))
             bl, m = out["primary"]
             ms = out["sens"][1]
-            print(f"     {mode:8s} r={r:.1f} (c_k3) z {bl['c_k3']['z']:+6.1f}; om {m['om']['value']:+.3f} "
-                  f"({m['om']['z']:+5.1f} SE); control {m['control']['value']:+.3f} ({m['control']['z']:+5.1f} SE, "
-                  f"n {m['n_with_decoy']}); sens control {ms['control']['z']:+5.1f} SE")
-            noinfo = mode in ("noise", "marker", "wrong", "steer", "salient", "passive")
-            if mode == "intended":      # no capture information: the probe learns 'marked = not actual'
-                check("intention-only channel: control does not pass", not m["control"]["passed"])
+            cr = m["criterion"]
+            print(f"     {mode:9s} r={r:.1f} (c_k3) z {bl['c_k3']['z']:+6.1f}; decoy {cr['decoy']['z']:+6.1f} SE, "
+                  f"matched {cr['matched']['z']:+6.1f} SE (n {cr['n']}) -> {'PASS' if cr['passed'] else 'no'}; "
+                  f"sens {ms['criterion']['decoy']['z']:+5.1f}/{ms['criterion']['matched']['z']:+5.1f}")
+            noinfo = mode in ("noise", "marker", "wrong", "steer", "salient", "passive", "damped", "unvis_sal",
+                              "priority", "visited", "intended", "anti")
             if noinfo:
-                check(f"calibration: no role information ({mode}, r={r}) -> control does not pass (z < 2)",
-                      m["control"]["z"] < 2)
+                check(f"calibration: {mode} (r={r}) does not pass the joint criterion", not cr["passed"])
+            if mode in ("ast",):
+                check(f"AST-like channel (r={r}) passes the joint criterion", cr["passed"])
             if mode == "actual":
-                check("veridical channel: (c) passes, control does not", bl["c_k3"]["passed"] and not m["control"]["passed"])
-            if mode == "ast":
-                check(f"AST-like channel (r={r}): control passes", m["control"]["passed"])
-            if mode == "anti":
-                check("channel erring elsewhere: control does not pass", not m["control"]["passed"])
+                check("veridical channel: (c) passes, joint criterion does not", bl["c_k3"]["passed"] and not cr["passed"])
             if mode == "steer":
-                check("steering signal at t does not pass in the sensitivity probe either", ms["control"]["z"] < 2)
+                check("steering signal at t does not pass in the sensitivity probe either", not ms["criterion"]["passed"])
         # paired comparison with a shadow channel (the judged quantity)
         for tm, sm, expect in (("ast", "passive", True), ("passive", "passive", False), ("salient", "noise", False)):
             s = synth(res, tm, rng, 0.6, shadow_mode=sm)
@@ -242,7 +269,7 @@ if __name__ == "__main__":
     r = test_collect()
     test_null(r)
     ag1c = make_agent_1c(CFG, seed=3, alarm=True)
-    big = P.collect(ag1c, "1c", [8_100_000 + i for i in range(2000)])     # larger sample for the calibration
+    big = P.collect(ag1c, "1c", [8_100_000 + i for i in range(2000)], store_maps=True)   # calibration sample
     test_decoys(big)
     test_measures(big)
     print("\nALL OK" if not FAILS else f"\n{len(FAILS)} FAILED: {FAILS}")

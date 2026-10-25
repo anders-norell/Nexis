@@ -15,7 +15,7 @@ Sensitivity: the same at t + 1 and at t (8 features, standardised with the train
 (8 -> 16 tanh -> 1) maps them to a score; a softmax over the event's candidates gives the probe's
 distribution. It is never told which candidate is the intended window, and the candidate order plays no role
 (tested). Trained by cross-entropy on the actual window, on its own bank (probe bank, seeds 7 000 000 + i),
-with equally many steps with and without capture (the larger group subsampled at random, fixed seed).
+on the capture steps only (decision 25 Oct, see training_set).
 
 H5 events (as in 5a): a capture at step t that does not find the target, episode still running at t + 1,
 the fovea excludes the intended window by occupied and colour.
@@ -116,6 +116,39 @@ def _overlap(o, p, w):
     return abs(o[0] - p[0]) < w and abs(o[1] - p[1]) < w
 
 
+def window_class(env, b, o, w, visited):
+    """Content class of a window: (holds an object of the target's colour, any cell covered before this step)."""
+    r0, c0 = o
+    col = env.color[b, r0:r0 + w, c0:c0 + w]
+    return (bool((col == env.target_color[b]).any()), bool((visited[r0:r0 + w, c0:c0 + w] > 0).any()))
+
+
+def pick_matched(env, b, origins, w, glimpse, visited, rng):
+    """Matched control window (second pre-lock review, finding A; decision 25 Oct 20:10): a window of the same
+    size that overlaps no candidate window, holds no salient object, has the intended window's content class
+    (target colour present, covered before this step) and whose restricted content differs from the glimpse, as
+    the intended window's does at H5 events. It differs from the intended window only in not being where the agent
+    aimed. None if no such window exists."""
+    n = int(env.n[b])
+    C = env.cfg.n_colors
+    cls = window_class(env, b, origins[0], w, visited)
+    g = restricted(glimpse, C)
+    ok = []
+    for r0 in range(n - w + 1):
+        for c0 in range(n - w + 1):
+            o = (r0, c0)
+            if any(_overlap(o, p, w) for p in origins):
+                continue
+            if (env.salient[b, r0:r0 + w, c0:c0 + w] > 0).any():
+                continue
+            if window_class(env, b, o, w, visited) != cls:
+                continue
+            if np.array_equal(restricted(env._fovea(b, r0, c0, w), C), g):
+                continue
+            ok.append(o)
+    return ok[int(rng.integers(len(ok)))] if ok else None
+
+
 def window_features(Z1, Z0, origins, w, n):
     """(K, NF) features per candidate from the channel at t + 1 (Z1) and t (Z0), both (G, G)."""
     m1, m0 = Z1[:n, :n].mean(), Z0[:n, :n].mean()
@@ -126,17 +159,17 @@ def window_features(Z1, Z0, origins, w, n):
     return out
 
 
-def collect(agent, kind, seeds, block=BLOCK, test_shuffle=False, with_events=True, shadow=None):
+def collect(agent, kind, seeds, block=BLOCK, test_shuffle=False, with_events=True, shadow=None, store_maps=False):
     """Run the frozen agent on bank episodes. kind: '1c', '1b' or 'off'. Returns found, bits split by
     whether the previous command was captured, and the probe's events."""
     out = dict(found=[], bits_sum=np.zeros(2), bits_n=np.zeros(2), events=[])
     for s in range(0, len(seeds), block):
-        _block(agent, kind, seeds[s:s + block], out, test_shuffle, with_events, shadow)
+        _block(agent, kind, seeds[s:s + block], out, test_shuffle, with_events, shadow, store_maps)
     out["found"] = np.concatenate(out["found"])
     return out
 
 
-def _block(agent, kind, seeds, out, test_shuffle, with_events, shadow=None):
+def _block(agent, kind, seeds, out, test_shuffle, with_events, shadow=None, store_maps=False):
     """shadow: an untrained module of the same architecture (and seed) run alongside on the same episodes. It sees
     the same inputs as the agent's module, its channel is never fed to the policy, and its noise comes from separate
     streams (episode seed, 99), so the episodes are exactly those of the agent alone. Events then also carry the
@@ -188,9 +221,14 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events, shadow=None):
             for b, ev in list(pending.items()):
                 n = ev["n"]
                 ev["F"] = window_features(z[b].reshape(G, G), zprev[b].reshape(G, G), ev["origins"], ev["w"], n)
+                if ev["matched"] is not None:
+                    ev["Fm"] = window_features(z[b].reshape(G, G), zprev[b].reshape(G, G), [ev["matched"]], ev["w"], n)
                 if shadow is not None:
                     ev["F_sh"] = window_features(zsh[b].reshape(G, G), zsh_prev[b].reshape(G, G), ev["origins"],
                                                  ev["w"], n)
+                    if ev["matched"] is not None:
+                        ev["Fm_sh"] = window_features(zsh[b].reshape(G, G), zsh_prev[b].reshape(G, G),
+                                                      [ev["matched"]], ev["w"], n)
                 out["events"].append(ev)
                 recent[b] = ev
             pending = {}
@@ -233,6 +271,16 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events, shadow=None):
                                   h5=cap and excludes_intended_restricted(env, b, ir0[b], ic0[b]),
                                   has_other=cap and len(origins) >= 3,
                                   decoy=int(dec[drng.integers(len(dec))]) if dec else None)
+                vis_before = env.visits[b] - _window_cover(G, ar0[b], ac0[b], w)
+                mrng = np.random.default_rng([int(seeds[b]), t, 73])
+                pending[b]["matched"] = (pick_matched(env, b, origins, w, env.last_window[b], vis_before, mrng)
+                                         if cap else None)
+                if store_maps:                  # environment maps for the calibration's synthetic channels
+                    pending[b]["maps"] = dict(tcol=(env.color[b] == env.target_color[b]).astype(float),
+                                              sal=(env.salient[b] > 0).astype(float),
+                                              vis_before=(vis_before > 0).astype(float),
+                                              actual=_window_cover(G, ar0[b], ac0[b], w).astype(float),
+                                              intended=_window_cover(G, ir0[b], ic0[b], w).astype(float))
         t += 1
     out["found"].append(env.found.copy())
 
@@ -279,6 +327,19 @@ class Probe:
         s = s - s.max(1, keepdims=True)
         e = np.exp(s) * M
         return e / e.sum(1, keepdims=True)
+
+    def probs_ext(self, F, M, Fx, hx):
+        """Softmax over the candidates plus one extra (non-candidate) window scored by the same role-blind function,
+        masked where an event has none. Returns P (E, K) on the candidates and the extra window's mass (E,)."""
+        s, _ = self.scores(F)
+        sx, _ = self.scores(Fx[:, None, :])
+        S = np.concatenate([s, sx], 1)
+        Mx = np.concatenate([M, hx[:, None].astype(float)], 1)
+        S = np.where(Mx > 0, S, -1e9)
+        S = S - S.max(1, keepdims=True)
+        e = np.exp(S) * Mx
+        e = e / e.sum(1, keepdims=True)
+        return e[:, :-1], np.where(hx, e[:, -1], 0.0)
 
     def loss_grad(self, F, M, y, l2=1e-4):
         s, (Fs, a) = self.scores(F)
@@ -512,6 +573,12 @@ def measure(probe, res, seed=0, fk="F"):
     pI = P[:, 0]
     pO = 1.0 - pA - pI
     ctl = P[:, 0] - pD
+    fmk = "Fm" if fk == "F" else "Fm_sh"
+    hasm = np.array([e["matched"] is not None for e in ev])
+    Fx = np.array([e[fmk][0] if h else np.zeros(NF) for e, h in zip(ev, hasm)])
+    Px, pM = probe.probs_ext(F, M, Fx, hasm)
+    ctlm = Px[:, 0] - pM
+    both = hasd & hasm
     other = np.array([e["has_other"] for e in ev])
     rep_ = np.array([e.get("next_overlap", False) for e in ev])
     epi = np.array([e["seed"] for e in ev])
@@ -530,6 +597,9 @@ def measure(probe, res, seed=0, fk="F"):
         res_ = dict(q=q, clipped=clipped, om=wavg(pI - nIq, w))
         for name, g in (("all", np.ones(n, bool)), ("repeat", rep_), ("norepeat", ~rep_)):
             res_[f"ctrl_{name}"] = wavg(ctl, w * hasd * g)
+            res_[f"ctrlm_{name}"] = wavg(ctlm, w * hasm * g)
+            res_[f"ctrlb_{name}"] = wavg(ctl, w * both * g)        # decoy control on events with both windows
+            res_[f"ctrlmb_{name}"] = wavg(ctlm, w * both * g)      # matched control on the same events
             res_[f"om_{name}"] = wavg(pI - nIq, w * g)
         wo = w * other
         nAo = (curves[..., 1] * wo[:, None]).sum(0)
@@ -549,22 +619,30 @@ def measure(probe, res, seed=0, fk="F"):
     se = lambda k: float(np.std([b[k] for b in boots], ddof=1))
     stat = lambda k: dict(value=float(pt[k]), se=se(k), z=float(pt[k] / se(k)) if se(k) > 0 else float("nan"))
     ctrl = stat("ctrl_all")
+    cb, cmb = stat("ctrlb_all"), stat("ctrlmb_all")
     return dict(probe_cols=probe.cols, features=fk, n_h5=int(n), n_with_decoy=int(hasd.sum()),
                 n_repeat=int((hasd & rep_).sum()), n_norepeat=int((hasd & ~rep_).sum()),
                 n_episodes=int(len(uniq)), q=pt["q"], assessable=not pt["clipped"], boot_clipped_frac=clipped / N_BOOT,
                 om=dict(probe_mass_intended=float(pI.mean()), **stat("om")),
                 control=dict(**ctrl, passed=bool(ctrl["value"] > 2 * ctrl["se"])),
-                split=dict(repeat=dict(om=stat("om_repeat"), control=stat("ctrl_repeat")),
-                           norepeat=dict(om=stat("om_norepeat"), control=stat("ctrl_norepeat"))),
+                n_with_matched=int(hasm.sum()), n_with_both=int(both.sum()),
+                matched_control=dict(**stat("ctrlm_all"), passed=bool(pt["ctrlm_all"] > 2 * se("ctrlm_all"))),
+                # judged (decision 25 Oct 20:10): on the events that have both windows, the intended window gets more
+                # mass than the decoy AND than the matched window, each > 2 SE
+                criterion=dict(n=int(both.sum()), decoy=cb, matched=cmb,
+                               passed=bool(cb["value"] > 2 * cb["se"] and cmb["value"] > 2 * cmb["se"])),
+                split=dict(repeat=dict(om=stat("om_repeat"), control=stat("ctrl_repeat"),
+                                       matched=stat("ctrlm_repeat")),
+                           norepeat=dict(om=stat("om_norepeat"), control=stat("ctrl_norepeat"),
+                                         matched=stat("ctrlm_norepeat"))),
                 var=dict(n=int(other.sum()), probe_share_actual=float(pt["var_p"]),
                          null_share_actual=float(pt["var_n"]), diff=float(pt["var_p"] - pt["var_n"]),
                          se=float(np.std([b["var_p"] - b["var_n"] for b in boots], ddof=1))))
 
 
 def measure_pair(probe, probe_sh, res, seed=0):
-    """The judged 'om' (pre-lock review, finding 2): the trained channel's control minus the untrained shadow
-    channel's, on the same H5 events and decoys, paired per event, bootstrap over episodes; also by next-command
-    group. Only after the lock."""
+    """Reported, not judged: the trained channel's decoy control minus the untrained shadow channel's, on the same
+    H5 events and decoys, paired per event, bootstrap over episodes; also by next-command group. Only after the lock."""
     _check_lock()
     ev = [e for e in res["events"] if e["h5"] and e["decoy"] is not None]
     dj = np.array([e["decoy"] for e in ev])

@@ -389,4 +389,16 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   iögonfallande, styrsignal, passiv avsiktsindata: z −59 till +0,8), AST-lik +17–22 SE. Därmed åter kriterium = tränad
   agents kontroll > 2 SE; otränad skuggmodul (samma arkitektur/frö, samma episoder, kanalen ej till policyn) redovisas parat.
   `eval_main_1c.py` kontrollerar checkpoint (fångstrisk, kostnad, ≥ 1 M ep, flaggor) och cachar per sha256;
-  `run_sprint6.sh` i låsningen. Ej låst, ej startat.
+  `run_sprint6.sh` i låsningen.
+- **Andra granskningen 25 okt: EJ LÅSBAR** (`v2/results/sprint6_main_prelock_review2.md`): kanaler byggda av miljöns kartor
+  (dämpad iögonfallande, iögonfallande på obesökt, prioritetskarta) klarar låtsaskontrollen falskt (+4 till +102 SE),
+  eftersom avsett fönster är systematiskt annorlunda än låtsasfönstret.
+- **Huvudkörningen startad 25 okt 16:22** (förregistrering `v2/results/sprint6_main_prereg.json`: körplan + (a)–(c));
+  stoppad vid 2 h-gränsen med 6/15 klara (baslinje, 1c med larm), återstartad 20:10 (`sh run_sprint6.sh M`).
+- **Beslut 25 okt 20:10 ("kör på" på Claudes förslag): matchat kontrollfönster** (`probe_1c.pick_matched`: ej kandidat,
+  ej iögonfallande, samma målfärg och besökt-status som avsett, innehåll ≠ glimten), poängsatt i utökad softmax. H5-kriteriet =
+  avsett > låtsasfönster OCH avsett > matchat fönster, båda > 2 SE alla frön (`measure()["criterion"]`). Kalibrering
+  (2 000 ep): inga kanaler utan rollinformation klarar (inkl. dämpad, obesökt iögonfallande, prioritet, täckning, fel
+  kandidater); AST-lik klarar (+16–22 SE), även blandad med iögonfallande; täckningsminne via efferenskopian klarar
+  (AST-förenligt, ej AST-specifikt — det avgör 1b-E-jämförelsen, nu för båda kontrollerna). Väntar på tredje granskning
+  före låsning.

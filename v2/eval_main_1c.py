@@ -5,8 +5,8 @@
 
 Runs (run_sprint6.sh M): results/c6_mL-{off,e1e-4,u1e-4,cap1e-4,1bE}_s{30,31,32}, capture risk 0.5, cost 0.0001,
 1 000 000 episodes, final checkpoints. Test bank: the MVP bank (episode i: seed 2 000 000 + i, i < 4 000), with the
-environment of the run (capture risk 0.5). Probes: probe bank (7 000 000 + i, 4 000 episodes, balanced), one primary
-probe (channel at t + 1) and one sensitivity probe (t + 1 and t) per run.
+environment of the run (capture risk 0.5). Probes: probe bank (7 000 000 + i, 4 000 episodes, capture steps only), one
+primary probe (channel at t + 1) and one sensitivity probe (t + 1 and t) per run.
 
 Criteria (locked; every comparison per seed, unpaired SE over test episodes as in the MVP unless stated):
   (a) benefit      1c minus Baslinje, found rate, > 2 SE in all three seeds
@@ -15,13 +15,19 @@ Criteria (locked; every comparison per seed, unpaired SE over test episodes as i
                    conservative)
   (c) self-reference  primary probe's mass on the actual window minus 1 / K at H5 events (all K), > 2 SE in all seeds
                    (bootstrap over episodes)
-  H5 "om"          only for a 1c condition that passes (a), (b) and (c): role-swap control of the primary probe
-                   (probe trained on capture steps only; mass on the intended window minus on the decoy, another
-                   wrong salient candidate, at H5 events with a decoy), > 2 SE in all three seeds (bootstrap over
-                   episodes). Calibrated (test_probe_1c.py): no synthetic channel without role information passes,
-                   passive transmission of the intended window's input comes out negative.
-  AST-specific     only if "om" passes for 1c with alarm: its control minus 1b-E's, > 2 SE in all three seeds
-                   (SE = root of the sum of the two bootstrap variances)
+  H5 "om"          only for a 1c condition that passes (a), (b) and (c): the primary probe (channel at t + 1, trained
+                   on capture steps only) at H5 events that have both control windows puts more mass on the intended
+                   window than on (1) the decoy, another wrong salient candidate whose content differs from the
+                   glimpse, AND (2) the matched window, a non-candidate, non-salient window of the intended window's
+                   content class (target colour, covered before) whose content differs from the glimpse; each
+                   > 2 SE in all three seeds (bootstrap over episodes). Decision 25 Oct 20:10 after the second
+                   pre-lock review. Calibrated (test_probe_1c.py): none of noise, marker, wrong candidates, salience,
+                   steering signal, passive intended-window input, damped salience, unvisited salience, priority map,
+                   true coverage passes; AST-like channels pass, also mixed with salience. A coverage map built from
+                   the efference copy (covered + where one aimed) passes: it is a memory of where attention was
+                   aimed and is read as consistent with AST, not as AST-specific (that is the comparison with 1b-E).
+  AST-specific     only if "om" passes for 1c with alarm: for both controls, 1c's value minus 1b-E's > 2 SE in all
+                   three seeds (SE = root of the sum of the two bootstrap variances)
   Reported: the same control for an untrained shadow module (same architecture and seed, run on the same episodes,
   its channel not fed to the policy) and the trained-minus-shadow difference, paired per event.
 Reported, not judged: the null-adjusted "om" and the control with the null, the sensitivity probe's control, the split
@@ -78,6 +84,10 @@ def checkpoint_ok(path, a, meta, cond):
         errs.append("no-alarm flags")
     if cond == "1bE" and a.get("schema") != "channel_e":
         errs.append("1b-E schema")
+    if cond == "off" and a.get("schema") != "off":
+        errs.append("baseline schema")
+    if int(a.get("seed", -1)) != int(path.rsplit("_s", 1)[1].split(".")[0]):
+        errs.append("seed")
     if errs:
         raise RuntimeError(f"{path}: not the decided run: {errs}")
 
@@ -149,8 +159,9 @@ def judge(res):
         b = [diff(R[name(c, s)], R[name("cap1e-4", s)]) for s in SEEDS]
         cc = [R[name(c, s)]["c_all"] for s in SEEDS]
         pre = all(x["passed"] for x in a) and all(x["passed"] for x in b) and all(x["passed"] for x in cc)
-        ctrl = [R[name(c, s)]["h5_primary"]["control"] for s in SEEDS]
-        J[c] = dict(a=a, b=b, c=cc, preconditions=pre, om_control=ctrl,
+        crit = [R[name(c, s)]["h5_primary"]["criterion"] for s in SEEDS]
+        ctrl = [dict(passed=x["passed"]) for x in crit]
+        J[c] = dict(a=a, b=b, c=cc, preconditions=pre, om_criterion=crit,
                     trained_minus_shadow=[R[name(c, s)]["trained_minus_shadow"] for s in SEEDS],
                     om_passed=bool(pre and all(x["passed"] for x in ctrl)),
                     norepeat=[R[name(c, s)]["h5_primary"]["split"]["norepeat"]["control"] for s in SEEDS],
@@ -158,10 +169,15 @@ def judge(res):
     if "e1e-4" in J and have("1bE"):
         sp = []
         for s in SEEDS:
-            x, y = R[name("e1e-4", s)]["h5_primary"]["control"], R[name("1bE", s)]["h5_primary"]["control"]
-            d = x["value"] - y["value"]
-            se = float(np.sqrt(x["se"] ** 2 + y["se"] ** 2))
-            sp.append(dict(diff=d, se=se, z=d / se if se > 0 else float("nan"), passed=bool(d > 2 * se)))
+            row = {}
+            for k in ("decoy", "matched"):
+                x = R[name("e1e-4", s)]["h5_primary"]["criterion"][k]
+                y = R[name("1bE", s)]["h5_primary"]["criterion"][k]
+                d = x["value"] - y["value"]
+                se = float(np.sqrt(x["se"] ** 2 + y["se"] ** 2))
+                row[k] = dict(diff=d, se=se, z=d / se if se > 0 else float("nan"), passed=bool(d > 2 * se))
+            row["passed"] = bool(row["decoy"]["passed"] and row["matched"]["passed"])
+            sp.append(row)
         J["ast_specific"] = dict(per_seed=sp, judged=J["e1e-4"]["om_passed"],
                                  passed=bool(J["e1e-4"]["om_passed"] and all(x["passed"] for x in sp)))
     res["judgement"] = J
