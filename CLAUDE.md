@@ -357,5 +357,9 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   rollinformation). Byggt som probens massa på avsett minus på låtsasfönstret (ej nollmodell); då |z| < 2 för alla
   kanaler utan rollinformation, AST-lik +19–26 SE, "fel åt annat håll" −17, styrsignal vid t når bara känslighetsproben.
   Avvikelsen från beslutets ordalydelse ska godkännas av produktägaren före 6a.
-- **Pilot:** fas A och U utan nytta (med larm bäst +1,3 p vid 44 bitar, z 1,7–1,8), ingen kollaps → fas C (kostnad
-  0,0001) startad 25 okt 02:34; därefter D om ingen nytta.
+- **Pilot klar 25 okt ca 05:20: STOPP enligt regeln, förutsättning (a) klaras inte i något villkor.** Med larm: 44 bitar
+  +1,2/+1,4 p (z 1,7/1,8), 22 och 11 bitar ≤ +0,6; kostnad 0,0001 +1,2/+1,9 (z 1,6/2,6); dubbel fångstrisk +1,7/+0,6 (z
+  1,8/0,7). Utan larm aldrig nytta (−1,6 till +0,9 p). Policyn med larm är beroende av kanalen (blandad vid test −5 till
+  −15 p) men vinner lite. Bitar efter fångst = utan fångst i alla körningar (ingen avvikelsekod). Kritikerns andel av
+  modulgradienten 1–16 %. Ingen kollaps. H5 bedöms inte för 1c. Inget om var probens fel pekar har beräknats.
+  **Väntar på produktägarens beslut** om nästa steg.
