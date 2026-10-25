@@ -8,6 +8,8 @@
 #   sh run_sprint6.sh U           no level gives "with" a benefit: 1c without alarm at all levels  (6 runs)
 #   sh run_sprint6.sh C           no benefit anywhere (after the collapse check): fixed cost 0.0001 (4 runs)
 #   sh run_sprint6.sh D           still none: capture risk doubled (p_capture 0.5), cost 0.0001   (6 runs)
+#   sh run_sprint6.sh M           MAIN RUN (gate 6a, 25 Oct): capture risk 0.5, cost 0.0001, 1 000 000 episodes, seeds
+#                                 30-32: Baslinje, 1c with / without alarm, capacity baseline (with alarm), 1b-E (15 runs)
 #   sh run_sprint6.sh E           follow-up 25 Oct (post hoc): phase D's with-alarm condition and Baslinje trained
 #                                 1 000 000 episodes, new seeds 42, 43 (same entropy schedule)    (4 runs)
 # Names: results/c6_<cond>_s<seed>; off = Baslinje (train_rl.py), e = with alarm, u = without, cap / capu = capacity
@@ -26,7 +28,8 @@ case "$phase" in
   C) add e1e-4; add u1e-4 ;;
   D) add dc-off; add dc-e1e-4; add dc-u1e-4 ;;
   E) S="42 43"; add dcL-off; add dcL-e1e-4 ;;
-  *) echo "phase A|B <level>|U|C|D"; exit 1 ;;
+  M) S="30 31 32"; add mL-off; add mL-e1e-4; add mL-cap1e-4; add mL-u1e-4; add mL-1bE ;;
+  *) echo "phase A|B <level>|U|C|D|E|M"; exit 1 ;;
 esac
 for j in $JOBS; do echo "$j"; done | xargs -P 2 -I{} sh -c '
   name=$(echo "$1" | cut -d: -f1); s=$(echo "$1" | cut -d: -f2)
@@ -36,9 +39,12 @@ for j in $JOBS; do echo "$j"; done | xargs -P 2 -I{} sh -c '
   case "$name" in
     dc-*)  pc=0.5; base=${name#dc-} ;;
     dcL-*) pc=0.5; base=${name#dcL-}; extra="--max-episodes 1000000" ;;
+    mL-*)  pc=0.5; base=${name#mL-}; extra="--max-episodes 1000000" ;;
   esac
   case "$base" in
     off)   cmd="train_rl.py --schema off" ;;
+    1bE)   cmd="train_rl.py --schema channel_e --rate-cost 0.0001" ;;
+    cap1e-4) cmd="train_1c.py --alarm --shuffle --rate-cost 0.0001" ;;
     e1e-4) cmd="train_1c.py --alarm --rate-cost 0.0001" ;;
     u1e-4) cmd="train_1c.py --rate-cost 0.0001" ;;
     e*)    cmd="train_1c.py --alarm --rate-target ${base#e}" ;;

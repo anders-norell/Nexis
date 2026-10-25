@@ -372,4 +372,11 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   (80,9 mot 78,6 %, z 2,6), frö 43 +2,8 p (80,9 mot 78,1 %, z 3,1) → **nytta > 2 SE i båda fröna**. Bitar ~21/steg.
   Blandad kanal vid test −9 till −13 p. Prob vid fångst (K ≥ 3) långt över likformig (z 27–28). Kritikerns andel 2–6 %.
   Inlärningskurvor (träningseval, 2 000 ep) brusiga. Efterhand: låser inget. Kapacitetskontroll (b) ej prövad.
-  Förslag till huvudkörning väntar på produktägaren.
+  Huvudkörning godkänd 25 okt 12:53 ("kör på", inkl. fast kostnad 0,0001 och kontroll utan nollmodell).
+- **Huvudkörningen förberedd men INTE låst eller startad:** `v2/eval_main_1c.py` (lock/run, kriterier (a)–(c), "om" via
+  rollbyteskontroll, AST-specificitet mot 1b-E), `run_sprint6.sh M` (15 körningar c6_mL-*, frö 30–32, fångstrisk 0,5,
+  kostnad 0,0001, 1 M ep). Kontrollens godkännande kräver inte längre matchbart q. **Röktest 25 okt: otränade agenter
+  klarar rollbyteskontrollen** (1500 ep: 1c med larm +0,011 / +5,2 SE, utan larm +0,004 / +3,3, 1b-E +0,010 / +5,1,
+  kapacitetsbaslinjen 0,000 / +0,5): kanalen för passivt vidare den remappade foveán och matchningssignalen, som ligger på
+  avsedda rutor. Förslag till produktägaren: kriteriet = tränad minus otränad agent (samma arkitektur och frö) > 2 SE.
+  Väntar på beslut före låsning.

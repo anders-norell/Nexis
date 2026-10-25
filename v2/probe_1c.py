@@ -423,7 +423,8 @@ def found_summary(res):
 
 # ------------------------------------------------------------------------------------- locked measures
 def lock_hashes():
-    files = ("probe_1c.py", "schema_1c.py", "train_1c.py", "env.py", "bank.py", "h5.py", "h5_eval.py", "agent_rl.py")
+    files = ("probe_1c.py", "schema_1c.py", "train_1c.py", "env.py", "bank.py", "h5.py", "h5_eval.py", "agent_rl.py",
+             "train_rl.py", "schema_channel.py", "eval_main_1c.py", "pilot_1c.py")
     return {f: hashlib.sha256(open(os.path.join(HERE, f), "rb").read()).hexdigest() for f in files}
 
 
@@ -452,7 +453,7 @@ def measure(probe, res, seed=0):
                   actual window over all H5 events. Reported, not the criterion.
       control     the probe's mass on the intended window minus its mass on a decoy (a random wrong candidate,
                   not intended, content differing from the glimpse, as the intended window's at H5 events), on H5
-                  events that have one. Criterion: > 2 SE in every seed, and q matchable. A role-blind probe on a
+                  events that have one. Criterion: > 2 SE in every seed (q plays no role here). A role-blind probe on a
                   channel without role information puts the same mass on both in expectation.
                   The first version, om(intended) - om(decoy) with the null subtracted on both sides, is reported as
                   control_with_null: the synthetic calibration (test_probe_1c.py, 25 Oct) showed it is biased
@@ -517,7 +518,7 @@ def measure(probe, res, seed=0):
                 n_repeat=int((hasd & rep_).sum()), n_norepeat=int((hasd & ~rep_).sum()),
                 n_episodes=int(len(uniq)), q=pt["q"], assessable=not pt["clipped"], boot_clipped_frac=clipped / N_BOOT,
                 om=dict(probe_mass_intended=float(pI.mean()), **stat("om")),
-                control=dict(**ctrl, passed=bool((not pt["clipped"]) and ctrl["value"] > 2 * ctrl["se"])),
+                control=dict(**ctrl, passed=bool(ctrl["value"] > 2 * ctrl["se"])),   # no null, so q plays no role
                 control_with_null=stat("ctrlnull_all"),
                 split=dict(repeat=dict(om=stat("om_repeat"), control=stat("ctrl_repeat")),
                            norepeat=dict(om=stat("om_norepeat"), control=stat("ctrl_norepeat"))),
