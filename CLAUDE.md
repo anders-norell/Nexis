@@ -362,4 +362,9 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   1,8/0,7). Utan larm aldrig nytta (−1,6 till +0,9 p). Policyn med larm är beroende av kanalen (blandad vid test −5 till
   −15 p) men vinner lite. Bitar efter fångst = utan fångst i alla körningar (ingen avvikelsekod). Kritikerns andel av
   modulgradienten 1–16 %. Ingen kollaps. H5 bedöms inte för 1c. Inget om var probens fel pekar har beräknats.
-  **Väntar på produktägarens beslut** om nästa steg.
+  Sprint 3:s rutnät visar att 1a vinner +11 p vid fångstrisk 0,5, där 1c med larm bara tog +1,7/+0,6 → flaskhalsen är
+  troligen inlärningssignalen, inte uppgiften (Claudes förslag att flytta arbetspunkten tillbakadraget).
+- **Fas E (efterhandsanalys, godkänd 25 okt 08:14):** `sh run_sprint6.sh E` = baslinje + 1c med larm, kostnad 0,0001,
+  fångstrisk 0,5, 1 M episoder, frö 42–43 (körningar c6_dcL-*). Nytta > 2 SE båda fröna → föreslå huvudkörning;
+  annars produktägarens val: prediktiv signal (förutsäga nästa glimt) eller avsluta + resultatrapport (skrivs oavsett).
+  Fortfarande sprint 6.

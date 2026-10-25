@@ -8,6 +8,8 @@
 #   sh run_sprint6.sh U           no level gives "with" a benefit: 1c without alarm at all levels  (6 runs)
 #   sh run_sprint6.sh C           no benefit anywhere (after the collapse check): fixed cost 0.0001 (4 runs)
 #   sh run_sprint6.sh D           still none: capture risk doubled (p_capture 0.5), cost 0.0001   (6 runs)
+#   sh run_sprint6.sh E           follow-up 25 Oct (post hoc): phase D's with-alarm condition and Baslinje trained
+#                                 1 000 000 episodes, new seeds 42, 43 (same entropy schedule)    (4 runs)
 # Names: results/c6_<cond>_s<seed>; off = Baslinje (train_rl.py), e = with alarm, u = without, cap / capu = capacity
 # baseline with / without alarm.
 cd "$(dirname "$0")"
@@ -23,14 +25,18 @@ case "$phase" in
   U) add u44.2; add u22.1; add u11.05 ;;
   C) add e1e-4; add u1e-4 ;;
   D) add dc-off; add dc-e1e-4; add dc-u1e-4 ;;
+  E) S="42 43"; add dcL-off; add dcL-e1e-4 ;;
   *) echo "phase A|B <level>|U|C|D"; exit 1 ;;
 esac
 for j in $JOBS; do echo "$j"; done | xargs -P 2 -I{} sh -c '
   name=$(echo "$1" | cut -d: -f1); s=$(echo "$1" | cut -d: -f2)
   n=results/c6_${name}_s${s}
   if [ -f $n.final.npz ]; then echo "skip $n"; exit 0; fi
-  pc=0.25; base=$name
-  case "$name" in dc-*) pc=0.5; base=${name#dc-} ;; esac
+  pc=0.25; base=$name; extra=""
+  case "$name" in
+    dc-*)  pc=0.5; base=${name#dc-} ;;
+    dcL-*) pc=0.5; base=${name#dcL-}; extra="--max-episodes 1000000" ;;
+  esac
   case "$base" in
     off)   cmd="train_rl.py --schema off" ;;
     e1e-4) cmd="train_1c.py --alarm --rate-cost 0.0001" ;;
@@ -41,6 +47,6 @@ for j in $JOBS; do echo "$j"; done | xargs -P 2 -I{} sh -c '
     cap*)  cmd="train_1c.py --alarm --shuffle --rate-target ${base#cap}" ;;
   esac
   echo "start $n $(date +%H:%M:%S)"
-  python3 $cmd --seed $s --p-capture $pc --out $n '"$ARGS"' >> $n.stdout 2>&1
+  python3 $cmd --seed $s --p-capture $pc --out $n '"$ARGS"' $extra >> $n.stdout 2>&1
   echo "end   $n $(date +%H:%M:%S)"
 ' _ {} >> results/c6_runner.log 2>&1
