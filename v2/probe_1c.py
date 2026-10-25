@@ -275,6 +275,8 @@ def _block(agent, kind, seeds, out, test_shuffle, with_events, shadow=None, stor
                 mrng = np.random.default_rng([int(seeds[b]), t, 73])
                 pending[b]["matched"] = (pick_matched(env, b, origins, w, env.last_window[b], vis_before, mrng)
                                          if cap else None)
+                pending[b]["int_clean"] = bool(not _overlap(origins[0], origins[act], w)
+                                               and not (env.salient[b, ir0[b]:ir0[b] + w, ic0[b]:ic0[b] + w] > 0).any())
                 if store_maps:                  # environment maps for the calibration's synthetic channels
                     pending[b]["maps"] = dict(tcol=(env.color[b] == env.target_color[b]).astype(float),
                                               sal=(env.salient[b] > 0).astype(float),
@@ -523,7 +525,8 @@ def found_summary(res):
 # ------------------------------------------------------------------------------------- locked measures
 def lock_hashes():
     files = ("probe_1c.py", "schema_1c.py", "train_1c.py", "env.py", "bank.py", "h5.py", "h5_eval.py", "agent_rl.py",
-             "train_rl.py", "schema_channel.py", "eval_main_1c.py", "pilot_1c.py", "run_sprint6.sh")
+             "train_rl.py", "schema_channel.py", "eval_main_1c.py", "pilot_1c.py", "run_sprint6.sh",
+             "test_probe_1c.py")
     return {f: hashlib.sha256(open(os.path.join(HERE, f), "rb").read()).hexdigest() for f in files}
 
 
@@ -601,6 +604,9 @@ def measure(probe, res, seed=0, fk="F"):
             res_[f"ctrlb_{name}"] = wavg(ctl, w * both * g)        # decoy control on events with both windows
             res_[f"ctrlmb_{name}"] = wavg(ctlm, w * both * g)      # matched control on the same events
             res_[f"om_{name}"] = wavg(pI - nIq, w * g)
+        clean = np.array([e.get("int_clean", True) for e in ev])
+        res_["ctrlb_clean"] = wavg(ctl, w * both * clean)          # review 3, finding 2: sensitivity subset
+        res_["ctrlmb_clean"] = wavg(ctlm, w * both * clean)
         wo = w * other
         nAo = (curves[..., 1] * wo[:, None]).sum(0)
         nOo = (curves[..., 2] * wo[:, None]).sum(0)
@@ -631,10 +637,19 @@ def measure(probe, res, seed=0, fk="F"):
                 # mass than the decoy AND than the matched window, each > 2 SE
                 criterion=dict(n=int(both.sum()), decoy=cb, matched=cmb,
                                passed=bool(cb["value"] > 2 * cb["se"] and cmb["value"] > 2 * cmb["se"])),
+                # reported (review 3): intended window neither overlapping the actual one nor holding a salient object
+                criterion_clean=dict(n=int((both & np.array([e.get("int_clean", True) for e in ev])).sum()),
+                                     decoy=stat("ctrlb_clean"), matched=stat("ctrlmb_clean")),
+                # reported (review 3, finding 1): a channel that marks the intended AND the actual window passes the
+                # criterion without the schema being wrong; an AST-like channel trades mass between the two
+                # (correlation about -0.8), a both-marking channel does not (about 0 to +0.35)
+                corr_intended_actual=float(np.corrcoef(pI[both], pA[both])[0, 1]) if both.sum() > 2 else None,
                 split=dict(repeat=dict(om=stat("om_repeat"), control=stat("ctrl_repeat"),
-                                       matched=stat("ctrlm_repeat")),
+                                       matched=stat("ctrlm_repeat"), crit_decoy=stat("ctrlb_repeat"),
+                                       crit_matched=stat("ctrlmb_repeat")),
                            norepeat=dict(om=stat("om_norepeat"), control=stat("ctrl_norepeat"),
-                                         matched=stat("ctrlm_norepeat"))),
+                                         matched=stat("ctrlm_norepeat"), crit_decoy=stat("ctrlb_norepeat"),
+                                         crit_matched=stat("ctrlmb_norepeat"))),
                 var=dict(n=int(other.sum()), probe_share_actual=float(pt["var_p"]),
                          null_share_actual=float(pt["var_n"]), diff=float(pt["var_p"] - pt["var_n"]),
                          se=float(np.std([b["var_p"] - b["var_n"] for b in boots], ddof=1))))

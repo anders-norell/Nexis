@@ -30,7 +30,10 @@ Criteria (locked; every comparison per seed, unpaired SE over test episodes as i
                    three seeds (SE = root of the sum of the two bootstrap variances)
   Reported: the same control for an untrained shadow module (same architecture and seed, run on the same episodes,
   its channel not fed to the policy) and the trained-minus-shadow difference, paired per event.
-Reported, not judged: the null-adjusted "om" and the control with the null, the sensitivity probe's control, the split
+Reported, not judged: the null-adjusted "om", the sensitivity probe's criterion, the criterion on events where the intended
+window neither overlaps the actual one nor holds a salient object, the correlation between the probe's mass on the intended
+and on the actual window (an AST-like channel trades mass between them, about -0.8; a channel that marks both, which passes
+the criterion without the schema being wrong, about 0 to +0.35; review 3), the split
 by whether command t + 1 aims at the intended window again (a yes is read as AST only if the no-repeat group points
 the same way), "var", bits after capture / no capture, test-time shuffled channel, the critic's share.
 """
@@ -164,8 +167,11 @@ def judge(res):
         J[c] = dict(a=a, b=b, c=cc, preconditions=pre, om_criterion=crit,
                     trained_minus_shadow=[R[name(c, s)]["trained_minus_shadow"] for s in SEEDS],
                     om_passed=bool(pre and all(x["passed"] for x in ctrl)),
-                    norepeat=[R[name(c, s)]["h5_primary"]["split"]["norepeat"]["control"] for s in SEEDS],
-                    sens_control=[R[name(c, s)]["h5_sens"]["control"] for s in SEEDS])
+                    norepeat=[{k: R[name(c, s)]["h5_primary"]["split"]["norepeat"][k]
+                               for k in ("crit_decoy", "crit_matched")} for s in SEEDS],
+                    clean=[R[name(c, s)]["h5_primary"]["criterion_clean"] for s in SEEDS],
+                    corr_intended_actual=[R[name(c, s)]["h5_primary"]["corr_intended_actual"] for s in SEEDS],
+                    sens_criterion=[R[name(c, s)]["h5_sens"]["criterion"] for s in SEEDS])
     if "e1e-4" in J and have("1bE"):
         sp = []
         for s in SEEDS:
