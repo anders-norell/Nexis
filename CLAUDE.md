@@ -368,3 +368,8 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   fångstrisk 0,5, 1 M episoder, frö 42–43 (körningar c6_dcL-*). Nytta > 2 SE båda fröna → föreslå huvudkörning;
   annars produktägarens val: prediktiv signal (förutsäga nästa glimt) eller avsluta + resultatrapport (skrivs oavsett).
   Fortfarande sprint 6.
+- **Fas E klar 25 okt 09:33 (efterhand, blind):** 1c med larm vs baslinje vid 1 M episoder, fångstrisk 0,5: frö 42 +2,3 p
+  (80,9 mot 78,6 %, z 2,6), frö 43 +2,8 p (80,9 mot 78,1 %, z 3,1) → **nytta > 2 SE i båda fröna**. Bitar ~21/steg.
+  Blandad kanal vid test −9 till −13 p. Prob vid fångst (K ≥ 3) långt över likformig (z 27–28). Kritikerns andel 2–6 %.
+  Inlärningskurvor (träningseval, 2 000 ep) brusiga. Efterhand: låser inget. Kapacitetskontroll (b) ej prövad.
+  Förslag till huvudkörning väntar på produktägaren.

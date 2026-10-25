@@ -1361,6 +1361,170 @@
      "bar_null_mass_intended": 0.3556105311858379
     }
    }
+  },
+  "c6_dcL-e1e-4_s42": {
+   "kind": "1c",
+   "seed": 42,
+   "alarm": true,
+   "shuffle": false,
+   "rate_target": 0.0,
+   "rate_cost": 0.0001,
+   "p_capture": 0.5,
+   "found": 0.8085,
+   "found_se": 0.0062214899742746525,
+   "n": 4000,
+   "log": {
+    "critic_share": 0.022226755710678864,
+    "critic_actor_cos": 0.06044463358205795,
+    "module_grad_norm_policy": 0.16440728199931745,
+    "minutes": 49.44,
+    "beta_late": 0.00010000000000000002
+   },
+   "bits": {
+    "bits_per_step": 21.184374420521525,
+    "bits_after_nocapture": 20.829534141356643,
+    "bits_after_capture": 21.535932693500737,
+    "n_steps": [
+     8248,
+     8325
+    ]
+   },
+   "collapse": false,
+   "probe": {
+    "n_train": 11714,
+    "train_loss": 0.904673903535428,
+    "cols": [
+     0,
+     1,
+     2,
+     6
+    ],
+    "n_events": 14114,
+    "n_capture": 8325,
+    "n_h5": 4141,
+    "n_h5_k2": 840,
+    "n_h5_k3": 3301,
+    "blind_subset": "capture steps: K >= 3 only",
+    "acc_nocapture": 0.8015201243738124,
+    "acc_capture_k3": 0.2885936100328456,
+    "mass_actual_capture_k3": 0.3153537177554451,
+    "c_k3": {
+     "mass_actual": 0.3871870629638401,
+     "uniform": 0.29296677774411795,
+     "diff": 0.0942202852197221,
+     "se": 0.003378997344229569,
+     "z": 27.884095671346223,
+     "passed": true,
+     "n_episodes": 1053
+    },
+    "feasibility_k3": {
+     "probe_mass_actual": 0.3871870629638401,
+     "null_q0": 0.9467838028880134,
+     "null_q1": 0.2604156568716545,
+     "q": 0.8150805227682614,
+     "possible": true,
+     "bar_null_mass_intended": 0.3020496477732339
+    }
+   },
+   "test_shuffle_found": 0.722
+  },
+  "c6_dcL-e1e-4_s43": {
+   "kind": "1c",
+   "seed": 43,
+   "alarm": true,
+   "shuffle": false,
+   "rate_target": 0.0,
+   "rate_cost": 0.0001,
+   "p_capture": 0.5,
+   "found": 0.80875,
+   "found_se": 0.006218388808606294,
+   "n": 4000,
+   "log": {
+    "critic_share": 0.055461002568931786,
+    "critic_actor_cos": -0.00297694479956061,
+    "module_grad_norm_policy": 0.13050782841427883,
+    "minutes": 50.09,
+    "beta_late": 0.00010000000000000002
+   },
+   "bits": {
+    "bits_per_step": 20.410682641214656,
+    "bits_after_nocapture": 21.28261090856334,
+    "bits_after_capture": 19.538122312780548,
+    "n_steps": [
+     8283,
+     8277
+    ]
+   },
+   "collapse": false,
+   "probe": {
+    "n_train": 11458,
+    "train_loss": 0.9225856349764167,
+    "cols": [
+     0,
+     1,
+     2,
+     6
+    ],
+    "n_events": 14050,
+    "n_capture": 8277,
+    "n_h5": 4142,
+    "n_h5_k2": 839,
+    "n_h5_k3": 3303,
+    "blind_subset": "capture steps: K >= 3 only",
+    "acc_nocapture": 0.80443443616837,
+    "acc_capture_k3": 0.26930545182972365,
+    "mass_actual_capture_k3": 0.31324765284268846,
+    "c_k3": {
+     "mass_actual": 0.39118721020240865,
+     "uniform": 0.29334443435260876,
+     "diff": 0.09784277584979988,
+     "se": 0.0036239419172957926,
+     "z": 26.998991176660677,
+     "passed": true,
+     "n_episodes": 1069
+    },
+    "feasibility_k3": {
+     "probe_mass_actual": 0.39118721020240865,
+     "null_q0": 0.9480775052982138,
+     "null_q1": 0.26049475224543306,
+     "q": 0.8094818225389644,
+     "possible": true,
+     "bar_null_mass_intended": 0.3012890443915981
+    }
+   },
+   "test_shuffle_found": 0.68
+  },
+  "c6_dcL-off_s42": {
+   "kind": "off",
+   "seed": 42,
+   "alarm": null,
+   "shuffle": null,
+   "rate_target": 0.0,
+   "rate_cost": 0.0,
+   "p_capture": 0.5,
+   "found": 0.7855,
+   "found_se": 0.006490180082247334,
+   "n": 4000,
+   "log": {
+    "minutes": 27.03,
+    "beta_late": 0.0
+   }
+  },
+  "c6_dcL-off_s43": {
+   "kind": "off",
+   "seed": 43,
+   "alarm": null,
+   "shuffle": null,
+   "rate_target": 0.0,
+   "rate_cost": 0.0,
+   "p_capture": 0.5,
+   "found": 0.78075,
+   "found_se": 0.006541777997991066,
+   "n": 4000,
+   "log": {
+    "minutes": 26.87,
+    "beta_late": 0.0
+   }
   }
  },
  "level_rule": {
