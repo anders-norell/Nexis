@@ -82,7 +82,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 
 ## Status
 
-- **Senast uppdaterad:** 24 okt 2026
+- **Senast uppdaterad:** 26 okt 2026
 - **Sprint 0 (spec):** klar. Spec v2 godkänd i huvudsak av produktägaren.
 - **Sprint 1 (miljö):** **klar, grind 1 godkänd 21 okt 2026** (produktägaren delegerade bedömningen till Claude).
   Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent; den styrda kan spåra
@@ -415,4 +415,8 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   avläsbar och proben (tränad på fångststeg) lär sig "avsikt = inte här"; inget belägg för AST eller emot; nollmodells-"om"
   oanvändbart (−35 SE även för tom kanal); (b) kontrollerar parametrar, inte information (kapacitetsbaslinjen kollapsar);
   vinsten kommer från jämförarsignalen (larmet), inte från en självmodell; sammanvägt +2,0 p (z ≈ 3,9), kriteriet har låg
-  styrka. Föreslagen nästa kontroll: larmet direkt till policyn utan modul. **Grind 6 väntar på produktägaren.**
+  styrka. Föreslagen nästa kontroll: larmet direkt till policyn utan modul.
+- **GRIND 6 GODKÄND 26 okt 00:59** (produktägaren: "kör vidare med din rekommendation"): resultatet godkänt, 1c avslutas i
+  denna form. Resultatrapport sprint 1–6 skriven som dokument: https://claude.ai/artifact/EYa5LBThWfTTp76SjS3jRv
+  ("Nexis v2 – resultatrapport sprint 1–6"). Inget nästa steg beslutat (alternativ i rapporten: larmet direkt till policyn,
+  prediktiv signal till modulen, social fas, fas 2).
