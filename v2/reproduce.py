@@ -230,8 +230,7 @@ def make_work(work, fresh_checkpoints=None):
     retrained ones."""
     if os.path.exists(work):
         shutil.rmtree(work)
-    shutil.copytree(HERE, work, ignore=shutil.ignore_patterns("repro_work*", "__pycache__", "*.ckpt.npz",
-                                                              "*.log.jsonl", "*.stdout", "*.log"))
+    shutil.copytree(HERE, work, ignore=shutil.ignore_patterns("repro_*", "__pycache__", "*.ckpt.npz"))
     for f, _ in EVAL_STEPS + EVAL_PILOTS:
         p = os.path.join(work, "results", f)
         if os.path.exists(p):
