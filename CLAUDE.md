@@ -82,7 +82,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 
 ## Status
 
-- **Senast uppdaterad:** 26 okt 2026
+- **Senast uppdaterad:** 26 okt 2026 (steg 0 pågår)
 - **Sprint 0 (spec):** klar. Spec v2 godkänd i huvudsak av produktägaren.
 - **Sprint 1 (miljö):** **klar, grind 1 godkänd 21 okt 2026** (produktägaren delegerade bedömningen till Claude).
   Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent; den styrda kan spåra
@@ -453,3 +453,13 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   partnerns dolda tillstånd > bara position, styrkeberäkning före låsning. Teori om andras sinnen = falsk tro; begrepp =
   gemensam kod (H0-2 i kärnan), generalisering, tala om det icke närvarande. Led 1: 2 × 2 givet schema med/utan × levande/
   kopplad, symboler, samarbete. Steg 0 separat, inre störning uppskjuten. Fyra beslutspunkter.
+- **BESLUT 26 okt 01:57 (produktägaren, efter diskussionstrådens rekommendation): den större utökningen väntar.** Ordning:
+  (1) steg 0 nu: larmet direkt till policyn (sluter sprint 6); (2) resultatrapporten slutförs med steg 0 och metodlärdomar,
+  på engelska om den ska ut, data skilda från tolkning; (3) reproducerbarhetsskript i repot som återskapar huvudtabellerna;
+  (4) extern granskning av en människa med ML-erfarenhet, sedan kontakt med Grazianos grupp och Piefke m.fl.;
+  (5) paus för beslut: social tes, inre störning eller ingenting; ny studie får egen spec. **Inget nytt bygge mellan 1 och 5.**
+- **Steg 0 startat 26 okt ca 02:10** (commit b37fef9, förregistrering `v2/results/sprint6_step0_prereg.json`):
+  `v2/train_alarm_direct.py` (baslinjens policy + matchningssignal och larm som indata, train_rl.py oförändrad),
+  körningar `c6_mL-alarmdirect_s{30,31,32}`, fångstrisk 0,5, 1 M ep. Efter träning: `python3 eval_step0.py` →
+  `results/sprint6_step0.json`. Regel: inom 2 SE av 1c med larm eller över i alla frön → modulen tillförde inget.
+  Låsta filer orörda (båda låsen kontrollerade).
