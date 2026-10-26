@@ -420,3 +420,9 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   denna form. Resultatrapport sprint 1–6 skriven som dokument: https://claude.ai/artifact/EYa5LBThWfTTp76SjS3jRv
   ("Nexis v2 – resultatrapport sprint 1–6"). Inget nästa steg beslutat (alternativ i rapporten: larmet direkt till policyn,
   prediktiv signal till modulen, social fas, fas 2).
+- **Inriktning 26 okt 01:20 (produktägaren):** lämna AST som måttstock, cybernetisk linje (Conant–Ashby, nödvändig varietet,
+  reafferensprincipen). **Sprint 7-plan skriven i specen 26 okt ("Sprint 7: cybernetisk linje, fördröjd återkoppling"),
+  väntar på godkännande. Inget byggt eller kört.** Foveán visar glimten D steg senare (D = 0/1/2), jämföraren tidsinställd;
+  baslinje, 1a, 1c med/utan larm; huvudmått = självreferens (kanalen vid t bär faktiskt fönster vid t innan glimten kommit,
+  mot otränad skuggmodul), plus använt, förenklat, nytta, form. Steg: bygge → utrymmeskontroll (baslinje + 1a, frö 50–51,
+  400k, grind 7a: minsta D med 1a ≥ +8 p) → pilot 1c → låsning 7b → huvudkörning frö 60–62. Fyra beslutspunkter.
