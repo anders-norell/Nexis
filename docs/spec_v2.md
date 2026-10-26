@@ -1,4 +1,4 @@
-<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 vid grind 5a (beslut väntar), rev 339. Vid skillnad gäller det levande dokumentet. -->
+<!-- Ögonblicksbild av det levande dokumentet "Nexis v2 – spec" (https://claude.ai/artifact/GsEmfNtb1vs2bhXxwc6vsW), exporterad 23 okt 2026 vid grind 5a, rev 339. INAKTUELL: sprint 5a-beslut, sprint 6 (1c), steg 0 och senare beslut saknas här. Vid skillnad gäller det levande dokumentet; resultaten sammanfattas i docs/report_v2.md. -->
 
 # Nexis v2 – spec
 

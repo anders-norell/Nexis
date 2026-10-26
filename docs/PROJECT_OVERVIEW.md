@@ -1,62 +1,47 @@
 # Nexis — projektöversikt
 
-Läs den här filen först. Den beskriver var allt finns, vad som är gjort och hur man tar upp arbetet igen.
+Uppdaterad 26 okt 2026. Läs den här filen först om du är ny i repot.
 
-**Produktägare:** Anders. **Byggt av:** Claude, oktober 2026.
-**Status 7 okt 2026:** pausat efter v2. Nästa steg ej beslutat.
+**Produktägare:** Anders Norell. **Byggt av:** Claude (Anthropic), oktober 2026. All kod är skriven av en AI och har
+granskats av separata AI-instanser, men ännu inte av en människa med ML-utbildning.
 
-## Syfte
+## Vad projektet prövar
 
-En liten proof of concept av Grazianos Attention Schema Theory (AST). En konstgjord agent följer ett mål med blicken och har en inre modell (ett "schema") av sin egen uppmärksamhet. Huvudfrågan: när agenten rapporterar var den tittar utifrån schemat, gör den då de systematiska fel AST förutsäger?
+Nexis prövar Michael Grazianos Attention Schema Theory (AST) i små artificiella agenter: kommer en agents kunskap om
+sin egen uppmärksamhet från en förenklad modell av uppmärksamheten (ett schema), och syns det i hur schemat har fel?
 
-Kopplingen till MACTA: om det fungerar blir kriteriet *Awareness* mätbart i stället för bara definierat.
+## Två försök
 
-## Var allt finns
+| | v1 (avslutat) | v2 (avslutat 26 okt, i extern granskning) |
+| --- | --- | --- |
+| Var | rotkatalogen (`*.py`, `results/`, `report/`) | `v2/` |
+| Spec | `docs/spec.md` (7 okt) | levande dokument + `docs/spec_v2.md` (ögonblicksbild 23 okt) |
+| Uppgift | följa ett mål med mjuk uppmärksamhet, övervakad inlärning | söka i rutnät med hård spotlight som kan kapas, förstärkningsinlärning |
+| Resultat | schemat hjälpte lite; bifynd: fel drog mot avsedd plats (ej förregistrerat) | se nedan |
+
+## v2: vad vi kom fram till
+
+Rapport (engelska): `docs/report_v2.md`, levande version https://claude.ai/artifact/WgWqgRBXEqaChu3NMB76JF.
+
+1. Ett korrekt schema som ges utifrån hjälper mycket (+6–7,5 procentenheter) och agenten lyder det även när det ljuger
+   (H2, förregistrerat, klarat). Det visar att schemat behandlas som auktoritet, inte att det är förenklat.
+2. Ett schema som agenten fick lära sig själv (1b med facit, 1c utan) gav ingen självmodell. Den lilla vinsten kom från
+   en handkodad felsignal ("det jag såg stämmer inte med var jag siktade"); samma signal direkt till agenten utan modul
+   gav samma vinst (steg 0, förregistrerat).
+3. AST:s kännetecken, att schemats fel drar mot den avsedda platsen (H5), syntes inte.
+4. Metodlärdom: mått på "pekar schemat på avsikten" blev fem gånger sanna eller falska enbart genom sin konstruktion.
+
+## Var saker finns i v2
 
 | Vad | Var |
 | --- | --- |
-| Spec, hypoteser, trösklar och alla resultat | `claude/nexis_spec.md` i projektet (ögonblicksbild 7 okt). Levande version med arkitekturdiagram: Claude-dokumentet "Nexis PoC – Attention Schema Specification" |
-| **Kodförrådet (huvudkälla)** | [github.com/anders-norell/Nexis](https://github.com/anders-norell/Nexis), privat. Kod, resultat, tränade modeller, spec |
-| All källkod, läsbar | `nexis_source.md` |
-| Kod + tränade modeller + rådata | `nexis_v2.zip` |
-| Figur från Sprint 1 | `report/sprint1.png` i zip-filen |
+| Börja här | `v2/README.md` |
+| Återskapa tabellerna | `python3 v2/reproduce.py tables` (sekunder) eller `evaluate` (ca 35 min) |
+| Resultat, förregistreringar, låsfiler, granskningar | `v2/results/` |
+| Arbetsdagbok sprint för sprint | `CLAUDE.md`, avsnittet Status |
+| Begrepp i vardagsspråk | https://claude.ai/artifact/2syuVpzf2GcAfaP9DgSgjC (ordlista) |
 
-## Vad som är gjort
+## Status och nästa steg
 
-| Steg | Resultat |
-| --- | --- |
-| Sprint 1: miljö och agent utan schema | Klar. Styrd uppmärksamhet ger 66–68 % rätt pixel, mot 39 % med jämn uppmärksamhet och 1,6 % slump. |
-| Sprint 2 (v1): schema tillagt | H0 och H1 föll. Schemat hjälper, men bara 2–3 procentenheter. Krav var 10 och 20. |
-| v2: drift i uppmärksamheten + grov spårsignal | H0, H0b och H1 föll. Agenter utan schema klarar sig lika bra. |
-| Explorativ observation (v2) | När uppmärksamheten drev iväg rapporterade schemat ofta den *avsedda* platsen (31 %, mot cirka 7 % av slump). Det liknar AST:s förutsägelse, men är inte förregistrerat. |
-
-## Beslut som gäller
-
-- Trösklar sätts **innan** körning och sänks aldrig i efterhand.
-- Stoppregel: om schemat inte hjälper styrningen (H0/H1) körs inte H2/H3 utan nytt beslut.
-- Inga fler försök att "få H0 att gå igenom" utan ny förregistrering. Risk för att leta tills något råkar fungera.
-
-## Öppna vägar för nästa försök
-
-1. Skriva ihop resultaten som de är och kontakta Grazianos labb.
-2. Förregistrera ett test av den explorativa observationen (H2) på befintliga v2-modeller. Bryter mot stoppregeln, vilket då måste redovisas öppet.
-3. Ny uppgift där agenten verkligen behöver känna sin egen uppmärksamhet, närmare Wilterson & Graziano 2021. Kräver ny spec.
-
-## Köra koden
-
-Kräver bara Python 3, NumPy och Matplotlib (PyTorch användes inte; en egen liten autodiff ersätter den).
-
-```
-unzip nexis_v2.zip && cd nexis
-export OMP_NUM_THREADS=1
-python3 test_autodiff.py     # gradientkontroll
-./run_v2.sh                  # 15 träningskörningar, ca 30 min på 2 kärnor
-python3 eval_v2.py           # domar för H0, H0b, H1
-```
-
-## Viktiga designval (detaljer i specen)
-
-- 8×8 synfält, 16 rutor, målet driver i 12 steg. Agenten ska ange exakt pixel.
-- Uppmärksamheten följer agentens egen tro om var målet är, och begränsas till ±4 så att en blixt (+10) alltid vinner.
-- Styrenheten ser inte blixten. I v2 driver uppmärksamheten slumpmässigt (AR(1), SD 2,5), och schemat får en brusig signal per kvadrant.
-- Kontroller med lika många parametrar (C, C2) för att utesluta att schemat bara hjälper för att nätverket blir större.
+Beslut 26 okt: ingen ny studie innan rapporten granskats av en människa med ML-erfarenhet. Därefter kontakt med
+Grazianos grupp och Piefke m.fl. Sedan beslut om nästa studie (social tes, inre störning eller ingen), med egen spec.

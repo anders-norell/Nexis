@@ -3,7 +3,7 @@
 A small agent that tracks a target with its attention and carries an internal model (a "schema") of that attention, built to test predictions of Michael Graziano's Attention Schema Theory (AST).
 
 **Product owner:** Anders Norell. **Built by:** Claude (Anthropic), October 2026.
-**Status:** v1 (below) is closed. Nexis v2 is in progress: see `CLAUDE.md` and `docs/spec_v2.md`. v1 status: paused after v2. Code written by an AI and not yet independently reviewed — do not cite results before review.
+**Status:** v1 (below) is closed. **Nexis v2 is finished and in external review: start at [`v2/README.md`](v2/README.md) and the report [`docs/report_v2.md`](docs/report_v2.md).** Code written by an AI and reviewed only by other AI instances so far — do not cite results before human review.
 
 ## Results so far
 
