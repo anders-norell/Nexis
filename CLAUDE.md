@@ -82,7 +82,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
 
 ## Status
 
-- **Senast uppdaterad:** 26 okt 2026 (steg 0 pågår)
+- **Senast uppdaterad:** 26 okt 2026 (steg 0 klart)
 - **Sprint 0 (spec):** klar. Spec v2 godkänd i huvudsak av produktägaren.
 - **Sprint 1 (miljö):** **klar, grind 1 godkänd 21 okt 2026** (produktägaren delegerade bedömningen till Claude).
   Kod: `v2/env.py`, `v2/agents.py` (slump-, avsöknings- och styrd referensagent; den styrda kan spåra
@@ -463,3 +463,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   körningar `c6_mL-alarmdirect_s{30,31,32}`, fångstrisk 0,5, 1 M ep. Efter träning: `python3 eval_step0.py` →
   `results/sprint6_step0.json`. Regel: inom 2 SE av 1c med larm eller över i alla frön → modulen tillförde inget.
   Låsta filer orörda (båda låsen kontrollerade).
+- **Steg 0 klart 26 okt (`v2/results/sprint6_step0.json`): modulen tillförde inget utöver larmet** (förregistrerade regeln
+  uppfylld). Larm direkt till policyn: träff 80,9/81,3/81,1 % (frö 30–32); minus 1c med larm 0,0/−0,05/+0,6 p (z 0,0/−0,06/
+  0,7); minus Baslinje +1,9/+2,6/+2,2 p (z 2,1/2,9/2,5, > 2 SE i alla frön, vilket 1c med larm inte klarade i frö 32).
+  Sprint 6 sluten. Nästa: steg 2 (rapport), 3 (reproducerbarhetsskript).
