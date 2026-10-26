@@ -426,3 +426,12 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   baslinje, 1a, 1c med/utan larm; huvudmått = självreferens (kanalen vid t bär faktiskt fönster vid t innan glimten kommit,
   mot otränad skuggmodul), plus använt, förenklat, nytta, form. Steg: bygge → utrymmeskontroll (baslinje + 1a, frö 50–51,
   400k, grind 7a: minsta D med 1a ≥ +8 p) → pilot 1c → låsning 7b → huvudkörning frö 60–62. Fyra beslutspunkter.
+- **Diskussionstråden 26 okt: sprint 7-planen "nej i nuvarande form"; Claude håller med. Reviderad plan i specen ("Sprint 7,
+  reviderad plan efter diskussionstråden"), väntar på godkännande.** Skäl: baslinjen använder inte glimten (H6, blind fovea
+  lika bra) → fördröjning ändrar inget; 1a-facit utan fördröjning = tautologi; grinden väljer D = 0 vid fångstrisk 0,5;
+  självreferens sant per konstruktion via efferenskopian. Teori: internmodellprincipen (Francis & Wonham) + framåtmodeller,
+  PCT som nollteori. Steg 0: larmet direkt till policyn utan modul (frö 30–32, fångstrisk 0,5, 1 M, jämförs med sprint 6:s
+  körningar). Huvudlinje: inre störning (inre kapning). Mått: kalibrera självreferens mot efferens/salience-kanaler, "använt"
+  huvudmått, beteendesignatur, prob på baslinjens dolda tillstånd, ett låst kriterium. Förslag: social fas villkoras av
+  positiv kontroll i social miljö i stället för att 1c visat något. **Rapporten rättad:** 1b-E med facit ≈ 1c i vinst → policyns
+  gradient troligen inte flaskhalsen; gapet = lokalisering vid fångst (57 % mot ideal 94 %).
