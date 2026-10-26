@@ -445,3 +445,11 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   andras sinnen. Uppställning 2 × 2 × 2 (självmodell med/utan × levande/uppspelad partner × symboler/kontinuerlig);
   huvudmått = självmodellens nytta per ruta; nollhypotes = lika nytta i alla fyra; tesen stöds om rutan symboler + teori om
   andras sinnen > var och en av de övriga > 2 SE alla frön; förutsättning H0-0. H0-1–H0-4 beskrivande. I specen.
+- **Diskussionstråden 26 okt om förslaget; reviderat förslag i specen ("Reviderat förslag efter diskussionstråden"), väntar på
+  godkännande.** "Kräver nytta" motsägs av egna data (1a +7–11 p ensam, lesion −44 p) → tesen i två led: (1) storlek, givet
+  schema gör större nytta socialt (interaktion), (2) uppkomst, självbyggt schema växer fram socialt men inte ensamt.
+  Hanabi-miljö: partnern ser min faktiska spotlight inkl. fångster, jag vet bara vart jag siktade; samarbete = inte söka
+  samma rutor. Krav: samma målledtråd för båda, kanaler matchade i bitar, kopplad (yoked) ensam kontroll, H0-0 = facit om
+  partnerns dolda tillstånd > bara position, styrkeberäkning före låsning. Teori om andras sinnen = falsk tro; begrepp =
+  gemensam kod (H0-2 i kärnan), generalisering, tala om det icke närvarande. Led 1: 2 × 2 givet schema med/utan × levande/
+  kopplad, symboler, samarbete. Steg 0 separat, inre störning uppskjuten. Fyra beslutspunkter.
