@@ -441,3 +441,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   som samarbete och tävling. H0-0 positiv kontroll (facit om den andras uppmärksamhet hjälper, grind 8a), H0-1 självmodell
   lika ensam/socialt (låst huvudkriterium), H0-2 oberoende kod för egen/andras, H0-3 symboler × socialt, H0-4 sanning vid
   samarbete = tävling. Kostnad 18–24 körningar, 15–25 h. Fyra beslutspunkter.
+- **Precisering 26 okt 01:42 (produktägaren):** frågan är om *nyttan* av en självmodell kräver begreppsbildning + teori om
+  andras sinnen. Uppställning 2 × 2 × 2 (självmodell med/utan × levande/uppspelad partner × symboler/kontinuerlig);
+  huvudmått = självmodellens nytta per ruta; nollhypotes = lika nytta i alla fyra; tesen stöds om rutan symboler + teori om
+  andras sinnen > var och en av de övriga > 2 SE alla frön; förutsättning H0-0. H0-1–H0-4 beskrivande. I specen.
