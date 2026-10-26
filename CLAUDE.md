@@ -478,3 +478,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   Liu/Piefke rättade. Införda, plus mellan-frö-medel, KI för steg 0, lokalisering 26–45 % på bedömda nivåer, skuggmodul,
   begränsningar, nya referenser (ur minnet: Agarwal, Hewitt & Liang, Mnih 2014, Sperry, Wolpert), bilaga 12–14.
   Kvar: steg 3 (reproducerbarhetsskript), mänsklig ML-granskare.
+- **Steg 3 klart 26 okt: `v2/reproduce.py`** (`tables` sekunder / `evaluate` 33 min / `train` ca 10–15 h). `evaluate` på de
+  incheckade checkpointerna återskapade alla sex resultatfiler exakt (4 809 värden, 0 skillnader;
+  `results/reproduce_evaluate_report.md`). Omträning från grunden av c6_mL-alarmdirect_s30 gav bitidentiska vikter
+  (`results/reproduce_determinism.md`). Full omträning ej körd. Rapportens avsnitt 8 uppdaterat. Kvar: steg 4 (mänsklig granskare).

@@ -7,14 +7,14 @@ Three levels, from fast to complete. Each writes nothing outside its work direct
       interval), from the committed result files in results/. Writes results/reproduce_tables.md.
 
   python3 reproduce.py evaluate [--work DIR] [--all]
-      About 1.5-2 h on one core. Copies v2/ to DIR (default ./repro_work), deletes the committed result
+      About 35 min on one core (measured 26 Oct 2026: 33 min). Copies v2/ to DIR (default ./repro_work), deletes the committed result
       files there, re-runs every evaluation on the committed checkpoints (the locked evaluators refuse to run
       if any locked code differs), compares each new result file with the committed one number by number,
       and builds the tables from the new files. --all also re-runs the two pilot evaluations (sprint 5a and
       sprint 6, about 2 h more).
 
   python3 reproduce.py train [--work DIR] [--jobs 2] [--only NAME[,NAME]]
-      About 25-35 h with two cores. Retrains every run behind the main tables from scratch, with exactly
+      Roughly 10-15 h with two cores (a 1 M-episode baseline run takes 23 min on one core; runs with a module take longer). Retrains every run behind the main tables from scratch, with exactly
       the arguments stored in the committed checkpoint, compares the new final weights with the committed
       ones, then runs `evaluate` on the retrained checkpoints. --only retrains the named runs only (no
       evaluation), e.g. --only c6_mL-alarmdirect_s30 for a one-hour determinism check.
