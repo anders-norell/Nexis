@@ -471,3 +471,10 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   self-model: testing attention-schema predictions in small RL agents"). Data (avsnitt 4) skild från tolkning (6), metodlärdomar,
   begränsningar, avvikelser (bilaga). Siffror kontrollerade mot results/*.json. Referenser utan länk citerade ur minnet.
   Avsnitt 8 hänvisar till reproducerbarhetsskriptet (steg 3, ej skrivet). Produktägaren har inte beslutat om extern granskning.
+- **Rapporten granskad 26 okt (annan Claude-instans, 19 kommentarer, "kan skickas ut efter ändringar").** Alla elva sakfel
+  prövade mot kod/JSON/källor och bekräftade: steg 0 matar matchningskarta + larm; larmet = ELLER; 1c:s bitkostnad på
+  modulens förlust; 1c utan larm saknar matchningssignal (två saker ändras); entropi 700k i sprint 4; H5 5a två frön; −0,29 =
+  kvarstående effekt; pilot utan larm max +0,7; bitar efter fångst −2,6 till +9,2; (b) föll också i frö 32, sammanvägt post hoc;
+  Liu/Piefke rättade. Införda, plus mellan-frö-medel, KI för steg 0, lokalisering 26–45 % på bedömda nivåer, skuggmodul,
+  begränsningar, nya referenser (ur minnet: Agarwal, Hewitt & Liang, Mnih 2014, Sperry, Wolpert), bilaga 12–14.
+  Kvar: steg 3 (reproducerbarhetsskript), mänsklig ML-granskare.
