@@ -1,0 +1,6 @@
+{"decision": "Produktägaren 26 okt 01:57: steg 0 nu, larmet direkt till policyn, förregistrerat som i specen. Inget nytt bygge mellan steg 1 och 5 utöver detta.",
+ "condition": "c6_mL-alarmdirect_s{30,31,32}: baslinjens policy (PriorityMapAgent, schema off) + matchningssignal och larm som indata per ruta (samma tillskott som 1c med larm gav modulen); ingen modul, ingen kanal",
+ "training": "train_rl.py oförändrad via train_alarm_direct.py; samma argument som c6_mL-off: p_capture 0.5, 1 000 000 episoder, ent_episodes 300000, batch 256, lr 0.001",
+ "test": "MVP-banken, frö 2 000 000 + i, 4 000 episoder, slutcheckpoint, oparat SE",
+ "rule": "Om larm direkt ligger inom 2 SE av 1c med larm (c6_mL-e1e-4) eller över i alla tre frön: modulen tillförde inget utöver jämförarsignalen. Annars: modulen tillförde något. Larm direkt minus Baslinje redovisas.",
+ "files": ["train_alarm_direct.py", "eval_step0.py"]}
