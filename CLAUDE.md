@@ -435,3 +435,9 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   huvudmått, beteendesignatur, prob på baslinjens dolda tillstånd, ett låst kriterium. Förslag: social fas villkoras av
   positiv kontroll i social miljö i stället för att 1c visat något. **Rapporten rättad:** 1b-E med facit ≈ 1c i vinst → policyns
   gradient troligen inte flaskhalsen; gapet = lokalisering vid fångst (57 % mot ideal 94 %).
+- **Förslag 26 okt (på produktägarens begäran): självmodell under socialt tryck, nollhypoteser från en ensam agent** (specen,
+  väntar på godkännande, inget byggt). Två agenter, brusig syn på den andras spotlight, egna ofullständiga ledtrådar;
+  ensam kontroll = uppspelad, icke-reagerande partner (samma indata). 2 × 2 ensam/social × kontinuerlig/symboler, socialt
+  som samarbete och tävling. H0-0 positiv kontroll (facit om den andras uppmärksamhet hjälper, grind 8a), H0-1 självmodell
+  lika ensam/socialt (låst huvudkriterium), H0-2 oberoende kod för egen/andras, H0-3 symboler × socialt, H0-4 sanning vid
+  samarbete = tävling. Kostnad 18–24 körningar, 15–25 h. Fyra beslutspunkter.
