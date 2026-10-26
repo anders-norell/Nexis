@@ -28,3 +28,4 @@ v2/results/c6_*.ckpt.npz
 v2/results/c6_*.best.npz
 v2/results/c6_runner.log
 v2/results/c6_*.final.npz
+v2/repro_*/
