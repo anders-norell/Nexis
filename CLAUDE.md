@@ -467,3 +467,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   uppfylld). Larm direkt till policyn: träff 80,9/81,3/81,1 % (frö 30–32); minus 1c med larm 0,0/−0,05/+0,6 p (z 0,0/−0,06/
   0,7); minus Baslinje +1,9/+2,6/+2,2 p (z 2,1/2,9/2,5, > 2 SE i alla frön, vilket 1c med larm inte klarade i frö 32).
   Sprint 6 sluten. Nästa: steg 2 (rapport), 3 (reproducerbarhetsskript).
+- **Steg 2 (rapport på engelska) utkast klart 26 okt:** https://claude.ai/artifact/WgWqgRBXEqaChu3NMB76JF ("A comparator, not a
+  self-model: testing attention-schema predictions in small RL agents"). Data (avsnitt 4) skild från tolkning (6), metodlärdomar,
+  begränsningar, avvikelser (bilaga). Siffror kontrollerade mot results/*.json. Referenser utan länk citerade ur minnet.
+  Avsnitt 8 hänvisar till reproducerbarhetsskriptet (steg 3, ej skrivet). Produktägaren har inte beslutat om extern granskning.
