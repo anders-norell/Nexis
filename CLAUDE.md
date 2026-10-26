@@ -482,3 +482,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   incheckade checkpointerna återskapade alla sex resultatfiler exakt (4 809 värden, 0 skillnader;
   `results/reproduce_evaluate_report.md`). Omträning från grunden av c6_mL-alarmdirect_s30 gav bitidentiska vikter
   (`results/reproduce_determinism.md`). Full omträning ej körd. Rapportens avsnitt 8 uppdaterat. Kvar: steg 4 (mänsklig granskare).
+- **26 okt 17:03: produktägaren mejlade Piefke och Thorat (Osnabrück)** med rapport-PDF, ordlista-PDF och länk till repot,
+  som gjordes publikt 26 okt. Pitch och mejltext: claude.ai-projektet, `claude/nexis_pitch.md`. Repo-dokument uppdaterade:
+  `docs/PROJECT_OVERVIEW.md`, `docs/report_v2.md` (ögonblicksbild), `v2/README.md`; `docs/spec_v2.md` märkt inaktuell.
+  Ordlistan har engelsk flik. Väntar på svar och/eller mänsklig ML-granskare. Inget nytt bygge.
