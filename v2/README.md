@@ -1,6 +1,7 @@
 # Nexis v2 — attention-schema predictions in small RL agents
 
 Report: [`../docs/report_v2.md`](../docs/report_v2.md) (draft for external review, not peer reviewed).
+Illustrated episode explaining the task and conditions (constructed, not a recorded run): https://claude.ai/artifact/YaJypo4vjvo7cFUKTaswsz#en
 
 ## Start here (reviewers)
 

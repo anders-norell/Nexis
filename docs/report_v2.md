@@ -29,7 +29,7 @@ The work ran in six sprints, each closed by a gate where the project lead approv
 
 ## 2 Environment and agents
 
-The agent searches a grid for one target with a hard spotlight; a salient distractor can capture the spotlight so that it lands somewhere other than where the agent aimed.
+The agent searches a grid for one target with a hard spotlight; a salient distractor can capture the spotlight so that it lands somewhere other than where the agent aimed. An illustrated episode, constructed to explain the task and the conditions rather than recorded from a run, is available at [Through the agent's eyes](https://claude.ai/artifact/YaJypo4vjvo7cFUKTaswsz#en).
 
 ### 2.1 Task
 

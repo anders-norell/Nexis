@@ -495,3 +495,7 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   `docs/report_v2.md` och `docs/PROJECT_OVERVIEW.md` uppdaterade. Utkast till svarsmejl givet. Hans designförslag (samma
   felsignal kräver olika handlingar beroende på var uppmärksamheten hamnade + kausala prov på policyns inre) = utgångspunkt
   om ny studie.
+- **27 okt: animationen "Nexis genom agentens ögon"** (https://claude.ai/artifact/YaJypo4vjvo7cFUKTaswsz, delad med länk)
+  rättad: märkt som konstruerad illustration, 57 %-siffran flyttad till 1b-E, steg 0 (larm direkt, 81,1 %) i berättelse och
+  diagram, ny slutsatskort med svagheter (absolut handlingsrymd, policyns representation ej prövad), 1a-punkten markerad som
+  uppskattning; svensk/engelsk växling (`#sv`/`#en`). Länkad från rapporten (avsnitt 2) och `v2/README.md`.
