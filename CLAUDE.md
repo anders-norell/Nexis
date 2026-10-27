@@ -499,3 +499,6 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   rättad: märkt som konstruerad illustration, 57 %-siffran flyttad till 1b-E, steg 0 (larm direkt, 81,1 %) i berättelse och
   diagram, ny slutsatskort med svagheter (absolut handlingsrymd, policyns representation ej prövad), 1a-punkten markerad som
   uppskattning; svensk/engelsk växling (`#sv`/`#en`). Länkad från rapporten (avsnitt 2) och `v2/README.md`.
+- **27 okt 09:18: svar skickat till Thorat (kopia Piefke)** av produktägaren, utan bilaga, hänvisar till `docs/report_v2.md`.
+  Inget påstående om medvetande; snävt resultat; titel och uppgiftsdesign erkänt för svaga; Piefke-jämförelsen rättad;
+  ev. uppföljning utgår från hans design. "No need to reply." Väntar på mänsklig ML-granskare. Inget nytt bygge.
