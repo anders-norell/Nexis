@@ -25,11 +25,13 @@ Rapport (engelska): `docs/report_v2.md`, levande version https://claude.ai/artif
 
 1. Ett korrekt schema som ges utifrån hjälper mycket (+6–7,5 procentenheter) och agenten lyder det även när det ljuger
    (H2, förregistrerat, klarat). Det visar att schemat behandlas som auktoritet, inte att det är förenklat.
-2. Ett schema som agenten fick lära sig själv (1b med facit, 1c utan) gav ingen självmodell. Den lilla vinsten kom från
-   en handkodad felsignal ("det jag såg stämmer inte med var jag siktade"); samma signal direkt till agenten utan modul
-   gav samma vinst (steg 0, förregistrerat).
+2. En schemamodul som agenten fick lära sig själv (1b med facit, 1c utan) gav ingen mätbar nytta utöver en handkodad
+   felsignal ("det jag såg stämmer inte med var jag siktade"); samma signal direkt till agenten utan modul gav samma
+   vinst (steg 0, förregistrerat). Om agentens eget nät modellerar sin uppmärksamhet är inte prövat.
 3. AST:s kännetecken, att schemats fel drar mot den avsedda platsen (H5), syntes inte.
 4. Metodlärdom: mått på "pekar schemat på avsikten" blev fem gånger sanna eller falska enbart genom sin konstruktion.
+5. Svaghet i designen (extern kommentar 27 okt): agenten väljer absoluta rutor och behöver aldrig veta var spotlighten
+   står, så uppgiften satte lite tryck på att modellera uppmärksamhet. Rapporten är reviderad efter det.
 
 ## Var saker finns i v2
 

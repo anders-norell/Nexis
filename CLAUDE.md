@@ -486,3 +486,12 @@ specen; kontrollera ändringar sedan förra sessionen innan arbetet börjar.
   som gjordes publikt 26 okt. Pitch och mejltext: claude.ai-projektet, `claude/nexis_pitch.md`. Repo-dokument uppdaterade:
   `docs/PROJECT_OVERVIEW.md`, `docs/report_v2.md` (ögonblicksbild), `v2/README.md`; `docs/spec_v2.md` märkt inaktuell.
   Ordlistan har engelsk flik. Väntar på svar och/eller mänsklig ML-granskare. Inget nytt bygge.
+- **27 okt: svar från Sushrut Thorat** (delade en GPT-konversation; frågade vilket påstående om AST och medvetande vi gör).
+  Kritiken bedömd som i huvudsak riktig: titeln överdrev (policyn kan själv representera uppmärksamhet); absolut
+  handlingsrymd gör att agenten aldrig behöver veta var spotlighten står (bara bokföring); H5-förutsägelsen följer inte av
+  AST utan extra antaganden; mejlet överdrev Piefke-jämförelsen (konvergens inom budget, minne/efferenskopia). Rapporten
+  reviderad: ny titel "A learned attention-schema module adds no benefit over hand-coded mismatch features in small RL search
+  agents", snävare sammanfattning, nytt diskussionsstycke om uppgiftens design, H5 och Piefke rättade, tre nya begränsningar.
+  `docs/report_v2.md` och `docs/PROJECT_OVERVIEW.md` uppdaterade. Utkast till svarsmejl givet. Hans designförslag (samma
+  felsignal kräver olika handlingar beroende på var uppmärksamheten hamnade + kausala prov på policyns inre) = utgångspunkt
+  om ny studie.
