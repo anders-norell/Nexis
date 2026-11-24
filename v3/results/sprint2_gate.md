@@ -60,4 +60,4 @@ Samma tvingade bias (β 4, 0,97) men **på målmeningen**, på samma 300 testtex
 - [x] Ablationen redovisad (negativ)
 - [x] Fristående granskning av koden (`sprint2_review.md`), åtgärdat utom läckage till nya ämnen (redovisat som begränsning)
 - [x] Resultatgranskning (`sprint2_result_review.md`): bedömningen korrekt med anmärkningar, införda ovan
-- [ ] Anders godkännande
+- [x] **Grind 2 godkänd av Anders 24 nov 18:27** ("ok vi gör så"): krit. 2 uppfyllt inom kända mallar, krit. 3 ej visat; styrningen görs om i sprint 3.
