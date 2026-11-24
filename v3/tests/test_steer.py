@@ -120,3 +120,36 @@ def test_value_of_and_forced_S():
     assert steer_eval.value_of(it.sentences[it.lure]) is None
     S = steer_eval.forced_S(2)
     assert abs(sum(S) - 1) < 1e-9 and S[2] == steer_eval.FORCED_MASS
+
+
+def test_mentions_word_boundary_and_digits():
+    assert steer_eval.mentions("It is red.", "red") and not steer_eval.mentions("a hundred", "red")
+    assert steer_eval.mentions("By 3 goals", "three") and not steer_eval.mentions("By 13 goals", "three")
+    assert not steer_eval.mentions("anything", None)
+
+
+def test_silent_steering_detected(measurer, monkeypatch):
+    st = Steerer(measurer.model, measurer.layers)
+    st.remove()  # hooken bortkopplad: styrningen blir tyst avslagen
+    try:
+        steer_eval.run(measurer, st, ITEMS[0], [0.97, 0.01, 0.01, 0.01], 2.0)
+        assert False, "borde ha upptäckt att styrningen aldrig anropades"
+    except RuntimeError:
+        pass
+
+
+def test_read_jsonl_skips_truncated_line(tmp_path):
+    f = tmp_path / "x.jsonl"
+    f.write_text('{"a": 1}\n{"a": 2', encoding="utf-8")
+    assert steer_eval.read_jsonl(f) == [{"a": 1}]
+
+
+def test_perm_condition_present(measurer, monkeypatch):
+    monkeypatch.setattr(steer_eval, "STATE_LAYERS", [1, 3])
+    st = Steerer(measurer.model, measurer.layers)
+    try:
+        sch = Schema(2, measurer.model.config.hidden_size, 8, 0.0).eval()
+        row = steer_eval.item_rows(measurer, st, sch, ITEMS[0], 2.0, 1, roll=2)
+    finally:
+        st.remove()
+    assert set(row) >= {"base", "own", "perm", "forced"} and row["roll"] == 2

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import random
 import sys
 import time
@@ -27,7 +28,7 @@ from nexis3.attention import DEFAULT_MODEL, Measurer, load_model, weights_checks
 from nexis3.schema import Schema  # noqa: E402
 from nexis3.segment import token_segment_ids  # noqa: E402
 from nexis3.steer import Steerer  # noqa: E402
-from nexis3.textgen import SYSTEM_PROMPT, TOPICS_V2, answer_correct, make_items_v2  # noqa: E402
+from nexis3.textgen import _NUM, SYSTEM_PROMPT, TOPICS_V2, answer_correct, make_items_v2  # noqa: E402
 
 STATE_LAYERS = [9, 13, 17]
 LATE_LAYERS = list(range(18, 28))
@@ -79,27 +80,59 @@ def value_of(sentence):
     return None  # lockmening: inget värde
 
 
+def mentions(answer, value):
+    """Ordgräns och siffra för talord, som answer_correct."""
+    if not value:
+        return False
+    a, v = answer.lower(), value.lower()
+    hit = lambda w: re.search(r"\b" + re.escape(w) + r"\b", a) is not None
+    return hit(v) or (v in _NUM and hit(_NUM[v]))
+
+
+def read_jsonl(f):
+    """Läser rader; en avhuggen sista rad (avbruten körning) hoppas över."""
+    if not f.exists():
+        return []
+    out = []
+    for line in f.read_text(encoding="utf-8").splitlines():
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError:
+            pass
+    return out
+
+
 def run(meas, steerer, it, S, beta):
     msgs = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": it.prompt}]
     ids, seg_ids = prompt_info(meas, msgs, it.sentences)
     if S is None or beta == 0:
         m = meas.measure(msgs, max_new_tokens=24, segment_texts=it.sentences)
     else:
+        c0 = steerer.calls
         with steerer.active(Steerer.make_bias(S, seg_ids, beta), start=len(ids) - 1):
             m = meas.measure(msgs, max_new_tokens=24, segment_texts=it.sentences)
+        if steerer.calls == c0:
+            raise RuntimeError("styrningen anropades aldrig (fel transformers-version?)")
     return {"A": m.A, "A_late": m.A_extra, "answer": m.answer, "correct": answer_correct(it, m.answer)}
 
 
-def item_rows(meas, steerer, schema, it, beta, forced_k, conds=("base", "own", "forced")):
+def item_rows(meas, steerer, schema, it, beta, forced_k, conds=("base", "own", "perm", "forced"), roll=1):
     msgs = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": it.prompt}]
     ids, seg_ids = prompt_info(meas, msgs, it.sentences)
     S_own = schema_S(meas, schema, ids, seg_ids)
-    row = {"idx": it.idx, "target": it.target, "lure": it.lure, "S_own": S_own, "forced_k": forced_k, "beta": beta}
+    row = {"idx": it.idx, "target": it.target, "lure": it.lure, "S_own": S_own, "forced_k": forced_k, "beta": beta,
+           "roll": roll, "forced_is_filler": value_of(it.sentences[forced_k]) is not None}
     for c in conds:
-        S = None if c == "base" else (S_own if c == "own" else forced_S(forced_k))
+        if c == "base":
+            S = None
+        elif c == "own":
+            S = S_own
+        elif c == "perm":   # kontroll: samma värden i S, flyttade till andra meningar
+            S = S_own[-roll:] + S_own[:-roll]
+        else:
+            S = forced_S(forced_k)
         r = run(meas, steerer, it, S, 0 if c == "base" else beta)
-        v = value_of(it.sentences[forced_k])
-        r["mentions_forced_value"] = bool(v) and v.lower() in r["answer"].lower()
+        r["mentions_forced_value"] = mentions(r["answer"], value_of(it.sentences[forced_k]))
         row[c] = r
     return row
 
@@ -108,7 +141,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("phase", choices=["beta", "test"])
     ap.add_argument("--model", default=DEFAULT_MODEL)
-    ap.add_argument("--dtype", default="auto")
+    ap.add_argument("--dtype", default="float32")  # samma som schemadatan
     ap.add_argument("--schema", default="models/schema_s.pt")
     ap.add_argument("--n", type=int, default=None)
     a = ap.parse_args()
@@ -124,7 +157,7 @@ def main():
     if a.phase == "beta":
         items = make_items_v2(1200, 2000)[1000:1000 + (a.n or 40)]  # valideringsdelen
         f = out / "sprint2_beta.jsonl"
-        done = {json.loads(l)["key"] for l in f.read_text(encoding="utf-8").splitlines()} if f.exists() else set()
+        done = {r["key"] for r in read_jsonl(f)}
         for it in items:
             fk = rng.choice([i for i in range(4) if i != it.target])
             for beta in BETAS:
@@ -138,12 +171,16 @@ def main():
                     fh.write(json.dumps(row, ensure_ascii=False) + "\n")
                 print(f"[{it.idx}] beta {beta}: tvingad A {row['forced']['A'][fk]:.2f}, egen rätt {row['own']['correct']}"
                       f"  {time.time() - t0:.0f} s", flush=True)
-        if not (out / "sprint2_beta_base.jsonl").exists():
-            with open(out / "sprint2_beta_base.jsonl", "w", encoding="utf-8") as fh:
-                for it in items:
-                    r = run(meas, steerer, it, None, 0)
-                    fh.write(json.dumps({"idx": it.idx, "target": it.target, **r}, ensure_ascii=False) + "\n")
-                    print(f"[{it.idx}] bas A mål {r['A'][it.target]:.2f}", flush=True)
+        fb = out / "sprint2_beta_base.jsonl"
+        done_b = {r["idx"] for r in read_jsonl(fb)}
+        with open(fb, "a", encoding="utf-8") as fh:
+            for it in items:
+                if it.idx in done_b:
+                    continue
+                r = run(meas, steerer, it, None, 0)
+                fh.write(json.dumps({"idx": it.idx, "target": it.target, **r}, ensure_ascii=False) + "\n")
+                fh.flush()
+                print(f"[{it.idx}] bas A mål {r['A'][it.target]:.2f}", flush=True)
     else:
         lock = out / "sprint2_beta_choice.json"
         if not lock.exists():
@@ -151,13 +188,14 @@ def main():
         beta = json.loads(lock.read_text(encoding="utf-8"))["beta"]
         items = make_items_v2(300, 3000)[:a.n] if a.n else make_items_v2(300, 3000)
         f = out / "sprint2_steer_test.jsonl"
-        done = {json.loads(l)["idx"] for l in f.read_text(encoding="utf-8").splitlines()} if f.exists() else set()
+        done = {r["idx"] for r in read_jsonl(f)}
         for it in items:
             fk = rng.choice([i for i in range(4) if i != it.target])  # dras även för klara texter: samma följd
+            roll = rng.choice([1, 2, 3])
             if it.idx in done:
                 continue
             t0 = time.time()
-            row = item_rows(meas, steerer, schema, it, beta, fk)
+            row = item_rows(meas, steerer, schema, it, beta, fk, roll=roll)
             with open(f, "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(row, ensure_ascii=False) + "\n")
             print(f"[{it.idx}] mål {it.target + 1} tvingad {fk + 1}: A på tvingad bas {row['base']['A'][fk]:.2f} "
