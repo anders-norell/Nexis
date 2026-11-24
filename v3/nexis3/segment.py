@@ -1,7 +1,7 @@
 """Meningsindelning och koppling token -> mening.
 
 Invariant: segmentens teckenintervall motsvarar exakt meningarna i texten
-(testas i tests/test_segment.py på kända exempel).
+(testas i tests/test_invariants.py, I2).
 """
 from __future__ import annotations
 
@@ -83,10 +83,10 @@ def split_sentences(text: str, offset: int = 0) -> list[Segment]:
 def token_segment_ids(offsets: list[tuple[int, int]], segments: list[Segment]) -> list[int]:
     """Segmentindex per token, -1 om token inte hör till något segment.
 
-    En token hör till det segment som innehåller tokenens första icke-blanka
-    tecken. Hanteras via teckenintervallet: token (a, b) tillhör segment s om
-    s.start <= a' < s.end där a' = första tecknet i [a, b) som ligger inom
-    något segment. Specialtokens har (0, 0) och får -1.
+    En token hör till det första segment som dess teckenintervall [a, b)
+    överlappar (en token som korsar en meningsgräns räknas alltså till den
+    tidigare meningen). Tokens som inte överlappar något segment, t.ex.
+    mallmarkörer och specialtokens, får -1.
     """
     ids = []
     for a, b in offsets:

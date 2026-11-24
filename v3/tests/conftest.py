@@ -16,7 +16,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from nexis3.attention import Measurer, freeze, load_model  # noqa: E402
 from nexis3.textgen import TASK_TEMPLATE, TOPICS, REPORT_QUESTION  # noqa: E402
 
+# Som Qwen2.5: standardsystemprompt läggs till tyst om ingen systemprompt ges.
 CHAT_TEMPLATE = (
+    "{% if not messages or messages[0]['role'] != 'system' %}<|im_start|>system\nYou are a helpful "
+    "assistant created to help. Answer questions.<|im_end|>\n{% endif %}"
     "{% for m in messages %}<|im_start|>{{ m['role'] }}\n{{ m['content'] }}<|im_end|>\n{% endfor %}"
     "{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
 )
@@ -26,7 +29,7 @@ def _tiny_tokenizer():
     from tokenizers import Tokenizer, decoders, models, pre_tokenizers, trainers
     from transformers import PreTrainedTokenizerFast
 
-    corpus = [TASK_TEMPLATE, REPORT_QUESTION]
+    corpus = [TASK_TEMPLATE, REPORT_QUESTION, "You are a helpful assistant created to help. Answer questions."]
     for _, s, q, vals in TOPICS:
         corpus += [s.format(v=v) for v in vals] + [q]
     corpus += ["Dr. Smith arrived at 3.5 p.m. today. He left! Did she? Yes.",

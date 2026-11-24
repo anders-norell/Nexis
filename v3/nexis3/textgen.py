@@ -45,6 +45,8 @@ TASK_TEMPLATE = (
     "Read these four sentences.\n\n{body}\n\n"
     "Question: {question} Answer in a few words."
 )
+SYSTEM_PROMPT = "You are a helpful assistant."  # uttrycklig, oberoende av mallens standard
+
 REPORT_QUESTION = (
     "Which of the four sentences did you focus on most when you answered? "
     "Reply with the number only (1, 2, 3 or 4)."
@@ -99,4 +101,5 @@ _NUM = {"three": "3", "four": "4", "five": "5", "six": "6", "seven": "7", "eight
 def answer_correct(item: Item, answer: str) -> bool:
     a = answer.lower()
     v = item.answer.lower()
-    return v in a or (v in _NUM and _NUM[v] in a)
+    hit = lambda w: re.search(r"\b" + re.escape(w) + r"\b", a) is not None
+    return hit(v) or (v in _NUM and hit(_NUM[v]))

@@ -1,5 +1,22 @@
 # Nexis — överlämning mellan sessioner
 
+**GÄLLER NU: v3 (från 21 nov 2026).** Styrdokument: claude.ai-projektet "AST implementation",
+`claude/nexis_v3_tradintro.md`, och läget i `claude/nexis_status.md`. Kod: `v3/` (se `v3/README.md`).
+Allt nedan om v1/v2 är historik från fas 1. Korta svar till produktägaren. Förutsättningar han inte själv
+formulerat märks "[Claudes förslag]".
+
+## v3 – status
+
+- **Sprint 1 (chatt + attention per mening), 24 nov 2026:** kod i `v3/` (Qwen2.5-1.5B-Instruct, A per mening
+  över lager 9–17, chatt `v3/chat.py`, textgenerator, `v3/baseline.py`, invarianttester I1–I3 med mutanter).
+  Fristående granskning: godkänd med anmärkningar (`v3/results/sprint1_review.md`). Allt utom läckaget (#2)
+  är åtgärdat (`v3/results/sprint1_review_response.md`). Arbetsytan har ingen GPU och Hugging Face är blockerat,
+  så modellen körs på produktägarens Windows-dator: `v3/bootstrap_windows.ps1`, som han klistrar in i PowerShell
+  själv. Skärmstyrningen får inte skriva i terminaler. PyTorch går nu att installera i arbetsytan från PyPI.
+  Testerna körs här på en liten slumpmodell. Grind 1 väntar på baslinjen och chatten.
+
+---
+
 Läs den här filen först i varje ny session. Uppdatera avsnittet **Status** och pusha vid varje sprintgrind.
 
 ## Projektet i korthet

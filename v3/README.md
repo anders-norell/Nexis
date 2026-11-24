@@ -53,3 +53,10 @@ python chat.py                        # http://localhost:7860
 python baseline.py --n 100 --seed 0   # results/baseline_s0.json
 ```
 På Windows: `powershell -ExecutionPolicy Bypass -File setup_windows.ps1 install|test|baseline|chat`.
+
+## Tolkning av baslinjen (efter granskningen)
+
+Frågan delar innehållsord bara med målmeningen, i 100 % av uppgifterna. Både "A pekar på målet" och
+"R = mål" kan därför förklaras av ytlig ordmatchning. R = mål kräver alltså ingen självinsyn. Baslinjen
+är en nollpunkt, inget mått på självkännedom. De intressanta fallen är de där argmax A ≠ mål
+(`when_A_not_target`). Granskning: `results/sprint1_review.md`, åtgärder: `results/sprint1_review_response.md`.

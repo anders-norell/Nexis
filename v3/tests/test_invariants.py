@@ -92,18 +92,27 @@ def test_I1_matches_bruteforce(measurer):
     full = torch.tensor([ids + ans])
     with torch.no_grad():
         att = measurer.model(full, output_attentions=True, use_cache=False).attentions
-    raw = [0.0] * 4
-    cnt = 0
+    raw, first, allmass = [0.0] * 4, [0.0] * 4, 0.0
+    # rad q förutsäger token q+1: från sista prompttoken till näst sista svarstoken
+    qs = range(len(ids) - 1, len(ids) + len(ans) - 1)
     for l in measurer.layers:
         H = att[l].shape[1]
         for h in range(H):
-            for q in range(len(ids), len(ids) + len(ans)):
-                cnt += 1
-                for k in range(len(ids)):
-                    if seg[k] >= 0:
-                        raw[seg[k]] += float(att[l][0, h, q, k])
+            for q in qs:
+                for k in range(q + 1):
+                    w = float(att[l][0, h, q, k])
+                    allmass += w
+                    if k < len(seg) and seg[k] >= 0:
+                        raw[seg[k]] += w
+                        if q == len(ids) - 1:
+                            first[seg[k]] += w
     ref = [r / sum(raw) for r in raw]
     assert max(abs(a - b) for a, b in zip(ref, m.A)) < 1e-5
+    assert abs(sum(raw) / allmass - m.mass_in_segments) < 1e-5
+    assert max(abs(a - b) for a, b in zip([f / sum(first) for f in first], m.A_first)) < 1e-5
+    ntok = [seg.count(k) for k in range(4)]
+    mean = [r / n for r, n in zip(raw, ntok)]
+    assert max(abs(a - b) for a, b in zip([x / sum(mean) for x in mean], m.A_mean)) < 1e-5
 
 
 def test_I1_mutants_fail(measurer):
@@ -130,8 +139,12 @@ def test_I2_generated_items(item):
     check_boundaries(body, got, [f"{k + 1}. {s}" for k, s in enumerate(item.sentences)])
 
 
-def test_I2_tokens_map_to_sentences(measurer):
-    msgs = [{"role": "user", "content": "Hej. Jag heter Anders. Vad heter du?"}]
+CHAT_CASES = [[{"role": "user", "content": "Hej. Jag heter Anders. Vad heter du?"}]] + [
+    [{"role": "user", "content": it.prompt}] for it in ITEMS]
+
+
+@pytest.mark.parametrize("msgs", CHAT_CASES, ids=lambda m: m[0]["content"][:20])
+def test_I2_tokens_map_to_sentences(measurer, msgs):
     prompt = measurer.render(msgs)
     segs, _ = measurer.locate_segments(prompt, msgs)
     ids, offs = measurer.encode(prompt)
@@ -141,6 +154,31 @@ def test_I2_tokens_map_to_sentences(measurer):
         assert measurer.tok.decode(toks).strip() == s.text
     # tokens utanför meningarna (mallmarkörer) får -1
     assert sid.count(-1) > 0
+
+
+def test_I2_not_fooled_by_default_system_prompt(measurer):
+    """Användartext som också finns i mallens automatiska systemprompt."""
+    prompt0 = measurer.render([{"role": "user", "content": "x"}])
+    sys_sentence = split_sentences(prompt0.split("\n")[1])[0].text  # första meningen i standardsystemprompten
+    msgs = [{"role": "user", "content": sys_sentence}]
+    prompt = measurer.render(msgs)
+    segs, _ = measurer.locate_segments(prompt, msgs)
+    assert len(segs) == 1 and segs[0].start == prompt.rfind(sys_sentence) != prompt.find(sys_sentence)
+
+
+def test_I2_duplicate_sentence_located_in_order(measurer):
+    s = "My dog is called Rex."
+    msgs = [{"role": "user", "content": f"{s}\nErik plays the piano.\n{s}"}]
+    prompt = measurer.render(msgs)
+    segs = measurer.locate_given(prompt, [s, "Erik plays the piano.", s])
+    assert segs[0].start < segs[1].start < segs[2].start
+    segs2, _ = measurer.locate_segments(prompt, msgs)
+    assert [x.start for x in segs2] == [x.start for x in segs]
+
+
+def test_I2_crossing_token_goes_to_first_sentence():
+    segs = [Segment("Ab.", 0, 3), Segment("Cd.", 4, 7)]
+    assert token_segment_ids([(2, 5), (5, 7), (3, 4), (0, 0)], segs) == [0, 1, -1, -1]
 
 
 def test_I2_given_segments_located(measurer):
@@ -179,8 +217,26 @@ def test_I3_mutant_fails(model_tok):
     if sum(p.numel() for p in model.parameters()) > 50_000_000:
         pytest.skip("mutanttestet kopierar modellen; görs på testmodellen")
     ck0 = weights_checksum(model)
-    m2 = copy.deepcopy(model)
-    with torch.no_grad():
-        next(m2.parameters()).view(-1)[0] += 1e-3
-    with pytest.raises(AssertionError):
-        check_weights_unchanged(ck0, weights_checksum(m2))
+    n = len(list(model.parameters()))
+    for j in (0, n // 2, n - 1):  # första, mitten, sista parametern
+        m2 = copy.deepcopy(model)
+        with torch.no_grad():
+            list(m2.parameters())[j].view(-1)[-1] += 1e-3
+        with pytest.raises(AssertionError):
+            check_weights_unchanged(ck0, weights_checksum(m2))
+    check_weights_unchanged(ck0, weights_checksum(copy.deepcopy(model)))
+
+
+# ---------------- positiv kontroll (bara riktiga modellen) ---------------------
+
+def test_A_positive_control_copy(measurer):
+    """Svaret är målmeningens unika värde; argmax A ska då peka på den meningen."""
+    if measurer.model.config.num_hidden_layers < 12:
+        pytest.skip("kräver den riktiga modellen (NEXIS_REAL_MODEL)")
+    items = make_items(40, seed=555)
+    hits = 0
+    for it in items:
+        m = measurer.measure([{"role": "user", "content": it.prompt}], answer=it.answer + ".",
+                             segment_texts=it.sentences)
+        hits += max(range(4), key=lambda k: m.A[k]) == it.target
+    assert hits >= 36, f"argmax A = målet i bara {hits}/40"

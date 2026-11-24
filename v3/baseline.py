@@ -23,8 +23,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from nexis3.attention import DEFAULT_MODEL, Measurer, load_model, weights_checksum  # noqa: E402
-from nexis3.textgen import REPORT_QUESTION, answer_correct, make_items, parse_report  # noqa: E402
+from nexis3.attention import DEFAULT_MODEL, Measurer, load_model, model_info, weights_checksum  # noqa: E402
+from nexis3.textgen import REPORT_QUESTION, SYSTEM_PROMPT, answer_correct, make_items, parse_report  # noqa: E402
 
 
 def wilson(k, n, z=1.96):
@@ -46,6 +46,8 @@ def prop(flags):
 
 def mean_se(xs):
     n = len(xs)
+    if n == 0:
+        return {"mean": None, "se": None, "n": 0}
     m = sum(xs) / n
     v = sum((x - m) ** 2 for x in xs) / (n - 1) if n > 1 else 0.0
     return {"mean": m, "se": math.sqrt(v / n), "n": n}
@@ -55,17 +57,19 @@ def run_items(meas: Measurer, items, log=print):
     rows = []
     for it in items:
         t0 = time.time()
-        msgs = [{"role": "user", "content": it.prompt}]
+        msgs = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": it.prompt}]
         m1 = meas.measure(msgs, max_new_tokens=24, segment_texts=it.sentences)
         msgs2 = msgs + [{"role": "assistant", "content": m1.answer}, {"role": "user", "content": REPORT_QUESTION}]
         # A under rapportsvaret mäts över de fyra meningarna i första meddelandet.
         m2 = meas.measure(msgs2, max_new_tokens=6, segment_texts=it.sentences)
         R = parse_report(m2.answer)
-        a_arg = max(range(4), key=lambda k: m1.A[k])
+        am = lambda v: max(range(4), key=lambda k: v[k])
+        a_arg = am(m1.A)
         row = {
             "idx": it.idx, "target": it.target, "topics": it.topics,
             "answer": m1.answer, "task_correct": answer_correct(it, m1.answer),
             "A": m1.A, "A_argmax": a_arg, "mass_in_segments": m1.mass_in_segments,
+            "A_mean": m1.A_mean, "A_mean_argmax": am(m1.A_mean), "A_first": m1.A_first, "A_first_argmax": am(m1.A_first),
             "A_per_layer": m1.per_layer,
             "report_text": m2.answer, "R": R, "A_report": m2.A,
             "secs": round(time.time() - t0, 2),
@@ -85,9 +89,17 @@ def summarize(rows):
         "R_equals_A_argmax": sub(lambda r: r["R"] == r["A_argmax"]),
         "task_correct": sub(lambda r: r["task_correct"]),
         "R_unparsable": sub(lambda r: r["R"] is None),
+        "A_mean_points_to_target": sub(lambda r: r["A_mean_argmax"] == r["target"]),
+        "A_first_points_to_target": sub(lambda r: r["A_first_argmax"] == r["target"]),
         "A_on_target": mean_se([r["A"][r["target"]] for r in rows]),
         "mass_in_segments": mean_se([r["mass_in_segments"] for r in rows]),
         "chance": 0.25,
+    }
+    off = [r for r in rows if r["A_argmax"] != r["target"]]  # fallen där A och målet skiljer sig
+    out["when_A_not_target"] = {
+        "n": len(off),
+        "R_equals_A_argmax": sub(lambda r: r["R"] == r["A_argmax"], off) if off else None,
+        "R_equals_target": sub(lambda r: r["R"] == r["target"], off) if off else None,
     }
     by_pos = {}
     for p in range(4):
@@ -122,6 +134,8 @@ def main():
     ck1 = weights_checksum(model)
     res = {
         "model": a.model, "dtype": str(next(model.parameters()).dtype), "layers": meas.layers,
+        "model_info": model_info(model, tok), "system_prompt": SYSTEM_PROMPT,
+        "A_definition": "summa över meningens tokens, medel över lager/huvuden/svarspositioner (rad n_p-1..L-2), normerat",
         "n": a.n, "seed": a.seed, "minutes": round((time.time() - t0) / 60, 1),
         "weights_sha256_before": ck0, "weights_sha256_after": ck1, "weights_unchanged": ck0 == ck1,
         "platform": platform.platform(), "python": sys.version.split()[0],
@@ -131,9 +145,12 @@ def main():
     Path(a.out).write_text(json.dumps(res, indent=1, ensure_ascii=False), encoding="utf-8")
     s = res["summary"]
     print("\n=== Baslinje ===")
-    for k in ["A_points_to_target", "R_equals_target", "R_equals_A_argmax", "task_correct", "R_unparsable"]:
+    for k in ["A_points_to_target", "A_mean_points_to_target", "A_first_points_to_target", "R_equals_target", "R_equals_A_argmax", "task_correct", "R_unparsable"]:
         v = s[k]
         print(f"{k:22s} {v['k']:3d}/{v['n']}  {v['p']:.2f} ± {v['se']:.2f}  (95 %: {v['wilson95'][0]:.2f}–{v['wilson95'][1]:.2f})")
+    w = s["when_A_not_target"]
+    if w["n"]:
+        print(f"när argmax A != mål (n={w['n']}): R = argmax A {w['R_equals_A_argmax']['p']:.2f}, R = mål {w['R_equals_target']['p']:.2f}")
     print(f"A på målet (medel)      {s['A_on_target']['mean']:.3f} ± {s['A_on_target']['se']:.3f}")
     print(f"vikter orörda: {res['weights_unchanged']}   sparat: {a.out}")
 
