@@ -182,7 +182,7 @@ def main():
                 fh.flush()
                 print(f"[{it.idx}] bas A mål {r['A'][it.target]:.2f}", flush=True)
     else:
-        lock = out / "sprint2_beta_choice.json"
+        lock = Path("models/sprint2_beta_choice.json")  # följer med koden (results/ kopieras inte av startskriptet)
         if not lock.exists():
             sys.exit("Välj beta först (results/sprint2_beta_choice.json saknas).")
         beta = json.loads(lock.read_text(encoding="utf-8"))["beta"]

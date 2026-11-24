@@ -1,0 +1,42 @@
+{
+ "beta": 4.0,
+ "table": {
+  "0.5": {
+   "n": 40,
+   "forced_shift": 0.37117441855371,
+   "forced_flip_rate": 0.029411764705882353,
+   "own_acc": 0.825,
+   "base_acc": 0.85,
+   "ok_a": false,
+   "ok_b": true
+  },
+  "1.0": {
+   "n": 40,
+   "forced_shift": 0.6605975542217493,
+   "forced_flip_rate": 0.029411764705882353,
+   "own_acc": 0.85,
+   "base_acc": 0.85,
+   "ok_a": false,
+   "ok_b": true
+  },
+  "2.0": {
+   "n": 40,
+   "forced_shift": 0.7981736484915019,
+   "forced_flip_rate": 0.029411764705882353,
+   "own_acc": 0.875,
+   "base_acc": 0.85,
+   "ok_a": false,
+   "ok_b": true
+  },
+  "4.0": {
+   "n": 40,
+   "forced_shift": 0.8043355096131564,
+   "forced_flip_rate": 0.3235294117647059,
+   "own_acc": 0.85,
+   "base_acc": 0.85,
+   "ok_a": true,
+   "ok_b": true
+  }
+ },
+ "rule": "results/sprint2_prereg.md, till\u00e4gg 24 nov"
+}
