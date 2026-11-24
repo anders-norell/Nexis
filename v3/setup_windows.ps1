@@ -34,4 +34,5 @@ if ($step -eq "extract3") {
   & $py extract.py --split test3  | Tee-Object -Append results\extract3.log
   & $py extract.py --split train3 | Tee-Object -Append results\extract3.log
 }
+if ($step -eq "extract3b") { & $py extract.py --split test3b | Tee-Object -Append results\extract3b.log }
 if ($step -eq "chat") { & $py chat.py }

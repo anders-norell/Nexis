@@ -210,3 +210,49 @@ def make_items_v3(n: int, seed: int, split: str) -> list[Item2]:
 
 def make(version: int, n: int, seed: int):
     return make_items(n, seed) if version == 1 else make_items_v2(n, seed)
+
+
+@dataclass
+class Item3(Item2):
+    twin: int = 0            # 0 = original, 1 = tvilling (samma uppbyggnad, andra ämnen)
+
+
+def make_twins_v3(n_pairs: int, seed: int) -> list[Item3]:
+    """Sprint 3 steg 2c: symmetripar på testämnena. Varje par har samma målposition, lockposition och
+    fyllnadspositioner men tre helt andra ämnen (inga gemensamma ämnen inom paret). Ordning: x0, x0', x1, x1', ...
+    Båda i paret har samma idx. [Claudes förslag]"""
+    from .topics_v3 import TEST_TOPICS, TOPICS_V3
+    bank = [t for t in TOPICS_V3 if t[0] in TEST_TOPICS]
+    rng = random.Random(seed)
+    targets = [i % 4 for i in range(n_pairs)]
+    rng.shuffle(targets)
+
+    def build(idx, tgt, others, a, b, c):
+        va, vb, vc = (rng.choice(t[4]) for t in (a, b, c))
+        sents = [None] * 4
+        sents[tgt] = a[1].format(v=va)
+        sents[others[0]] = a[3]
+        sents[others[1]] = b[1].format(v=vb)
+        sents[others[2]] = c[1].format(v=vc)
+        pat = re.compile(r"\b" + re.escape(va.lower()) + r"\b")
+        if sum(bool(pat.search(s.lower())) for s in sents) != 1 or pat.search(a[2].lower()):
+            return None
+        topics = [""] * 4
+        topics[tgt], topics[others[0]], topics[others[1]], topics[others[2]] = a[0], a[0] + "-lure", b[0], c[0]
+        body = "\n".join(f"{k + 1}. {s}" for k, s in enumerate(sents))
+        return Item3(idx, sents, topics, tgt, a[2], va, TASK_TEMPLATE.format(body=body, question=a[2]), lure=others[0])
+
+    items = []
+    for idx in range(n_pairs):
+        tgt = targets[idx]
+        while True:
+            six = rng.sample(bank, 6)
+            others = [i for i in range(4) if i != tgt]
+            rng.shuffle(others)
+            x = build(idx, tgt, others, *six[:3])
+            y = build(idx, tgt, others, *six[3:])
+            if x is not None and y is not None:
+                break
+        y.twin = 1
+        items += [x, y]
+    return items
