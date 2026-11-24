@@ -96,6 +96,7 @@ class Measurement:
     A_mean: list[float] = field(default_factory=list)
     A_first: list[float] = field(default_factory=list)
     n_tokens: int = 0
+    states: dict | None = None       # {"seg": (S, Ls, d), "last": (Ls, d)} om STATE_LAYERS satt
     answer: str = ""
     prompt: str = ""
 
@@ -172,6 +173,7 @@ class Measurer:
 
     # ---- mätning ------------------------------------------------------------
     MAX_TOKENS = 1500  # attention för alla lager hålls i minnet; längre samtal avvisas
+    STATE_LAYERS: list[int] | None = None  # sätts för att spara inre tillstånd (schemats indata)
 
     @torch.no_grad()
     def attention_per_segment(self, prompt_ids, answer_ids, seg_ids, n_seg):
@@ -179,7 +181,9 @@ class Measurer:
         if len(full) > self.MAX_TOKENS:
             raise ValueError(f"samtalet är {len(full)} tokens, max {self.MAX_TOKENS}; rensa chatten")
         x = torch.tensor([full])
-        out = self.model(x, attention_mask=torch.ones_like(x), output_attentions=True, use_cache=False)
+        want = self.STATE_LAYERS is not None
+        out = self.model(x, attention_mask=torch.ones_like(x), output_attentions=True, use_cache=False,
+                         output_hidden_states=want)
         n_p = len(prompt_ids)
         q = list(range(n_p - 1, len(full) - 1)) if answer_ids else [n_p - 1]
         owner = torch.full((len(full),), -1, dtype=torch.long)
@@ -199,7 +203,14 @@ class Measurer:
         raw = torch.stack(per_layer_raw).mean(0)
         tot = torch.stack(total).mean()
         norm = lambda v: (v / v.sum()).tolist()
-        return {
+        states = None
+        if want:
+            # Bara promptens positioner (kausalt: oberoende av svaret). hidden_states[l+1] = utdata från lager l.
+            hs = torch.stack([out.hidden_states[l + 1][0, :n_p].float() for l in self.STATE_LAYERS])  # (Ls, n_p, d)
+            oh = onehot[:n_p]                                                                     # (n_p, S)
+            seg_mean = torch.einsum("lpd,ps->sld", hs, oh) / oh.sum(0).clamp(min=1)[:, None, None]
+            states = {"seg": seg_mean.half(), "last": hs[:, n_p - 1].half()}
+        return {"states": states,
             "A": norm(raw), "mass": float(raw.sum() / tot), "per_layer": [norm(r) for r in per_layer_raw],
             "A_mean": norm(raw / n_tok), "A_first": norm(torch.stack(first_raw).mean(0)), "n_tokens": len(full),
         }
@@ -226,7 +237,7 @@ class Measurer:
             ans_ids = self.tok(answer, add_special_tokens=False)["input_ids"]
         r = self.attention_per_segment(ids, ans_ids, seg_ids, len(segs))
         return Measurement(segs, owner, r["A"], r["mass"], r["per_layer"], list(self.layers),
-                           r["A_mean"], r["A_first"], r["n_tokens"], answer, prompt)
+                           r["A_mean"], r["A_first"], r["n_tokens"], r["states"], answer, prompt)
 
 
 def model_info(model, tok) -> dict:
