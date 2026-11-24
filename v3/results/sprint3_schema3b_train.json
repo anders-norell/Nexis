@@ -1,0 +1,94 @@
+{
+ "hyperparams": {
+  "k": 32,
+  "h": 64,
+  "dropout": 0.2
+ },
+ "val_KL": 0.11295253038406372,
+ "val_topics": [
+  "cheese",
+  "football",
+  "game",
+  "hobby",
+  "metal",
+  "train"
+ ],
+ "n_train": 768,
+ "n_val": 292,
+ "val": {
+  "n": 292,
+  "S_argmax_eq_A_argmax": 0.6438356164383562,
+  "recency_eq_A_argmax": 0.2534246575342466,
+  "overlap_eq_A_argmax": 0.3082191780821918,
+  "vs_recency": {
+   "diff": 0.3904109589041096,
+   "se": 0.0294093558884838,
+   "z": 13.275059827372413,
+   "n": 292
+  },
+  "vs_overlap": {
+   "diff": 0.3356164383561644,
+   "se": 0.03483466254534851,
+   "z": 9.634554028455183,
+   "n": 292
+  },
+  "KL_A_S": 0.11295254528522491,
+  "corr_S_A": 0.7378706932067871,
+  "S_argmax_eq_target": 0.4623287671232877,
+  "A_argmax_eq_target": 0.678082191780822,
+  "S_argmax_eq_A_argmax_when_A_not_target": [
+   0.7553191489361702,
+   94
+  ],
+  "target_eq_A_argmax": 0.678082191780822,
+  "vs_target": {
+   "diff": -0.03424657534246575,
+   "se": 0.04224682493947492,
+   "z": -0.8106307489741358,
+   "n": 292
+  }
+ },
+ "test3_descriptive": {
+  "n": 300,
+  "S_argmax_eq_A_argmax": 0.53,
+  "recency_eq_A_argmax": 0.36333333333333334,
+  "overlap_eq_A_argmax": 0.21,
+  "vs_recency": {
+   "diff": 0.16666666666666666,
+   "se": 0.032657587526327816,
+   "z": 5.1034592353860715,
+   "n": 300
+  },
+  "vs_overlap": {
+   "diff": 0.32,
+   "se": 0.036465955167630335,
+   "z": 8.775308326053496,
+   "n": 300
+  },
+  "KL_A_S": 0.11723167449235916,
+  "corr_S_A": 0.64972984790802,
+  "S_argmax_eq_target": 0.4866666666666667,
+  "A_argmax_eq_target": 0.74,
+  "S_argmax_eq_A_argmax_when_A_not_target": [
+   0.5128205128205128,
+   78
+  ],
+  "target_eq_A_argmax": 0.74,
+  "vs_target": {
+   "diff": -0.21,
+   "se": 0.03803565774052998,
+   "z": -5.521134968470086,
+   "n": 300
+  }
+ },
+ "test3_caricature": {
+  "spearman_dist": 0.27205008268356323,
+  "top10_overlap": 0.16833890974521637
+ },
+ "note": "test3 var redan sedd (steg 2); beskrivande, ingen bedömning.",
+ "model_sha256": "7ad0ce2545286b1707c0ed794110c015c6cb24a5803d5e2a98a8c75faccc67b1",
+ "test3_caricature_old_schema": {
+  "spearman_dist": 0.33407971262931824,
+  "top10_overlap": 0.23232999444007874
+ }
+}
