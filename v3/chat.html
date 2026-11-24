@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Nexis v3 – chatt</title>
+<style>
+  :root { --bg:#f6f5f1; --fg:#1d1d1b; --muted:#6b6a65; --line:#dcdad3; --user:#e8eef7; --bot:#fff; --bar:#2f6db5; --bar2:#c9772b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--fg);
+         height:100vh; display:grid; grid-template-rows:auto 1fr; }
+  header { padding:10px 16px; border-bottom:1px solid var(--line); display:flex; gap:16px; align-items:baseline; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; }
+  header span { color:var(--muted); font-size:13px; }
+  main { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); min-height:0; }
+  #chat { display:flex; flex-direction:column; min-height:0; border-right:1px solid var(--line); }
+  #log { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .msg { padding:8px 12px; border-radius:8px; max-width:90%; white-space:pre-wrap; border:1px solid var(--line); cursor:pointer; }
+  .msg.user { background:var(--user); align-self:flex-end; }
+  .msg.assistant { background:var(--bot); align-self:flex-start; }
+  .msg.sel { outline:2px solid var(--bar); }
+  form { display:flex; gap:8px; padding:12px; border-top:1px solid var(--line); }
+  textarea { flex:1; resize:vertical; min-height:56px; font:inherit; padding:8px; border:1px solid var(--line); border-radius:6px; }
+  button { font:inherit; padding:8px 14px; border:1px solid var(--fg); background:var(--fg); color:#fff; border-radius:6px; cursor:pointer; }
+  button.sec { background:transparent; color:var(--fg); }
+  button:disabled { opacity:.5; cursor:wait; }
+  #att { overflow:auto; padding:16px; }
+  #att h2 { font-size:14px; margin:0 0 4px; }
+  #att p.note { color:var(--muted); font-size:13px; margin:0 0 12px; }
+  .row { display:grid; grid-template-columns:3.2em 1fr; gap:8px; align-items:start; padding:4px 0; border-bottom:1px dotted var(--line); }
+  .pct { font-variant-numeric:tabular-nums; text-align:right; color:var(--muted); font-size:13px; }
+  .txt { font-size:14px; }
+  .txt .who { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; margin-right:6px; }
+  .bar { height:6px; background:var(--bar); border-radius:3px; margin-top:3px; }
+  .row.top .txt { font-weight:600; }
+  details { margin-top:16px; font-size:13px; }
+  table { border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  td, th { padding:2px 6px; border-bottom:1px solid var(--line); text-align:right; }
+  .err { color:#a32; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Nexis v3 · sprint 1</h1>
+  <span id="info">laddar…</span>
+  <span id="ck"></span>
+</header>
+<main>
+  <section id="chat">
+    <div id="log"></div>
+    <form id="f">
+      <textarea id="in" placeholder="Skriv ett meddelande. Enter skickar, Shift+Enter ny rad."></textarea>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button id="send">Skicka</button>
+        <button type="button" class="sec" id="clear">Rensa</button>
+        <button type="button" class="sec" id="check">Kontrollera vikter</button>
+      </div>
+    </form>
+  </section>
+  <section id="att">
+    <h2>Attention per mening</h2>
+    <p class="note" id="note">Visas för senaste svaret. Klicka på ett svar i chatten för att se dess mätning.</p>
+    <div id="rows"></div>
+    <details id="layers"><summary>Per lager</summary><div id="lt"></div></details>
+  </section>
+</main>
+<script>
+const log = document.getElementById('log'), inp = document.getElementById('in'), send = document.getElementById('send');
+let msgs = [], meas = {}; // meas[index i msgs] = mätning för det svaret
+const who = r => r === 'user' ? 'du' : 'modellen';
+
+fetch('/api/info').then(r => r.json()).then(i => {
+  document.getElementById('info').textContent = `${i.model} · ${i.dtype} · lager ${i.layers[0]}–${i.layers[i.layers.length-1]} av ${i.n_layers}`;
+});
+
+function render() {
+  log.innerHTML = '';
+  msgs.forEach((m, k) => {
+    const d = document.createElement('div');
+    d.className = 'msg ' + m.role;
+    d.textContent = m.content;
+    if (m.role === 'assistant') d.onclick = () => show(k);
+    log.appendChild(d);
+  });
+  log.scrollTop = log.scrollHeight;
+}
+
+function show(k) {
+  const r = meas[k]; if (!r) return;
+  [...log.children].forEach((el, j) => el.classList.toggle('sel', j === k));
+  const max = Math.max(...r.segments.map(s => s.A));
+  const rows = document.getElementById('rows'); rows.innerHTML = '';
+  r.segments.forEach(s => {
+    const row = document.createElement('div'); row.className = 'row' + (s.A === max ? ' top' : '');
+    row.innerHTML = `<div class="pct">${(100*s.A).toFixed(1)} %</div><div class="txt"><span class="who"></span><span class="t"></span><div class="bar"></div></div>`;
+    row.querySelector('.who').textContent = who(msgs[s.msg]?.role) + ' ' + (s.msg + 1);
+    row.querySelector('.t').textContent = s.text;
+    row.querySelector('.bar').style.width = (100 * s.A / max) + '%';
+    rows.appendChild(row);
+  });
+  document.getElementById('note').textContent =
+    `Svar ${k+1}. Andel av attention till meningarna (resten till mallmarkörer m.m.): ${(100*r.mass_in_segments).toFixed(0)} %. Summa över meningarna = 100 %.`;
+  let h = '<table><tr><th>lager</th>' + r.segments.map((_, j) => `<th>${j+1}</th>`).join('') + '</tr>';
+  r.per_layer.forEach((row, li) => { h += `<tr><td>${r.layers[li]}</td>` + row.map(v => `<td>${(100*v).toFixed(0)}</td>`).join('') + '</tr>'; });
+  document.getElementById('lt').innerHTML = h + '</table>';
+}
+
+document.getElementById('f').onsubmit = async e => {
+  e.preventDefault();
+  const text = inp.value.trim(); if (!text) return;
+  msgs.push({role: 'user', content: text}); inp.value = ''; render();
+  send.disabled = true; send.textContent = 'Tänker…';
+  try {
+    const res = await fetch('/api/chat', {method: 'POST', headers: {'Content-Type': 'application/json'},
+                                          body: JSON.stringify({messages: msgs})});
+    const r = await res.json();
+    if (r.error) throw new Error(r.error);
+    msgs.push({role: 'assistant', content: r.answer});
+    meas[msgs.length - 1] = r; render(); show(msgs.length - 1);
+  } catch (err) {
+    msgs.pop(); render();
+    document.getElementById('note').innerHTML = '<span class="err"></span>';
+    document.querySelector('#note .err').textContent = 'Fel: ' + err.message;
+  }
+  send.disabled = false; send.textContent = 'Skicka';
+};
+inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('f').requestSubmit(); } });
+document.getElementById('clear').onclick = () => { msgs = []; meas = {}; render(); document.getElementById('rows').innerHTML = ''; };
+document.getElementById('check').onclick = async () => {
+  const c = await (await fetch('/api/checksum')).json();
+  document.getElementById('ck').textContent = c.unchanged ? 'vikter orörda ✓' : 'VIKTER ÄNDRADE';
+};
+</script>
+</body>
+</html>
