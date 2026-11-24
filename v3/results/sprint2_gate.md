@@ -17,26 +17,30 @@ lockmeningen i 13 av 16 fall. Rapporten "vilken mening fokuserar du på" är en 
 ## G2b′ – tvingat schema gör svaret fel: KLARAD (`sprint2_steer.json`)
 β = 4, vald enligt den förregistrerade regeln på 40 valideringstexter (`sprint2_beta_choice.json`).
 - Fel svar: tvingat schema **36,7 %** mot 20,7 % utan styrning. Skillnad +16 p, SE 3,1, **z 5,2**.
-- Svaret använder aldrig den tvingade meningens värde (0 av 193 fyllnadsmeningar). Modellen tappar målet och faller
-  tillbaka på lockmeningen eller hittar på ("The antique volume was produced in 1850"). Den läser alltså inte den
-  mening schemat pekar på.
+- Uppdelat: tvingad lockmening −26 p, tvingad fyllnadsmening −10 p (resultatgranskningen).
+- Svaret tar aldrig över värdet i den tvingade fyllnadsmeningen (0 av 193). Värdet har dock fel typ för frågan, så det
+  säger lite om huruvida meningen läses.
+- **Förbehåll (resultatgranskningen):** vid β 2 ligger A redan på 0,99 på den tvingade meningen, men bara 3 % av svaren blir fel.
+  Vid β 4 blir 32 % fel. Effekten följer biasens storlek och syns inte i A. Utan doskontroll (samma bias på *målet*) visar G2b′
+  att en stor bias i mittlagren stör, inte att ett falskt schema styr.
 
 ## Redovisat (beskrivande)
 | Mått | Värde |
 | --- | --- |
 | A på tvingad mening, lager 9–17 (styrda) | 0,18 → 1,00 (per konstruktion) |
 | A på tvingad mening, lager 18–27 (ej styrda) | 0,17 → 0,19 (+0,03, z 4,1): **senare lager tar nästan inte efter** |
-| Ablation: rätt svar, schemats egen S mot ingen styrning | 75,7 % mot 79,3 % (−3,7 p, z −1,5): **schemat hjälper inte** |
+| Ablation: rätt svar, schemats egen S mot ingen styrning | 75,7 % mot 79,3 % (−3,7 p, z −1,5): **schemat hjälper inte**; när S pekar rätt −8 p (z −3,2, i efterhand) |
 | Kontroll: egen S mot omflyttad S ("perm") | 75,7 % mot 80,0 % (−4,3 p, z −2,0) |
 | A på målet med egen S, lager 9–17 / 18–27 | +0,25 (z 19,7) / −0,02 (z −2,7) |
+| A_late på målet med tvingat S | −0,06 (z −6,3) |
+| perm: A på målet, lager 9–17 | 0,44 → 0,14 utan att rätt-andelen sjunker (80 mot 79 %) |
 | Fel utan styrning som egen S rättade | 20 av 62 (men 31 rätta blev fel) |
 
 ## Tolkning
 - **Krit. 2 (schema):** uppfyllt inom kända mallar. S är en förenklad, användbar modell av A, och den följer A även när A är fel.
-- **Krit. 3 (styrning):** delvis uppfyllt. Styrning via schemat påverkar beteendet: ett falskt schema stör svaret
-  (G2b′). Men schemat *hjälper* inte (ablationen), och påverkan når knappt de senare lagren. Effekten är störning
-  snarare än styrning: när mittlagrens attention flyttas förlorar modellen informationen, men den hämtar inte in
-  den nya meningen.
+- **Krit. 3 (styrning): inte visat.** G2b′ är formellt klarad, men visar bara att en stor bias i mittlagren stör svaret.
+  Schemat hjälper inte, och att förstärka rätt mening skadar (−8 p). Påverkan når knappt de senare lagren. Mittlagrens
+  attention per mening är inte den variabel som styr svaret: perm flyttar den kraftigt utan effekt på svaret.
 - Det här är en öppen-slinga-styrning på β = 4 i mittlagren. Hur styrningen kan göras verkningsfull är en designfråga
   för sprint 3, där rapporten (LoRA) och kontrollmodellen ska byggas. Där kan det vara bättre att låta en LoRA lära sig
   använda schemat än att lägga en fast bias.
@@ -46,5 +50,5 @@ lockmeningen i 13 av 16 fall. Rapporten "vilken mening fokuserar du på" är en 
 - [x] G2b′ klarad
 - [x] Ablationen redovisad (negativ)
 - [x] Fristående granskning av koden (`sprint2_review.md`), åtgärdat utom läckage till nya ämnen (redovisat som begränsning)
-- [ ] Resultatgranskning (`sprint2_result_review.md`)
+- [x] Resultatgranskning (`sprint2_result_review.md`): bedömningen korrekt med anmärkningar, införda ovan
 - [ ] Anders godkännande

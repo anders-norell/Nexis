@@ -29,4 +29,5 @@ if ($step -eq "extract") {
 }
 if ($step -eq "steer_beta") { & $py steer_eval.py beta | Tee-Object -Append results\steer.log }
 if ($step -eq "steer_test") { & $py steer_eval.py test | Tee-Object -Append results\steer.log }
+if ($step -eq "steer_dose") { & $py steer_eval.py dose | Tee-Object -Append results\steer.log }
 if ($step -eq "chat") { & $py chat.py }

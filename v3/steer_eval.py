@@ -139,7 +139,7 @@ def item_rows(meas, steerer, schema, it, beta, forced_k, conds=("base", "own", "
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("phase", choices=["beta", "test"])
+    ap.add_argument("phase", choices=["beta", "test", "dose"])
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--dtype", default="float32")  # samma som schemadatan
     ap.add_argument("--schema", default="models/schema_s.pt")
@@ -181,6 +181,18 @@ def main():
                 fh.write(json.dumps({"idx": it.idx, "target": it.target, **r}, ensure_ascii=False) + "\n")
                 fh.flush()
                 print(f"[{it.idx}] bas A mål {r['A'][it.target]:.2f}", flush=True)
+    elif a.phase == "dose":  # doskontroll i efterhand: samma tvingade bias, men på målmeningen
+        beta = json.loads(Path("models/sprint2_beta_choice.json").read_text(encoding="utf-8"))["beta"]
+        items = make_items_v2(300, 3000)[:a.n] if a.n else make_items_v2(300, 3000)
+        f = out / "sprint2_dose.jsonl"
+        done = {r["idx"] for r in read_jsonl(f)}
+        for it in items:
+            if it.idx in done:
+                continue
+            r = run(meas, steerer, it, forced_S(it.target), beta)
+            with open(f, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps({"idx": it.idx, "target": it.target, "lure": it.lure, **r}, ensure_ascii=False) + "\n")
+            print(f"[{it.idx}] tvingad på målet: rätt {r['correct']:d}", flush=True)
     else:
         lock = Path("models/sprint2_beta_choice.json")  # följer med koden (results/ kopieras inte av startskriptet)
         if not lock.exists():
