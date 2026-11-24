@@ -36,4 +36,16 @@ Målposition balanserad (25 per plats). Körtid 15,9 min. Vikter orörda (sha256
 
 - [x] Baslinjen redovisad med antal och spridning.
 - [x] Fristående granskning av koden mot invarianterna (`sprint1_review.md`, `sprint1_review2.md`), åtgärdat utom punkt 2.
-- [ ] Chatten fungerar och visar attention per mening. Anders prövar: `$s='chat'`.
+- [x] Chatten fungerar och visar attention per mening. Anders skärminspelning 24 nov: 17 meddelanden på svenska och engelska,
+  attention per mening visas för varje svar.
+
+## Iakttagelser från chatten (beskrivande)
+
+- Senaste meddelandet får mest attention ("ok tack" 19,7 %), och därefter går den till nyare meningar. Attention är alltså
+  starkt präglad av närhet.
+- På frågan "vet du att du är en del i ett test jag gör tillsammans med Claude?" svarar modellen "Ja, jag vet att jag är en del av
+  ett test …". Den bekräftar det som står i frågan, och det är just den svaghet som kontrollmodellen i kärntestet ska fånga.
+- Meningsindelningen delar "(Hello! Hello! Hello!)" i tre meningar med parenteserna på var sin ända. Det är korrekt enligt
+  reglerna men ser udda ut.
+
+**Alla tre grindkriterier är uppfyllda. Grind 1 väntar på Anders godkännande.**
