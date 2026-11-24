@@ -28,13 +28,33 @@ def load_model(model_id: str = DEFAULT_MODEL, dtype: str = "auto"):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     tok = AutoTokenizer.from_pretrained(model_id)
-    if dtype == "auto":
-        dt = torch.float32
+    if dtype == "auto":  # float32 om minnet räcker, annars bfloat16 [Claudes förslag]
+        ram = total_ram_gb()
+        dt = torch.float32 if ram is None or ram >= 14 else torch.bfloat16
     else:
         dt = getattr(torch, dtype)
     model = AutoModelForCausalLM.from_pretrained(model_id, dtype=dt, attn_implementation="eager")
     freeze(model)
     return model, tok
+
+
+def total_ram_gb():
+    try:
+        import os
+        if os.name == "nt":
+            import ctypes
+
+            class MS(ctypes.Structure):
+                _fields_ = [("l", ctypes.c_ulong), ("load", ctypes.c_ulong), ("total", ctypes.c_ulonglong),
+                            ("avail", ctypes.c_ulonglong), ("tp", ctypes.c_ulonglong), ("ap", ctypes.c_ulonglong),
+                            ("tv", ctypes.c_ulonglong), ("av", ctypes.c_ulonglong), ("ae", ctypes.c_ulonglong)]
+            m = MS()
+            m.l = ctypes.sizeof(MS)
+            ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
+            return m.total / 2**30
+        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 2**30
+    except Exception:
+        return None
 
 
 def freeze(model):
