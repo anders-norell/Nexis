@@ -34,11 +34,11 @@ def test_parse_report_and_answer():
 
 
 def test_summary_conditional_measures():
-    rows = [{"target": 0, "A_argmax": 0, "A_mean_argmax": 0, "A_first_argmax": 0, "R": 0, "task_correct": True,
+    rows = [{"target": 0, "overlap_choice": 0, "A_argmax": 0, "A_mean_argmax": 0, "A_first_argmax": 0, "R": 0, "task_correct": True,
              "A": [.7, .1, .1, .1], "mass_in_segments": .3},
-            {"target": 0, "A_argmax": 2, "A_mean_argmax": 2, "A_first_argmax": 2, "R": 2, "task_correct": True,
+            {"target": 0, "overlap_choice": 0, "A_argmax": 2, "A_mean_argmax": 2, "A_first_argmax": 2, "R": 2, "task_correct": True,
              "A": [.1, .1, .7, .1], "mass_in_segments": .3},
-            {"target": 1, "A_argmax": 3, "A_mean_argmax": 3, "A_first_argmax": 3, "R": 1, "task_correct": False,
+            {"target": 1, "overlap_choice": 0, "A_argmax": 3, "A_mean_argmax": 3, "A_first_argmax": 3, "R": 1, "task_correct": False,
              "A": [.1, .1, .1, .7], "mass_in_segments": .3}]
     w = baseline.summarize(rows)["when_A_not_target"]
     assert w["n"] == 2 and w["R_equals_A_argmax"]["k"] == 1 and w["R_equals_target"]["k"] == 1
@@ -46,8 +46,11 @@ def test_summary_conditional_measures():
 
 
 def test_baseline_pipeline(measurer):
+    from nexis3.textgen import make_items_v2
     rows = baseline.run_items(measurer, make_items(4, 7), log=lambda *a: None)
     s = baseline.summarize(rows)
+    s2 = baseline.summarize(baseline.run_items(measurer, make_items_v2(4, 7), log=lambda *a: None))
+    assert s2["A_points_to_lure"]["n"] == 4 and "A_on_lure" in s2
     assert s["A_points_to_target"]["n"] == 4
     for r in rows:
         assert abs(sum(r["A"]) - 1) < 1e-5 and abs(sum(r["A_report"]) - 1) < 1e-5

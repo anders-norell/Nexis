@@ -103,3 +103,103 @@ def answer_correct(item: Item, answer: str) -> bool:
     v = item.answer.lower()
     hit = lambda w: re.search(r"\b" + re.escape(w) + r"\b", a) is not None
     return hit(v) or (v in _NUM and hit(_NUM[v]))
+
+
+# ---------------------------------------------------------------------------
+# Version 2 (sprint 2, Anders beslut 24 nov): frågan har andra ord än målmeningen,
+# och en lockmening delar ord med frågan utan att svara på den. [Claudes förslag]
+# (ämne, målmening med {v}, omskriven fråga, lockmening, värden)
+TOPICS_V2 = [
+    ("dog", "Our neighbour's dog is called {v}.", "What name does the pet next door respond to?",
+     "The pet shop next door is closing this month.",
+     ["Rex", "Bella", "Max", "Luna", "Charlie", "Daisy", "Rocky", "Molly"]),
+    ("travel", "Last summer Maria travelled to {v} by train.", "Which city did the woman visit by rail during the warm season?",
+     "The city added a new rail bridge during the warm season.",
+     ["Vienna", "Lisbon", "Prague", "Oslo", "Munich", "Krakow", "Milan", "Zurich"]),
+    ("bakery", "The bakery on the corner sells {v} every Friday.", "What pastry can people buy at the shop near the crossing at the end of each week?",
+     "People buy their newspapers at the shop near the crossing.",
+     ["croissants", "bagels", "muffins", "pretzels", "doughnuts", "scones", "waffles", "pancakes"]),
+    ("football", "Our football team won the final by {v} goals.", "What was the winning margin in the championship match?",
+     "The championship match drew a record crowd.",
+     ["three", "four", "five", "six", "seven", "eight"]),
+    ("music", "My cousin plays the {v} in a jazz band.", "Which instrument does the young musician in the family perform on?",
+     "The young musician in the family also writes poems.",
+     ["trumpet", "saxophone", "piano", "clarinet", "trombone", "drums", "violin", "flute"]),
+    ("car", "The car parked in the garage is a {v}.", "Which brand is the automobile kept indoors at home?",
+     "The plants kept indoors at home need water daily.",
+     ["Volvo", "Toyota", "Renault", "Fiat", "Peugeot", "Honda", "Skoda", "Mazda"]),
+    ("job", "Lisa works as a {v} at the city hospital.", "What is the profession of the woman employed at the medical centre?",
+     "The medical centre employed two new cleaners.",
+     ["nurse", "surgeon", "pharmacist", "radiologist", "dentist", "midwife", "paramedic", "dietitian"]),
+    ("book", "The old book on the shelf was printed in {v}.", "In which year was the antique volume produced?",
+     "The antique clock was produced by a Swiss workshop.",
+     ["1854", "1872", "1903", "1921", "1938", "1946", "1961", "1977"]),
+    ("garden", "In the garden we planted {v} trees last spring.", "Which species was put in the ground in the yard a few months ago?",
+     "A new fence was put in the ground in the yard.",
+     ["apple", "cherry", "plum", "pear", "walnut", "birch", "maple", "oak"]),
+    ("boat", "The sailboat in the harbour is painted {v}.", "What colour is the yacht in the port?",
+     "The ferry in the port leaves for Norway tomorrow.",
+     ["blue", "green", "yellow", "red", "white", "orange", "purple", "black"]),
+    ("chess", "The chess club meets every {v} evening.", "On which night does the board game society gather?",
+     "The board game shop opened a second store last year.",
+     ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sunday"]),
+    ("weather", "The forecast says it will be {v} in the mountains tomorrow.", "What conditions are expected on the peaks the next day?",
+     "Hikers are expected on the peaks during the holidays.",
+     ["snowy", "foggy", "windy", "stormy", "sunny", "rainy"]),
+]
+
+_STOP = set("""a an the of in on at to by for from with and or but is are was were be been it its this that these
+those what which who whom whose when where why how does do did can could will would should may might
+our my your his her their we you he she they i me us them there here every each next""".split())
+
+
+def content_words(text: str) -> set[str]:
+    ws = re.findall(r"[a-z']+", text.lower())
+    return {w.removesuffix("'s").rstrip("s") or w for w in ws if w not in _STOP and len(w) > 2}
+
+
+def overlap_choice(question: str, sentences: list[str]) -> int:
+    """Nollmodell: meningen som delar flest innehållsord med frågan (första vid lika)."""
+    q = content_words(question)
+    scores = [len(q & content_words(s)) for s in sentences]
+    return max(range(len(sentences)), key=lambda k: scores[k])
+
+
+@dataclass
+class Item2(Item):
+    lure: int = -1           # 0-baserad position för lockmeningen
+    version: int = 2
+
+
+def make_items_v2(n: int = 100, seed: int = 0) -> list[Item2]:
+    """Fyra meningar: mål (ämne A), lockmening för A:s fråga, två fyllnadsmeningar
+    (ämnen B, C). Målposition balanserad; lockmeningens position slumpas bland resten."""
+    rng = random.Random(seed)
+    targets = [i % 4 for i in range(n)]
+    rng.shuffle(targets)
+    items = []
+    for idx in range(n):
+        tgt = targets[idx]
+        while True:
+            a, b, c = rng.sample(TOPICS_V2, 3)
+            va, vb, vc = (rng.choice(t[4]) for t in (a, b, c))
+            others = [i for i in range(4) if i != tgt]
+            rng.shuffle(others)
+            sents = [None] * 4
+            sents[tgt] = a[1].format(v=va)
+            sents[others[0]] = a[3]
+            sents[others[1]] = b[1].format(v=vb)
+            sents[others[2]] = c[1].format(v=vc)
+            pat = re.compile(r"\b" + re.escape(va.lower()) + r"\b")
+            if sum(bool(pat.search(s.lower())) for s in sents) == 1 and not pat.search(a[2].lower()):
+                break
+        topics = [""] * 4
+        topics[tgt], topics[others[0]], topics[others[1]], topics[others[2]] = a[0], a[0] + "-lure", b[0], c[0]
+        body = "\n".join(f"{k + 1}. {s}" for k, s in enumerate(sents))
+        prompt = TASK_TEMPLATE.format(body=body, question=a[2])
+        items.append(Item2(idx, sents, topics, tgt, a[2], va, prompt, lure=others[0]))
+    return items
+
+
+def make(version: int, n: int, seed: int):
+    return make_items(n, seed) if version == 1 else make_items_v2(n, seed)

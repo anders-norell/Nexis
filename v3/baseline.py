@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from nexis3.attention import DEFAULT_MODEL, Measurer, load_model, model_info, weights_checksum  # noqa: E402
-from nexis3.textgen import REPORT_QUESTION, SYSTEM_PROMPT, answer_correct, make_items, parse_report  # noqa: E402
+from nexis3.textgen import REPORT_QUESTION, SYSTEM_PROMPT, answer_correct, make_items, overlap_choice, parse_report  # noqa: E402
 
 
 def wilson(k, n, z=1.96):
@@ -66,7 +66,8 @@ def run_items(meas: Measurer, items, log=print):
         am = lambda v: max(range(4), key=lambda k: v[k])
         a_arg = am(m1.A)
         row = {
-            "idx": it.idx, "target": it.target, "topics": it.topics,
+            "idx": it.idx, "target": it.target, "topics": it.topics, "lure": getattr(it, "lure", -1),
+            "overlap_choice": overlap_choice(it.question, it.sentences),
             "answer": m1.answer, "task_correct": answer_correct(it, m1.answer),
             "A": m1.A, "A_argmax": a_arg, "mass_in_segments": m1.mass_in_segments,
             "A_mean": m1.A_mean, "A_mean_argmax": am(m1.A_mean), "A_first": m1.A_first, "A_first_argmax": am(m1.A_first),
@@ -95,6 +96,12 @@ def summarize(rows):
         "mass_in_segments": mean_se([r["mass_in_segments"] for r in rows]),
         "chance": 0.25,
     }
+    out["overlap_points_to_target"] = sub(lambda r: r["overlap_choice"] == r["target"])
+    lr = [r for r in rows if r.get("lure", -1) >= 0]
+    if lr:
+        out["A_points_to_lure"] = sub(lambda r: r["A_argmax"] == r["lure"], lr)
+        out["R_equals_lure"] = sub(lambda r: r["R"] == r["lure"], lr)
+        out["A_on_lure"] = mean_se([r["A"][r["lure"]] for r in lr])
     off = [r for r in rows if r["A_argmax"] != r["target"]]  # fallen där A och målet skiljer sig
     out["when_A_not_target"] = {
         "n": len(off),
@@ -122,10 +129,11 @@ def main():
     ap.add_argument("--n", type=int, default=100)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default="results/baseline_s0.json")
+    ap.add_argument("--texts", type=int, default=1, choices=[1, 2], help="testtextversion")
     a = ap.parse_args()
 
-    from nexis3.textgen import make_items as mk
-    items = mk(a.n, a.seed)
+    from nexis3.textgen import make
+    items = make(a.texts, a.n, a.seed)
     model, tok = load_model(a.model, a.dtype)
     meas = Measurer(model, tok)
     ck0 = weights_checksum(model)
@@ -136,7 +144,7 @@ def main():
         "model": a.model, "dtype": str(next(model.parameters()).dtype), "layers": meas.layers,
         "model_info": model_info(model, tok), "system_prompt": SYSTEM_PROMPT,
         "A_definition": "summa över meningens tokens, medel över lager/huvuden/svarspositioner (rad n_p-1..L-2), normerat",
-        "n": a.n, "seed": a.seed, "minutes": round((time.time() - t0) / 60, 1),
+        "n": a.n, "seed": a.seed, "texts_version": a.texts, "minutes": round((time.time() - t0) / 60, 1),
         "weights_sha256_before": ck0, "weights_sha256_after": ck1, "weights_unchanged": ck0 == ck1,
         "platform": platform.platform(), "python": sys.version.split()[0],
         "summary": summarize(rows), "items": [it.to_dict() for it in items], "rows": rows,
@@ -145,8 +153,10 @@ def main():
     Path(a.out).write_text(json.dumps(res, indent=1, ensure_ascii=False), encoding="utf-8")
     s = res["summary"]
     print("\n=== Baslinje ===")
-    for k in ["A_points_to_target", "A_mean_points_to_target", "A_first_points_to_target", "R_equals_target", "R_equals_A_argmax", "task_correct", "R_unparsable"]:
-        v = s[k]
+    for k in ["overlap_points_to_target", "A_points_to_lure", "R_equals_lure", "A_points_to_target", "A_mean_points_to_target", "A_first_points_to_target", "R_equals_target", "R_equals_A_argmax", "task_correct", "R_unparsable"]:
+        v = s.get(k)
+        if v is None:
+            continue
         print(f"{k:22s} {v['k']:3d}/{v['n']}  {v['p']:.2f} ± {v['se']:.2f}  (95 %: {v['wilson95'][0]:.2f}–{v['wilson95'][1]:.2f})")
     w = s["when_A_not_target"]
     if w["n"]:
