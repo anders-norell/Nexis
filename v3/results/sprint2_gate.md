@@ -36,9 +36,18 @@ lockmeningen i 13 av 16 fall. Rapporten "vilken mening fokuserar du på" är en 
 | perm: A på målet, lager 9–17 | 0,44 → 0,14 utan att rätt-andelen sjunker (80 mot 79 %) |
 | Fel utan styrning som egen S rättade | 20 av 62 (men 31 rätta blev fel) |
 
+## Doskontroll (i efterhand, `sprint2_dose.json`, kördes efter resultatgranskningen)
+Samma tvingade bias (β 4, 0,97) men **på målmeningen**, på samma 300 testtexter:
+- Fel svar **36,7 %**, exakt samma som när schemat tvingas på fel mening (36,7 %). Mot ingen styrning 20,7 %: +16 p, z 5,3.
+- Skillnad mellan tvingad fel och tvingad rätt: 0,0 p (z 0,0).
+- A_late på målet sjunker även här (−0,09, z −7,9).
+
+**Slutsats: G2b′ mäter bara att en stor bias stör. Åt vilket håll schemat pekar spelar ingen roll.**
+
 ## Tolkning
 - **Krit. 2 (schema):** uppfyllt inom kända mallar. S är en förenklad, användbar modell av A, och den följer A även när A är fel.
-- **Krit. 3 (styrning): inte visat.** G2b′ är formellt klarad, men visar bara att en stor bias i mittlagren stör svaret.
+- **Krit. 3 (styrning): inte visat.** G2b′ är formellt klarad, men doskontrollen visar att effekten är ren störning:
+  en bias mot rätt mening skadar lika mycket som en bias mot fel mening.
   Schemat hjälper inte, och att förstärka rätt mening skadar (−8 p). Påverkan når knappt de senare lagren. Mittlagrens
   attention per mening är inte den variabel som styr svaret: perm flyttar den kraftigt utan effekt på svaret.
 - Det här är en öppen-slinga-styrning på β = 4 i mittlagren. Hur styrningen kan göras verkningsfull är en designfråga
