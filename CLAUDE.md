@@ -11,7 +11,7 @@ formulerat märks "[Claudes förslag]".
   över lager 9–17, chatt `v3/chat.py`, textgenerator, `v3/baseline.py`, invarianttester I1–I3 med mutanter).
   Fristående granskning: godkänd med anmärkningar (`v3/results/sprint1_review.md`). Allt utom läckaget (#2)
   är åtgärdat (`v3/results/sprint1_review_response.md`). Arbetsytan har ingen GPU och Hugging Face är blockerat,
-  så modellen körs på produktägarens Windows-dator: `v3/bootstrap_windows.ps1`, som han klistrar in i PowerShell
+  så modellen körs på produktägarens Windows-dator: `v3/bootstrap_windows.ps1` (installerar till %USERPROFILE%\\nexis3 och VC++ Redistributable), som han klistrar in i PowerShell
   själv. Skärmstyrningen får inte skriva i terminaler. PyTorch går nu att installera i arbetsytan från PyPI.
   Testerna körs här på en liten slumpmodell. Grind 1 väntar på baslinjen och chatten.
 
