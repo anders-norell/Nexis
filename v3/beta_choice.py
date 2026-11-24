@@ -13,7 +13,7 @@ for beta in sorted({r["beta"] for r in rows}):
     acc = sum(r["own"]["correct"] for r in rs) / len(rs)
     ok_base = [r for r in rs if base[r["idx"]]["correct"]]
     flip = sum(not r["forced"]["correct"] for r in ok_base) / max(1, len(ok_base))
-    rule_behaviour = len(sys.argv) > 3 and sys.argv[3] == "behaviour"
+    rule_behaviour = not (len(sys.argv) > 3 and sys.argv[3] == "shift")  # godkänd regel (a′) 24 nov
     res[beta] = {"n": len(rs), "forced_shift": shift, "forced_flip_rate": flip, "own_acc": acc, "base_acc": acc0,
                  "ok_a": (flip >= 0.20) if rule_behaviour else (shift >= 0.20), "ok_b": acc >= acc0 - 0.05}
 cands = [b for b, v in res.items() if v["ok_a"] and v["ok_b"]]

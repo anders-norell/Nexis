@@ -31,7 +31,7 @@ vikter) prövas β ∈ {0,5; 1; 2; 4}. β* är det minsta β där (a) A på den 
 jämfört med β = 0, och (b) uppgiften med schemats egen S är rätt minst lika ofta som med β = 0, minus 5 procentenheter.
 Uppfyller inget β båda villkoren väljs det största β som uppfyller (b). Testtexterna används inte för valet.
 
-## Granskningen 24 nov (`sprint2_review.md`) och FÖRSLAG till ändring – väntar på Anders, inget kört på riktiga modellen
+## Granskningen 24 nov (`sprint2_review.md`) och ändring – GODKÄND av Anders 24 nov 14:52 ("absolut"), före all styrning på riktiga modellen
 
 Granskaren visade att **G2b och β-villkor (a) är sanna per konstruktion**. Biasen läggs i samma lager och rader som A mäts i,
 så A flyttar redan av aritmetiken (+0,46 vid β = 0,5). Förslag [Claudes förslag, efter granskarens]:
