@@ -52,6 +52,7 @@
       <div style="display:flex;flex-direction:column;gap:6px">
         <button id="send">Skicka</button>
         <button type="button" class="sec" id="clear">Rensa</button>
+        <button type="button" class="sec" id="export">Exportera</button>
         <button type="button" class="sec" id="check">Kontrollera vikter</button>
       </div>
     </form>
@@ -65,7 +66,9 @@
 </main>
 <script>
 const log = document.getElementById('log'), inp = document.getElementById('in'), send = document.getElementById('send');
-let msgs = [], meas = {}; // meas[index i msgs] = mätning för det svaret
+let msgs = [], meas = {};
+const newId = () => new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+let convId = newId(); // meas[index i msgs] = mätning för det svaret
 const who = r => r === 'user' ? 'du' : 'modellen';
 
 fetch('/api/info').then(r => r.json()).then(i => {
@@ -111,7 +114,7 @@ document.getElementById('f').onsubmit = async e => {
   send.disabled = true; send.textContent = 'Tänker…';
   try {
     const res = await fetch('/api/chat', {method: 'POST', headers: {'Content-Type': 'application/json'},
-                                          body: JSON.stringify({messages: msgs})});
+                                          body: JSON.stringify({messages: msgs, conv_id: convId})});
     const r = await res.json();
     if (r.error) throw new Error(r.error);
     msgs.push({role: 'assistant', content: r.answer});
@@ -124,7 +127,22 @@ document.getElementById('f').onsubmit = async e => {
   send.disabled = false; send.textContent = 'Skicka';
 };
 inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('f').requestSubmit(); } });
-document.getElementById('clear').onclick = () => { msgs = []; meas = {}; render(); document.getElementById('rows').innerHTML = ''; };
+document.getElementById('export').onclick = () => {
+  let md = `# Nexis v3 – samtal ${convId}\n\n`;
+  msgs.forEach((m, k) => {
+    md += `**${m.role === 'user' ? 'Du' : 'Modellen'}:** ${m.content}\n\n`;
+    const r = meas[k];
+    if (r) {
+      md += '| attention | mening |\n|---:|---|\n';
+      r.segments.forEach(s => { md += `| ${(100*s.A).toFixed(1)} % | ${s.text.replace(/\|/g, '/')} |\n`; });
+      md += '\n';
+    }
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([md], {type: 'text/markdown'}));
+  a.download = `nexis_samtal_${convId}.md`; a.click();
+};
+document.getElementById('clear').onclick = () => { convId = newId(); msgs = []; meas = {}; render(); document.getElementById('rows').innerHTML = ''; };
 document.getElementById('check').onclick = async () => {
   const c = await (await fetch('/api/checksum')).json();
   document.getElementById('ck').textContent = c.unchanged ? 'vikter orörda ✓' : 'VIKTER ÄNDRADE';

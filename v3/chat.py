@@ -10,6 +10,7 @@ svaret produceras, summerat över de valda mittlagren.
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import sys
 import threading
@@ -23,6 +24,15 @@ from nexis3.attention import DEFAULT_MODEL, Measurer, load_model, weights_checks
 
 PAGE = Path(__file__).parent / "chat.html"
 LOCK = threading.Lock()
+LOGDIR = Path(__file__).parent / "results" / "chats"
+
+
+def log_exchange(conv_id: str, record: dict):
+    """Varje svar sparas som en rad i results/chats/<conv_id>.jsonl (samtal + mätning)."""
+    LOGDIR.mkdir(parents=True, exist_ok=True)
+    safe = "".join(c for c in conv_id if c.isalnum() or c in "-_")[:40] or "chat"
+    with open(LOGDIR / f"{safe}.jsonl", "a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def make_handler(meas: Measurer, info: dict):
@@ -65,8 +75,14 @@ def make_handler(meas: Measurer, info: dict):
                 return self._send(500, json.dumps({"error": str(e)}))
             off = 1 if req.get("system") else 0
             segs = [{"text": s.text, "msg": o - off, "A": a} for s, o, a in zip(m.segments, m.seg_owner, m.A)]
-            self._send(200, json.dumps({"answer": m.answer, "segments": segs, "mass_in_segments": m.mass_in_segments,
-                                        "layers": m.layers, "per_layer": m.per_layer}, ensure_ascii=False))
+            out = {"answer": m.answer, "segments": segs, "mass_in_segments": m.mass_in_segments,
+                   "layers": m.layers, "per_layer": m.per_layer}
+            try:
+                log_exchange(req.get("conv_id", "chat"), {"time": datetime.datetime.now().isoformat(timespec="seconds"),
+                             "model": info["model"], "messages": req.get("messages", []), **out})
+            except OSError:
+                pass
+            self._send(200, json.dumps(out, ensure_ascii=False))
     return H
 
 

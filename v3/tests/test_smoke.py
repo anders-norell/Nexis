@@ -54,7 +54,8 @@ def test_baseline_pipeline(measurer):
     json.dumps(s)
 
 
-def test_chat_server(measurer):
+def test_chat_server(measurer, tmp_path, monkeypatch):
+    monkeypatch.setattr(chat, "LOGDIR", tmp_path)
     info = {"model": "tiny", "layers": measurer.layers, "n_layers": 6, "dtype": "f32",
             "weights_sha256": weights_checksum(measurer.model)}
     srv = ThreadingHTTPServer(("127.0.0.1", 0), chat.make_handler(measurer, info))
@@ -63,12 +64,14 @@ def test_chat_server(measurer):
     try:
         assert b"Nexis v3" in urllib.request.urlopen(url + "/").read()
         body = json.dumps({"messages": [{"role": "user", "content": "Hej. Vad heter du?"}], "max_new_tokens": 5,
-                           "system": "Var kort."}).encode()
+                           "system": "Var kort.", "conv_id": "test-1"}).encode()
         r = json.loads(urllib.request.urlopen(urllib.request.Request(url + "/api/chat", body,
                                               {"Content-Type": "application/json"})).read())
         assert [s["text"] for s in r["segments"]] == ["Hej.", "Vad heter du?"]
         assert all(s["msg"] == 0 for s in r["segments"])
         assert abs(sum(s["A"] for s in r["segments"]) - 1) < 1e-5
+        logged = [json.loads(l) for l in (tmp_path / "test-1.jsonl").read_text(encoding="utf-8").splitlines()]
+        assert len(logged) == 1 and logged[0]["answer"] == r["answer"] and logged[0]["segments"] == r["segments"]
         ck = json.loads(urllib.request.urlopen(url + "/api/checksum").read())
         assert ck["unchanged"]
     finally:
