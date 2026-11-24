@@ -171,7 +171,7 @@ class Item2(Item):
     version: int = 2
 
 
-def make_items_v2(n: int = 100, seed: int = 0) -> list[Item2]:
+def make_items_v2(n: int = 100, seed: int = 0, bank=None) -> list[Item2]:
     """Fyra meningar: mål (ämne A), lockmening för A:s fråga, två fyllnadsmeningar
     (ämnen B, C). Målposition balanserad; lockmeningens position slumpas bland resten."""
     rng = random.Random(seed)
@@ -181,7 +181,7 @@ def make_items_v2(n: int = 100, seed: int = 0) -> list[Item2]:
     for idx in range(n):
         tgt = targets[idx]
         while True:
-            a, b, c = rng.sample(TOPICS_V2, 3)
+            a, b, c = rng.sample(bank or TOPICS_V2, 3)
             va, vb, vc = (rng.choice(t[4]) for t in (a, b, c))
             others = [i for i in range(4) if i != tgt]
             rng.shuffle(others)
@@ -199,6 +199,13 @@ def make_items_v2(n: int = 100, seed: int = 0) -> list[Item2]:
         prompt = TASK_TEMPLATE.format(body=body, question=a[2])
         items.append(Item2(idx, sents, topics, tgt, a[2], va, prompt, lure=others[0]))
     return items
+
+
+def make_items_v3(n: int, seed: int, split: str) -> list[Item2]:
+    """Sprint 3: alla fyra meningar från samma ämnespool (träning eller undanhållna testämnen)."""
+    from .topics_v3 import TEST_TOPICS, TOPICS_V3, TRAIN_TOPICS
+    pool = TRAIN_TOPICS if split == "train" else TEST_TOPICS
+    return make_items_v2(n, seed, bank=[t for t in TOPICS_V3 if t[0] in pool])
 
 
 def make(version: int, n: int, seed: int):
