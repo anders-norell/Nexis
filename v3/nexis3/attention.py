@@ -32,6 +32,10 @@ DEFAULT_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
 def load_model(model_id: str = DEFAULT_MODEL, dtype: str = "auto"):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
+    import os
+    n_thr = int(os.environ.get("NEXIS_THREADS", max(1, (os.cpu_count() or 2) - 2)))
+    torch.set_num_threads(n_thr)  # Windows kör annars ibland bara en tråd
+    print(f"torch-trådar: {torch.get_num_threads()} (logiska processorer: {os.cpu_count()})", flush=True)
     tok = AutoTokenizer.from_pretrained(model_id)
     if dtype == "auto":  # OBS: inte HF:s "auto". float32 om minnet räcker, annars bfloat16 [Claudes förslag]
         ram = total_ram_gb()
