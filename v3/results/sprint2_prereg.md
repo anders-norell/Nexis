@@ -18,3 +18,15 @@ två nollmodeller: (i) senaste meningen (nr 4) och (ii) ordöverlapp med frågan
 Godkänt om > 2 SE. β väljs på träningstexter innan testtexterna används.
 
 **Redovisas oavsett:** ablation (β = 0 mot β > 0: A på målet, uppgiften rätt), korrelation S–A, kalibrering.
+
+## Tillägg 24 nov ca 14:50 (före all styrning på riktiga modellen; G2a redan bedömd, se `sprint2_schema.json`)
+
+**Styrningens form:** bias β·log(4·S_s) på attention-poängen mot mening s tokens, lager 9–17, rader från sista
+prompttoken och framåt (`nexis3/steer.py`). Tvingat S = 0,97 på vald mening, 0,01 på övriga.
+A mäts som förut (lager 9–17). Eftersom biasen läggs i samma lager som A mäts i, redovisas också A_late
+(lager 18–27, ej direkt styrda) och om svaret ändras. Det är de mått som visar att styrningen får följder.
+
+**Val av β (regel låst nu):** på 40 valideringstexter (träningsfröets texter 1000–1039, ej använda för schemats
+vikter) prövas β ∈ {0,5; 1; 2; 4}. β* är det minsta β där (a) A på den tvingade meningen ökar med minst 0,20 i medel
+jämfört med β = 0, och (b) uppgiften med schemats egen S är rätt minst lika ofta som med β = 0, minus 5 procentenheter.
+Uppfyller inget β båda villkoren väljs det största β som uppfyller (b). Testtexterna används inte för valet.

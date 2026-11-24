@@ -1,6 +1,6 @@
 # Nexis v3 – installation och körning på Windows (PowerShell).
 # Kör från katalogen v3:   powershell -ExecutionPolicy Bypass -File setup_windows.ps1 [steg]
-#   steg: install | test | baseline | baseline2 | extract | chat | all   (default: install)
+#   steg: install | test | baseline | baseline2 | extract | steer_beta | steer_test | chat | all   (default: install)
 param([string]$step = "install")
 $ErrorActionPreference = "Continue"  # PS 5.1: stderr från python får inte avbryta
 $env:PYTHONUTF8 = "1"
@@ -27,4 +27,6 @@ if ($step -eq "extract") {
   & $py extract.py --split test  | Tee-Object -Append results\extract.log
   & $py extract.py --split train | Tee-Object -Append results\extract.log
 }
+if ($step -eq "steer_beta") { & $py steer_eval.py beta | Tee-Object -Append results\steer.log }
+if ($step -eq "steer_test") { & $py steer_eval.py test | Tee-Object -Append results\steer.log }
 if ($step -eq "chat") { & $py chat.py }

@@ -97,6 +97,7 @@ class Measurement:
     A_first: list[float] = field(default_factory=list)
     n_tokens: int = 0
     states: dict | None = None       # {"seg": (S, Ls, d), "last": (Ls, d)} om STATE_LAYERS satt
+    A_extra: list[float] | None = None
     answer: str = ""
     prompt: str = ""
 
@@ -174,6 +175,7 @@ class Measurer:
     # ---- mätning ------------------------------------------------------------
     MAX_TOKENS = 1500  # attention för alla lager hålls i minnet; längre samtal avvisas
     STATE_LAYERS: list[int] | None = None  # sätts för att spara inre tillstånd (schemats indata)
+    EXTRA_LAYERS: list[int] | None = None  # A även för dessa lager (redovisas, t.ex. lager efter styrningen)
 
     @torch.no_grad()
     def attention_per_segment(self, prompt_ids, answer_ids, seg_ids, n_seg):
@@ -203,6 +205,11 @@ class Measurer:
         raw = torch.stack(per_layer_raw).mean(0)
         tot = torch.stack(total).mean()
         norm = lambda v: (v / v.sum()).tolist()
+        A_extra = None
+        if self.EXTRA_LAYERS:
+            raw_x = torch.stack([(out.attentions[l][0].float()[:, q, :] @ onehot).mean(dim=(0, 1))
+                                 for l in self.EXTRA_LAYERS]).mean(0)
+            A_extra = norm(raw_x)
         states = None
         if want:
             # Bara promptens positioner (kausalt: oberoende av svaret). hidden_states[l+1] = utdata från lager l.
@@ -210,7 +217,7 @@ class Measurer:
             oh = onehot[:n_p]                                                                     # (n_p, S)
             seg_mean = torch.einsum("lpd,ps->sld", hs, oh) / oh.sum(0).clamp(min=1)[:, None, None]
             states = {"seg": seg_mean.half(), "last": hs[:, n_p - 1].half()}
-        return {"states": states,
+        return {"states": states, "A_extra": A_extra,
             "A": norm(raw), "mass": float(raw.sum() / tot), "per_layer": [norm(r) for r in per_layer_raw],
             "A_mean": norm(raw / n_tok), "A_first": norm(torch.stack(first_raw).mean(0)), "n_tokens": len(full),
         }
@@ -237,7 +244,7 @@ class Measurer:
             ans_ids = self.tok(answer, add_special_tokens=False)["input_ids"]
         r = self.attention_per_segment(ids, ans_ids, seg_ids, len(segs))
         return Measurement(segs, owner, r["A"], r["mass"], r["per_layer"], list(self.layers),
-                           r["A_mean"], r["A_first"], r["n_tokens"], r["states"], answer, prompt)
+                           r["A_mean"], r["A_first"], r["n_tokens"], r["states"], r["A_extra"], answer, prompt)
 
 
 def model_info(model, tok) -> dict:
