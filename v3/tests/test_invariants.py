@@ -230,7 +230,9 @@ def test_I3_mutant_fails(model_tok):
 # ---------------- positiv kontroll (bara riktiga modellen) ---------------------
 
 def test_A_positive_control_copy(measurer):
-    """Svaret är målmeningens unika värde; argmax A ska då peka på den meningen."""
+    """Svaret är målmeningens unika värde; argmax A ska då peka på den meningen.
+    Gräns 36/40 [Claudes förslag]: en grov rimlighetskontroll, inte ett mått. Svag eftersom frågan
+    delar ord med målmeningen (granskningen, punkt 2)."""
     if measurer.model.config.num_hidden_layers < 12:
         pytest.skip("kräver den riktiga modellen (NEXIS_REAL_MODEL)")
     items = make_items(40, seed=555)
@@ -240,3 +242,38 @@ def test_A_positive_control_copy(measurer):
                              segment_texts=it.sentences)
         hits += max(range(4), key=lambda k: m.A[k]) == it.target
     assert hits >= 36, f"argmax A = målet i bara {hits}/40"
+
+
+def test_I2_short_and_repeated_messages(measurer):
+    """Korta texter som finns i mallens markörer, och text som upprepas i senare meddelanden."""
+    msgs = [{"role": "user", "content": "e"}, {"role": "assistant", "content": "end"},
+            {"role": "user", "content": "Rex."}, {"role": "assistant", "content": "m"},
+            {"role": "user", "content": "Rex."}]
+    prompt = measurer.render(msgs)
+    segs, owner = measurer.locate_segments(prompt, msgs)
+    assert [x.text for x in segs] == ["e", "end", "Rex.", "m", "Rex."] and owner == [0, 1, 2, 3, 4]
+    for x, m in zip(segs, msgs):
+        before = prompt[: x.start]
+        assert before.endswith("<|im_start|>" + m["role"] + "\n"), before[-30:]
+
+
+def test_too_long_conversation_rejected(measurer):
+    old = measurer.MAX_TOKENS
+    measurer.MAX_TOKENS = 20
+    try:
+        with pytest.raises(ValueError):
+            measurer.measure([{"role": "user", "content": ITEMS[0].prompt}], answer="Rex.")
+    finally:
+        measurer.MAX_TOKENS = old
+
+
+def test_generate_is_greedy_without_repetition_penalty(measurer, monkeypatch):
+    seen = {}
+    orig = measurer.model.generate
+
+    def spy(*a, **k):
+        seen.update(k)
+        return orig(*a, **k)
+    monkeypatch.setattr(measurer.model, "generate", spy)
+    measurer.generate(measurer.encode(measurer.render([{"role": "user", "content": "Hej."}]))[0], 2)
+    assert seen["do_sample"] is False and seen["repetition_penalty"] == 1.0

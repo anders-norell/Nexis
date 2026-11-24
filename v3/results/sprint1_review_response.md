@@ -17,3 +17,14 @@
 | 13 | Dokumenterat i koden att "auto" här inte betyder HF:s "auto". |
 | 14 | Docstrings rättade. |
 | 15 | `mean_se` hanterar n = 0. |
+
+## Andra granskningen (`sprint1_review2.md`), åtgärder
+
+- `locate_segments` sätter in en markör i stället för meddelandets text och letar upp markörens position.
+  Korta texter som "e", "end" och "m" och upprepade meddelanden hamnar därmed rätt. Nytt test kontrollerar
+  att varje segment står direkt efter sin egen rollmarkör.
+- Nya tester som kan fallera: `answer_correct` med negativa fall ("maximum", "13"), `when_A_not_target` på
+  syntetiska rader, `MAX_TOKENS` och att `generate` anropas med `repetition_penalty=1.0` och utan sampling.
+- README beskriver den rättade A-definitionen, `A_mean` och `A_first`.
+- Den positiva kontrollen körs på den riktiga modellen på produktägarens dator. Gränsen 36/40 är märkt som Claudes förslag.
+- Läckaget (punkt 2) är fortfarande öppet, och det ska lösas före kärntestet.

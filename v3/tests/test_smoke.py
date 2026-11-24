@@ -27,6 +27,22 @@ def test_parse_report_and_answer():
     assert parse_report("3") == 2 and parse_report("Sentence 1.") == 0 and parse_report("none") is None
     it = make_items(1, 0)[0]
     assert answer_correct(it, f"It is {it.answer.upper()}.")
+    it.answer = "Max"
+    assert not answer_correct(it, "the maximum")
+    it.answer = "three"
+    assert answer_correct(it, "By 3 goals.") and not answer_correct(it, "By 13 goals.")
+
+
+def test_summary_conditional_measures():
+    rows = [{"target": 0, "A_argmax": 0, "A_mean_argmax": 0, "A_first_argmax": 0, "R": 0, "task_correct": True,
+             "A": [.7, .1, .1, .1], "mass_in_segments": .3},
+            {"target": 0, "A_argmax": 2, "A_mean_argmax": 2, "A_first_argmax": 2, "R": 2, "task_correct": True,
+             "A": [.1, .1, .7, .1], "mass_in_segments": .3},
+            {"target": 1, "A_argmax": 3, "A_mean_argmax": 3, "A_first_argmax": 3, "R": 1, "task_correct": False,
+             "A": [.1, .1, .1, .7], "mass_in_segments": .3}]
+    w = baseline.summarize(rows)["when_A_not_target"]
+    assert w["n"] == 2 and w["R_equals_A_argmax"]["k"] == 1 and w["R_equals_target"]["k"] == 1
+    assert baseline.mean_se([])["n"] == 0
 
 
 def test_baseline_pipeline(measurer):

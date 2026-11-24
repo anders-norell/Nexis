@@ -117,13 +117,14 @@ class Measurer:
         segs, owner = [], []
         cursor = 0
         for i, m in enumerate(messages):
-            # Meddelande i ligger i slutet av mallen renderad t.o.m. i. Det skyddar mot
-            # text som förekommer tidigare, t.ex. i Qwens automatiska systemprompt.
-            pre = self.render(messages[: i + 1], add_generation_prompt=False)
-            if not prompt.startswith(pre):
-                raise ValueError("chattmallen är inte prefixkonsistent")
-            pos = pre.rfind(m["content"])
-            if pos < cursor:
+            # Position = där en markör hamnar när meddelandets text byts mot den i mallen
+            # renderad t.o.m. i. Skyddar mot text som också finns i mallens markörer, i
+            # Qwens automatiska systemprompt eller i andra meddelanden.
+            mark = "\u2063NEXIS\u2063"
+            probe = [dict(x) for x in messages[: i + 1]]
+            probe[i]["content"] = mark
+            pos = self.render(probe, add_generation_prompt=False).find(mark)
+            if pos < cursor or prompt[pos:pos + len(m["content"])] != m["content"]:
                 raise ValueError(f"meddelande {i} hittades inte i prompten")
             cursor = pos + len(m["content"])
             if which is None:

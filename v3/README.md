@@ -12,9 +12,11 @@ Den laddas med `attn_implementation="eager"` så att attention-vikterna kan läs
 
 ## Mätningen (A)
 
-För varje svar och varje mening s i kontexten tas medelvärdet över mittlagren (default lager 9–17
-av 28), alla huvuden och alla svarstokens av den attention som går till meningens tokens. Sedan
-normeras över meningarna så att summan blir 1. Den andel attention som går till allt annat
+För varje svar och varje mening s i kontexten summeras den attention som går till meningens tokens.
+Summan tas från de positioner som väljer svarets tokens: sista prompttoken till och med näst sista
+svarstoken. Därefter tas medelvärdet över mittlagren (default lager 9–17 av 28), alla huvuden och de
+positionerna. Sist normeras över meningarna så att summan blir 1. Som jämförelse sparas `A_mean` (medel
+per token i stället för summa, utan längdbias) och `A_first` (bara steget som väljer första svarstoken). Den andel attention som går till allt annat
 (mallmarkörer, systemprompt, första token) redovisas separat som `mass_in_segments`.
 Valet av lager och normeringen är [Claudes förslag].
 
