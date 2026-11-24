@@ -13,7 +13,7 @@ formulerat märks "[Claudes förslag]".
   är åtgärdat (`v3/results/sprint1_review_response.md`). Arbetsytan har ingen GPU och Hugging Face är blockerat,
   så modellen körs på produktägarens Windows-dator: `v3/bootstrap_windows.ps1` (installerar till %USERPROFILE%\\nexis3 och VC++ Redistributable), som han klistrar in i PowerShell
   själv. Skärmstyrningen får inte skriva i terminaler. PyTorch går nu att installera i arbetsytan från PyPI.
-  Testerna körs här på en liten slumpmodell. Grind 1 väntar på baslinjen och chatten.
+  Testerna körs här på en liten slumpmodell; på riktiga modellen 48 klarade. **Baslinje klar 24 nov** (`v3/results/sprint1_gate.md`): uppgift 100 %, argmax A = mål 98 %, A_first 45 %, rapport R = mål 41 % (R är bara "4" 74 % / "1" 26 %, positionsvana). Grind 1 väntar på att produktägaren prövat chatten. Produktägarens dator: `C:\\Users\\ander\\nexis3` (kopplad mapp).
 
 ---
 
