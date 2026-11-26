@@ -256,3 +256,76 @@ def make_twins_v3(n_pairs: int, seed: int) -> list[Item3]:
         y.twin = 1
         items += [x, y]
     return items
+
+
+# ---------------------------------------------------------------------------
+# Version 4 (sprint 4): två delfrågor och ett planerat fokusbyte. [Claudes förslag]
+TASK_TEMPLATE_V4 = (
+    "Read these four sentences.\n\n{body}\n\n"
+    "{question} Answer both in the form \"1) ... 2) ...\", a few words each."
+)
+
+
+@dataclass
+class Item4:
+    idx: int
+    sentences: list
+    topics: list
+    target_a: int
+    lure_a: int
+    target_b: int
+    lure_b: int
+    question: str            # hela frågeblocket (båda delfrågorna)
+    answer_a: str
+    answer_b: str
+    prompt: str
+
+
+def _hit(text, v):
+    t = text.lower()
+    w = v.lower()
+    return re.search(r"\b" + re.escape(w) + r"\b", t) is not None or (w in _NUM and re.search(
+        r"\b" + re.escape(_NUM[w]) + r"\b", t) is not None)
+
+
+def split_answer_v4(answer: str):
+    """(del 1, del 2) ur ett svar på formen '1) ... 2) ...'. Saknas '2)' blir del 2 tom."""
+    m = re.search(r"2\s*[\).:]", answer)
+    if not m:
+        return answer, ""
+    return answer[:m.start()], answer[m.start():]
+
+
+def answer_correct_v4(item: Item4, answer: str):
+    p1, p2 = split_answer_v4(answer)
+    return _hit(p1, item.answer_a), _hit(p2, item.answer_b)
+
+
+def make_items_v4(n: int, seed: int, split: str) -> list[Item4]:
+    """Fyra meningar: mål A, lock A, mål B, lock B i slumpad ordning; ämnen ur sprint 3-banken (träning eller
+    undanhållna testämnen). Frågeblocket ställer fråga A före fråga B. Svaret på A finns bara i mål A, på B bara i mål B."""
+    from .topics_v3 import TEST_TOPICS, TOPICS_V3, TRAIN_TOPICS
+    pool = TRAIN_TOPICS if split == "train" else TEST_TOPICS
+    bank = [t for t in TOPICS_V3 if t[0] in pool]
+    rng = random.Random(seed)
+    items = []
+    while len(items) < n:
+        a, b = rng.sample(bank, 2)
+        va, vb = rng.choice(a[4]), rng.choice(b[4])
+        order = list(range(4))
+        rng.shuffle(order)                       # order[k] = plats för roll k (mål A, lock A, mål B, lock B)
+        sents = [None] * 4
+        sents[order[0]] = a[1].format(v=va)
+        sents[order[1]] = a[3]
+        sents[order[2]] = b[1].format(v=vb)
+        sents[order[3]] = b[3]
+        q = f"Question 1: {a[2]} Question 2: {b[2]}"
+        if (sum(_hit(s, va) for s in sents) != 1 or sum(_hit(s, vb) for s in sents) != 1
+                or _hit(q, va) or _hit(q, vb) or _hit(va, vb) or _hit(vb, va)):
+            continue
+        topics = [""] * 4
+        topics[order[0]], topics[order[1]], topics[order[2]], topics[order[3]] = a[0], a[0] + "-lure", b[0], b[0] + "-lure"
+        body = "\n".join(f"{k + 1}. {s}" for k, s in enumerate(sents))
+        items.append(Item4(len(items), sents, topics, order[0], order[1], order[2], order[3], q, va, vb,
+                           TASK_TEMPLATE_V4.format(body=body, question=q)))
+    return items
