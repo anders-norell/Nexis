@@ -1,0 +1,12 @@
+{
+ "answer": "Anders 25 nov 23:45: \"vi kör på det\" (plan 3b, kriterier låses i steg 3 enligt planen)",
+ "sha256": {
+  "models/compress_k4.pt": "d35e7cd4bb5c42545c8bbae2b346f3e8ae124dcac40d7ca339a1650b05502e30",
+  "models/compress_k2.pt": "86ab1c591b34dfa19923cff447a32308394bbc5122788779f852a93d5b7673ca",
+  "models/compress_k8.pt": "d350604568b36ad1b90939dace75b91c2bced8b4b1b2e05a80cc947cd6a83894",
+  "train_compress.py": "ed5cf3e03b52c007dfda802cc9a1377c2dfeee97381733cf47536ad46914a7b2",
+  "nexis3/compress.py": "36cb5731c6a0bddb375fe71b24f1ee60e5d86befce0fefcbc72b39912fd64803",
+  "extract_tokens.py": "1f3de5ec318f56ff0b1bcf8e401d67560136f91a46badd401a6a5cb1a48a06bf",
+  "results/sprint3b_prereg.md": "d1da91a05dc59bff4054e6e554638acae6e7d912c417c0830ba6f682df7b46fd"
+ }
+}

@@ -35,3 +35,11 @@ Tekniska val nedan är [Claudes förslag].
 - Bi-Y (vilken mening svaret hämtas ur) mäts med ordöverlapp och är brusigt: lockmeningen delar ofta ord med svaret
   (i träningsdatan "lock" 481 av 1 500). Därför bara beskrivande.
 - Uppgiften rätt i 75 % av träningstexterna.
+
+## Tillägg före låsning (26 nov ca 07:30, efter träning och validering, före test)
+Validering (undanhållna träningsämnen): vald λ = 10; k = 4: ε_G 0,197 mot ε_identitet 0,254 (K1 z 22), Y-förlust S 0,175
+mot karikatyren 0,622 och konstant 0,626 (K2 z 15), K3 0,24 ± 0,03. Y-vinsten var oväntat stor, så tre kontroller
+gjordes på valideringen: svarslängd ensam 0,659; S + längd 0,220, karikatyr + längd 0,649; S bara vid första token (innan
+något svarsord finns) 0,383, karikatyren vid första token 0,622. Längd förklarar alltså inte vinsten. Kriterierna ändras
+inte. Testet redovisar dessutom samma kontroller (`Y_controls`), beskrivande. Valideringen användes för tidigt stopp och
+val av λ, så dess siffror är optimistiska; bara testet bedöms.

@@ -119,6 +119,23 @@ def describe(m, b):
             "corr_S_with_sentence_shares": [[C(S[:, j], b.H[:, s]) for s in range(4)] for j in range(S.shape[1])]}
 
 
+def ylength_controls(m, b_tr, b_va, b_ev):
+    """Beskrivande: Y ur bara första token (före svaret) och med svarslängd som extra indata till båda."""
+    Ln = lambda b: torch.tensor([[float(min(r["n_answer_tokens"], 12)), float(r["n_answer_tokens"] == 2)] for r in b.recs])
+    out = {}
+    feats = {"S": lambda b: pool(m.S(b.X), b).detach(), "caricature": lambda b: pool(b.H, b),
+             "S_first_token": lambda b: torch.cat([m.S(b.X)[b.pos == 0]] * 2, 1).detach(),
+             "caricature_first_token": lambda b: torch.cat([b.H[b.pos == 0]] * 2, 1)}
+    for name, f in feats.items():
+        for extra in (False, True):
+            Z = lambda b: torch.cat([f(b), Ln(b)], 1) if extra else f(b)
+            h, _ = fit_yhead(Z(b_tr), b_tr.y, Z(b_va), b_va.y)
+            out[name + ("+length" if extra else "")] = sum(ylosses(h, Z(b_ev), b_ev.y)) / b_ev.n
+    h, _ = fit_yhead(Ln(b_tr), b_tr.y, Ln(b_va), b_va.y)
+    out["length_only"] = sum(ylosses(h, Ln(b_ev), b_ev.y)) / b_ev.n
+    return out
+
+
 def cmd_train(a):
     recs = load(sorted(Path(a.data).glob("tok_train_*.pt")))
     tr, va = split(recs)
@@ -183,6 +200,7 @@ def cmd_test(a):
         ev = evaluate(m, b_tr, b_va, b_te)
         ev["K3"] = k3(m, b_te)
         ev["describe"] = describe(m, b_te)
+        ev["Y_controls"] = ylength_controls(m, b_tr, b_va, b_te)
         res[f"k{k}"] = ev
     r4 = res["k4"]
     res["K1_pass"] = r4["K1"]["z"] > 2
