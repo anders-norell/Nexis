@@ -35,7 +35,8 @@ def main(d):
            "F1b_pass": ok / max(1, n_ok) >= 0.70, "examples": ex}
     Path("results/sprint4_f1b.json").write_text(json.dumps(res, indent=1, ensure_ascii=False), encoding="utf-8")
     print(json.dumps(res, indent=1, ensure_ascii=False))
+    return res["F1b_pass"]
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    sys.exit(0 if main(sys.argv[1]) else 3)

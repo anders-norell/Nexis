@@ -41,6 +41,19 @@ if ($step -eq "extract_tok") {
 }
 if ($step -eq "base4") { & $py extract_v4.py --split base4 | Tee-Object -Append results\extract_v4.log }
 if ($step -eq "base4b") { & $py extract_v4.py --split base4b | Tee-Object -Append results\extract_v4.log }
+if ($step -eq "s4auto") {
+  # Sprint 4: base4b -> F1b-kontroll -> (bara om F1b klaras) test4 och train4. Avbrutet arbete återupptas.
+  & $py extract_v4.py --split base4b | Tee-Object -Append results\s4auto.log
+  & $py f1b_check.py results\v4_data | Tee-Object -Append results\s4auto.log
+  if ($LASTEXITCODE -eq 0) {
+    "F1b klarad - fortsätter med test4 och train4" | Tee-Object -Append results\s4auto.log
+    & $py extract_v4.py --split test4  | Tee-Object -Append results\s4auto.log
+    & $py extract_v4.py --split train4 | Tee-Object -Append results\s4auto.log
+    "S4AUTO KLART" | Tee-Object -Append results\s4auto.log
+  } else {
+    "F1b EJ klarad - stannar enligt förregistreringen" | Tee-Object -Append results\s4auto.log
+  }
+}
 if ($step -eq "extract4") {
   & $py extract_v4.py --split test4  | Tee-Object -Append results\extract_v4.log
   & $py extract_v4.py --split train4 | Tee-Object -Append results\extract_v4.log
