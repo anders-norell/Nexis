@@ -1,0 +1,11 @@
+{
+ "note": "efterhand, beskrivande (ej förregistrerat): S mot konstant prediktion med träningens andel rätt",
+ "S_vs_constant": {
+  "diff": 0.18628105521202087,
+  "se": 0.03305991366505623,
+  "z": 5.63465038352223,
+  "n": 300
+ },
+ "constant_p_train": 0.7526041865348816,
+ "Ylogloss_constant_trainp": 0.506725811958313
+}
