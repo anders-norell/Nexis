@@ -41,15 +41,20 @@ def part2_start(tok, ans_ids, answer):
 
 
 def content_rows(tokens, value, start, stop):
-    """Index (inom [start, stop)) för svarstoken vars text ingår i svarsordet (skiftlägesokänsligt, minst en bokstav
-    eller siffra). Raderna i att är förskjutna ett steg: rad i väljer token i, så index = tokenindex."""
-    v = value.lower()
-    out = []
-    for i in range(start, min(stop, len(tokens))):
-        t = tokens[i].strip().lower()
-        if t and any(ch.isalnum() for ch in t) and t in v:
-            out.append(i)
-    return out
+    """Index (inom [start, stop)) för svarstoken som täcker svarsordet: första förekomsten av ordet (skiftlägesokänsligt)
+    i den sammanfogade texten för token start..stop-1; token vars teckenintervall överlappar den räknas.
+    Rad i i att väljer token i, så index = tokenindex."""
+    stop = min(stop, len(tokens))
+    spans, pos = [], 0
+    for t in tokens[start:stop]:
+        spans.append((pos, pos + len(t)))
+        pos += len(t)
+    text = "".join(tokens[start:stop]).lower()
+    j = text.find(value.lower())
+    if j < 0:
+        return []
+    e = j + len(value)
+    return [start + k for k, (a, b) in enumerate(spans) if a < e and b > j]
 
 
 def run_chunk(meas, items):

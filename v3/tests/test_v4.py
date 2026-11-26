@@ -42,7 +42,7 @@ def test_chunk_records(measurer):
 
 def test_splits_distinct():
     seeds = [s for s, _, _ in ev.SPLITS.values()]
-    assert len(set(seeds)) == 3 and not set(seeds) & {5000, 6000, 7000, 8000}
+    assert len(set(seeds)) == len(seeds) and not set(seeds) & {5000, 6000, 7000, 8000}
 
 
 def test_part2_start(measurer):
