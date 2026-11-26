@@ -3,7 +3,8 @@
 Plan: projektet claude/nexis_v3_sprint4_plan.md (godkänd av Anders 26 nov 08:42, "då går vi vidare med s4 baserat
 på dina förslag"). Samma mätning som extract_tokens.py (lager × huvud × 7 textdelar), plus var del 2 börjar i svaret.
 
-    python extract_v4.py --split base4    # frö 9000, 100 texter, träningsämnen (steg 1: förutsättning F1)
+    python extract_v4.py --split base4    # frö 9000, 100 texter, träningsämnen (steg 1: förutsättning F1, underkänd)
+    python extract_v4.py --split base4b   # frö 9001, 100 nya texter, träningsämnen (F1 omdefinierad, innehållsord)
     python extract_v4.py --split train4   # frö 9100, 1500 texter, träningsämnen
     python extract_v4.py --split test4    # frö 9200, 300 texter, testämnen
 """
@@ -23,7 +24,7 @@ from nexis3.segment import token_segment_ids  # noqa: E402
 from nexis3.textgen import SYSTEM_PROMPT, answer_correct_v4, make_items_v4, split_answer_v4  # noqa: E402
 from extract_tokens import PARTS, Q_LAYER, token_attention  # noqa: E402
 
-SPLITS = {"base4": (9000, 100, "train"), "train4": (9100, 1500, "train"), "test4": (9200, 300, "test")}
+SPLITS = {"base4": (9000, 100, "train"), "base4b": (9001, 100, "train"), "train4": (9100, 1500, "train"), "test4": (9200, 300, "test")}
 CHUNK = 50
 MAX_NEW = 48
 
@@ -37,6 +38,18 @@ def part2_start(tok, ans_ids, answer):
         if len(tok.decode(ans_ids[:k], skip_special_tokens=True)) > len(p1):
             return max(0, k - 1)
     return len(ans_ids)
+
+
+def content_rows(tokens, value, start, stop):
+    """Index (inom [start, stop)) för svarstoken vars text ingår i svarsordet (skiftlägesokänsligt, minst en bokstav
+    eller siffra). Raderna i att är förskjutna ett steg: rad i väljer token i, så index = tokenindex."""
+    v = value.lower()
+    out = []
+    for i in range(start, min(stop, len(tokens))):
+        t = tokens[i].strip().lower()
+        if t and any(ch.isalnum() for ch in t) and t in v:
+            out.append(i)
+    return out
 
 
 def run_chunk(meas, items):
@@ -56,6 +69,8 @@ def run_chunk(meas, items):
                                                           "target_b": it.target_b, "lure_b": it.lure_b},
             "answer": answer, "correct_a": ca, "correct_b": cb, "part2_start": part2_start(meas.tok, ans_ids, answer),
             "att": att, "q": q, "n_answer_tokens": len(ans_ids),
+            "answer_a": it.answer_a, "answer_b": it.answer_b,
+            "answer_tokens": [meas.tok.decode([t]) for t in ans_ids],
         })
     return recs
 

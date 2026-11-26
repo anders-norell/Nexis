@@ -52,3 +52,15 @@ def test_part2_start(measurer):
     k = ev.part2_start(tok, ids, ans)
     assert tok.decode(ids[:k]).strip().endswith("bike") or "2" not in tok.decode(ids[:k])
     assert "2" in tok.decode(ids[k:k + 2])
+
+
+def test_content_rows():
+    toks = ["1", ")", " T", "ulips", " ", "2", ")", " Car", "rot"]
+    assert ev.content_rows(toks, "tulips", 0, 5) == [2, 3]
+    assert ev.content_rows(toks, "carrot", 5, 9) == [7, 8]
+    assert ev.content_rows(toks, "carrot", 0, 5) == []
+
+
+def test_records_have_tokens(measurer):
+    r = ev.run_chunk(measurer, make_items_v4(1, 9001, "train"))[0]
+    assert len(r["answer_tokens"]) == r["n_answer_tokens"] and r["answer_a"] and r["answer_b"]

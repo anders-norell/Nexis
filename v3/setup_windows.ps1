@@ -40,6 +40,7 @@ if ($step -eq "extract_tok") {
   & $py extract_tokens.py --split tok_train | Tee-Object -Append results\extract_tok.log
 }
 if ($step -eq "base4") { & $py extract_v4.py --split base4 | Tee-Object -Append results\extract_v4.log }
+if ($step -eq "base4b") { & $py extract_v4.py --split base4b | Tee-Object -Append results\extract_v4.log }
 if ($step -eq "extract4") {
   & $py extract_v4.py --split test4  | Tee-Object -Append results\extract_v4.log
   & $py extract_v4.py --split train4 | Tee-Object -Append results\extract_v4.log
