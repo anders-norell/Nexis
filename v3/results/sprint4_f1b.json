@@ -1,0 +1,86 @@
+{
+ "n": 100,
+ "both_correct": 0.57,
+ "F1b": 0.49122807017543857,
+ "F1b_n": 57,
+ "F1b_pass": false,
+ "examples": [
+  {
+   "answer": "1) Munich 2) Snowy",
+   "content_tokens": [
+    [
+     " Munich"
+    ],
+    [
+     " Snow",
+     "y"
+    ]
+   ]
+  },
+  {
+   "answer": "1) The finch 2) limestone",
+   "content_tokens": [
+    [
+     " fin",
+     "ch"
+    ],
+    [
+     " limestone"
+    ]
+   ]
+  },
+  {
+   "answer": "1) Lemons 2) Rooibos tea",
+   "content_tokens": [
+    [
+     " Lem",
+     "ons"
+    ],
+    [
+     " Roo",
+     "ib",
+     "os"
+    ]
+   ]
+  },
+  {
+   "answer": "1) Krakow 2) parrot",
+   "content_tokens": [
+    [
+     " Krak",
+     "ow"
+    ],
+    [
+     " par",
+     "rot"
+    ]
+   ]
+  },
+  {
+   "answer": "1) Bella 2) postcards",
+   "content_tokens": [
+    [
+     " Bella"
+    ],
+    [
+     " post",
+     "cards"
+    ]
+   ]
+  },
+  {
+   "answer": "1) 1938 2) April",
+   "content_tokens": [
+    [
+     "1",
+     "9",
+     "3",
+     "8"
+    ],
+    [
+     " April"
+    ]
+   ]
+  }
+ ]
+}
