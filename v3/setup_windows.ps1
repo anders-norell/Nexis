@@ -54,6 +54,19 @@ if ($step -eq "s4auto") {
     "F1b EJ klarad - stannar enligt förregistreringen" | Tee-Object -Append results\s4auto.log
   }
 }
+if ($step -eq "s4auto2") {
+  # Sprint 4: base4c -> F1c-kontroll -> (bara om F1c klaras) test4 och train4. Avbrutet arbete återupptas.
+  & $py extract_v4.py --split base4c | Tee-Object -Append results\s4auto2.log
+  & $py f1c_check.py results\v4_data | Tee-Object -Append results\s4auto2.log
+  if ($LASTEXITCODE -eq 0) {
+    "F1c klarad - fortsätter med test4 och train4" | Tee-Object -Append results\s4auto2.log
+    & $py extract_v4.py --split test4  | Tee-Object -Append results\s4auto2.log
+    & $py extract_v4.py --split train4 | Tee-Object -Append results\s4auto2.log
+    "S4AUTO2 KLART" | Tee-Object -Append results\s4auto2.log
+  } else {
+    "F1c EJ klarad - stannar enligt förregistreringen" | Tee-Object -Append results\s4auto2.log
+  }
+}
 if ($step -eq "extract4") {
   & $py extract_v4.py --split test4  | Tee-Object -Append results\extract_v4.log
   & $py extract_v4.py --split train4 | Tee-Object -Append results\extract_v4.log

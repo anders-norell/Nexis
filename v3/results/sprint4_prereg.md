@@ -17,3 +17,10 @@ av svarsordet i delens text (skiftlägesokänsligt, `extract_v4.content_rows`; r
 enstaka bokstäver). Saknas innehållstoken i en del räknas texten som
 ej klarad. Klaras F1b inte stannar vi igen.
 Konsekvens för resten av sprinten (låses i del 2): kärntestet K4 räknas på innehållsordens token.
+
+## Tillägg 26 nov ca 16:00: F1b underkänd, F1c (godkänt av Anders 15:56, "ja")
+F1b på base4b: 49 % (n 57), underkänd; per del 70 % och 72 %. Kravet att båda delarna ska stämma i samma text var
+strängare än kärntestet behöver (K4 jämför token för token). **F1c** (`f1c_check.py`, nya data `base4c`, frö 9002, 100
+texter, träningsämnen; base4 och base4b används inte igen för bedömning): per del, bland delar med rätt delsvar, ska
+argmax av medelandelen per mening över svarsordets token vara rätt målmening i minst 70 % av delarna. Klaras F1c
+fortsätter insamlingen (test4, train4) direkt; annars stopp. Övrigt i planen oförändrat.

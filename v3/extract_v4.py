@@ -4,7 +4,8 @@ Plan: projektet claude/nexis_v3_sprint4_plan.md (godkänd av Anders 26 nov 08:42
 på dina förslag"). Samma mätning som extract_tokens.py (lager × huvud × 7 textdelar), plus var del 2 börjar i svaret.
 
     python extract_v4.py --split base4    # frö 9000, 100 texter, träningsämnen (steg 1: förutsättning F1, underkänd)
-    python extract_v4.py --split base4b   # frö 9001, 100 nya texter, träningsämnen (F1 omdefinierad, innehållsord)
+    python extract_v4.py --split base4b   # frö 9001, 100 nya texter, träningsämnen (F1b, underkänd)
+    python extract_v4.py --split base4c   # frö 9002, 100 nya texter, träningsämnen (F1c, per del)
     python extract_v4.py --split train4   # frö 9100, 1500 texter, träningsämnen
     python extract_v4.py --split test4    # frö 9200, 300 texter, testämnen
 """
@@ -24,7 +25,7 @@ from nexis3.segment import token_segment_ids  # noqa: E402
 from nexis3.textgen import SYSTEM_PROMPT, answer_correct_v4, make_items_v4, split_answer_v4  # noqa: E402
 from extract_tokens import PARTS, Q_LAYER, token_attention  # noqa: E402
 
-SPLITS = {"base4": (9000, 100, "train"), "base4b": (9001, 100, "train"), "train4": (9100, 1500, "train"), "test4": (9200, 300, "test")}
+SPLITS = {"base4": (9000, 100, "train"), "base4b": (9001, 100, "train"), "base4c": (9002, 100, "train"), "train4": (9100, 1500, "train"), "test4": (9200, 300, "test")}
 CHUNK = 50
 MAX_NEW = 48
 
