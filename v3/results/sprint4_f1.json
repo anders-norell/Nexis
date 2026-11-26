@@ -1,0 +1,22 @@
+{
+ "n": 100,
+ "both_correct": 0.56,
+ "correct_a": 0.62,
+ "correct_b": 0.79,
+ "has_part2": 1.0,
+ "n_answer_tokens_median": 10,
+ "F1": 0.375,
+ "F1_n": 56,
+ "F1_pass": false,
+ "F1_all_texts": 0.22,
+ "examples": [
+  "1) Tulips 2) Carrot",
+  "1) Rooibos tea 2) Peonies",
+  "1) March 2) Lemons",
+  "1) Ginger tea 2) Poplar",
+  "1) The young musician in the family performs on the piano. 2) The man takes green tea with his morning meal.",
+  "1) 1938 2) Marble",
+  "1) Snowy in the mountains tomorrow.\n2) Coconut cake.",
+  "1) The girl practises the guitar on two days of every seven.\n2) The recently bought flat has a blue door and new digits on the mailbox."
+ ]
+}
