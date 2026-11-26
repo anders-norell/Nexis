@@ -12,7 +12,8 @@ Resten av kriterierna (F2, K4a–c) låses i del 2 av förregistreringen efter g
 F1 på base4: 37,5 % (n 56), underkänd. Beskrivande: fokus byter vid svarsordens token men medlet över delen domineras av
 strukturtoken. **F1b** (`f1b_check.py`, nya data `base4b`, frö 9001, 100 texter, träningsämnen; base4 används inte igen
 för bedömning): bland texter med båda delsvaren rätt ska argmax av medelandelen per mening (lager 9–17) över de svarstoken
-som skriver svarsordet vara mål A i del 1 och mål B i del 2, i minst 70 %. Innehållstoken = token vars text (minst en
-bokstav eller siffra) ingår i svarsordet (`extract_v4.content_rows`). Saknas innehållstoken i en del räknas texten som
+som skriver svarsordet vara mål A i del 1 och mål B i del 2, i minst 70 %. Innehållstoken = de token vars teckenintervall överlappar första förekomsten
+av svarsordet i delens text (skiftlägesokänsligt, `extract_v4.content_rows`; rättat före körning, första versionen räknade
+enstaka bokstäver). Saknas innehållstoken i en del räknas texten som
 ej klarad. Klaras F1b inte stannar vi igen.
 Konsekvens för resten av sprinten (låses i del 2): kärntestet K4 räknas på innehållsordens token.
