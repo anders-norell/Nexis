@@ -107,3 +107,29 @@ V = vanan (mening 4). R = schemamodellens rapport, Rc = kontrollmodellens.
 
 **Låsning efter träning:** `report_eval.py lock` hashar kod (inkl. compress, textgen, topics_v3, attention), alla tre
 kartorna, båda rapportmodellerna och denna fil. Därefter körs testet en gång på Anders dator.
+
+## Del 2b, andra revisionen (28 nov 2026, granskning omgång 2; ersätter K4a, K4c och tolkningen ovan) [Claudes förslag]
+Rättelse: på de token som räknas (oobserverade innehållstoken i train4) är argmax S = argmax A **44 %**, inte 61–62 %
+(det gällde alla oobserverade token). T = A 65 %.
+
+- **K4a:** nollmodellen är samma schemamodell med **donor-S** (S från en slumpad token i en annan text, dragen om tills
+  argmax skiljer sig; frö 4243). Vana och textväg är då identiska i båda armarna; bara kartan skiljer.
+  [1(R = S) − 1(R = A)] − [1(R_donor = S) − 1(R_donor = A)] i D, > 2 SE.
+- **K4b:** oförändrad.
+- **K4c:** 1(R = A | sann S) − 1(R = A | donor-S) > 2 SE: kartan gör rapporten sannare. Mot vanan redovisas.
+- **Grind 4:** K4a och K4b och K4c, var för sig.
+- **Låst extern kombinerare** (`combiner_fit.py`, `sprint4_combiner.json`, multinomial logistisk regression på train4):
+  utan S (T + position, träff 64,7 % på train4) och med S (+ log S, 70,8 %; R = S i D 20 %).
+- **Inre väg** (villkor för tolkning): kontrollmodellen slår kombineraren utan S, > 2 SE, både totalt och där A ≠ T.
+
+**Tolkning (ersätter tidigare):** Grinden visar att rapporten använder kartan kausalt som en ledtråd. Det skiljer inte AST
+från rationell vägning av ledtrådar: en kombinerare med S, T och position, tränad på facit A utan någon introspektion,
+klarar alla tre kriterierna på train4. Det AST-specifika kräver dessutom:
+1. att en inre väg finns (kontroll > kombinerare utan S), och
+2. att schemamodellen följer kartan **mer** än den rationella kombineraren med S gör (`K4a_vs_combiner` > 2 SE), dvs.
+   prioriterar schemat framför sin egen tillgång, särskilt där kontrollen har rätt (andel R = S redovisas för båda).
+Saknas 1 är resultatet "rapporten följer kartan i brist på annat". Finns 1 men inte 2: rationell vägning. Båda: AST-likt.
+Detta är tolkningsregler, inte grind; grind 4 bedöms på K4a–c.
+
+Omtokeniseringen av det kapade svaret kontrolleras och loggas i tidsmätningen (`report_train.py time`).
+Träningsloggen `results/report_train.log` checkas in före låsning.

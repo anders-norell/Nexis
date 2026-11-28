@@ -110,6 +110,12 @@ def main():
         f"{sum(int(e[3].argmax()) != e[5] for e in exs) / len(exs):.2f})")
     meas, mods, proj, ck0 = setup(a.model, a.dtype)
     if a.cmd == "time":
+        # omtokenisering (granskning anm. 9): ger det kapade svaret samma token som modellen skrev?
+        same = 0
+        for sy, us, pa, S, A, y, meta in exs:
+            r_tok = meas.tok(pa, add_special_tokens=False)["input_ids"]
+            same += len(r_tok) == meta["t"] + 1
+        log(f"omtokenisering: samma antal token i {same}/{len(exs)} kapade svar")
         t0 = time.time()
         train(meas, mods, proj, exs[:20], "schema")
         per = (time.time() - t0) / 20

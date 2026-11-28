@@ -16,6 +16,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
 import report_train as rt  # noqa: E402
+import combiner_fit as cf  # noqa: E402
 from nexis3.report import Reporter, load_lora_state  # noqa: E402
 from nexis3.compress import load  # noqa: E402
 from nexis3.kmap import seq  # noqa: E402
@@ -27,9 +28,11 @@ OUT = Path("results/sprint4_test.json")
 LOCKED = ["report_eval.py", "report_train.py", "kmap_crossfit.py", "nexis3/report.py", "nexis3/kmap.py",
           "nexis3/compress.py", "nexis3/textgen.py", "nexis3/topics_v3.py", "nexis3/attention.py", "extract_v4.py",
           "models/kmap.pt", "models/kmap_fold0.pt", "models/kmap_fold1.pt",
-          "models/report_schema.pt", "models/report_control.pt", "results/sprint4_prereg.md"]
+          "models/report_schema.pt", "models/report_control.pt", "results/sprint4_prereg.md",
+          "combiner_fit.py", "results/sprint4_combiner.json"]
 HABIT = 3          # vanligaste facit i träningen (mening 4), förregistrerad positionsvana
 SEED = 4242
+DONOR_SEED = 4243
 
 
 def sha(p):
@@ -71,7 +74,19 @@ def test_tokens(km=None):
                          "user": it.prompt, "partial": "".join(r["answer_tokens"][:t + 1]),
                          "S": S[t], "Sm": Sm, "j": j, "aS": aS, "aA": aA, "txt": txt,
                          "dose_swap": float((S[t] - Sm).abs().sum()), "dose_SA": float((S[t] - H[t]).abs().sum())})
+    add_donors(rows)
     return rows
+
+
+def add_donors(rows, seed=DONOR_SEED):
+    """Donor-S (R2-1): S från en slumpad token i en annan text, dragen om tills dess argmax skiljer sig från tokenens."""
+    g = random.Random(seed)
+    for x in rows:
+        while True:
+            d = rows[g.randrange(len(rows))]
+            if d["idx"] != x["idx"] and d["aS"] != x["aS"]:
+                break
+        x["Sd"], x["aSd"] = d["S"], d["aS"]
 
 
 def per_text(rows, f):
@@ -96,10 +111,18 @@ def k4a_contrast(x):
 
 
 def k4a_null(x):
-    return float(x["Rc"] == x["aS"]) - float(x["Rc"] == x["aA"])
+    """Samma schemamodell med donor-S: vana och textväg är identiska, bara kartan skiljer."""
+    return float(x["Rd"] == x["aS"]) - float(x["Rd"] == x["aA"])
+
+
+def add_combiner(rows):
+    p = json.loads(Path("results/sprint4_combiner.json").read_text(encoding="utf-8"))
+    for x, a, b in zip(rows, cf.predict(p["no_s"], rows, False), cf.predict(p["with_s"], rows, True)):
+        x["Kn"], x["Ks"] = a, b
 
 
 def summarize(rows):
+    add_combiner(rows)
     D = [x for x in rows if x["aS"] != x["aA"]]
     Dsub = [x for x in D if x["aA"] != x["txt"]]
     res = {
@@ -109,29 +132,40 @@ def summarize(rows):
         # grind
         "K4a": cmp(D, k4a_contrast, k4a_null),
         "K4b": cmp(rows, lambda x: float(x["Rm"] == x["j"]), lambda x: float(x["R"] == x["j"])),
-        "K4c": cmp(rows, lambda x: float(x["R"] == x["aA"]), lambda x: float(HABIT == x["aA"])),
+        "K4c": cmp(rows, lambda x: float(x["R"] == x["aA"]), lambda x: float(x["Rd"] == x["aA"])),
+        # villkor för tolkning: inre väg = kontrollen slår den låsta kombineraren utan S (text + position)
+        "inner_route": cmp(rows, lambda x: float(x["Rc"] == x["aA"]), lambda x: float(x["Kn"] == x["aA"])),
+        "inner_route_AneT": cmp([x for x in rows if x["aA"] != x["txt"]], lambda x: float(x["Rc"] == x["aA"]),
+                                lambda x: float(x["Kn"] == x["aA"])),
+        # rationell referens: kombineraren med S, samma mått som K4a mot samma donor-nollmodell
+        "K4a_combiner_ref": cmp(D, lambda x: float(x["Ks"] == x["aS"]) - float(x["Ks"] == x["aA"]), k4a_null),
+        "K4a_vs_combiner": cmp(D, k4a_contrast, lambda x: float(x["Ks"] == x["aS"]) - float(x["Ks"] == x["aA"])),
+        "K4c_vs_habit": cmp(rows, lambda x: float(x["R"] == x["aA"]), lambda x: float(HABIT == x["aA"])),
         # redovisas
         "K4a_Dsub": cmp(Dsub, k4a_contrast, k4a_null) if Dsub else None,
         "K4c_vs_control": cmp(rows, lambda x: float(x["R"] == x["aA"]), lambda x: float(x["Rc"] == x["aA"])),
         "K4c_vs_text": cmp(rows, lambda x: float(x["R"] == x["aA"]), lambda x: float(x["txt"] == x["aA"])),
         "control_vs_habit": cmp(rows, lambda x: float(x["Rc"] == x["aA"]), lambda x: float(HABIT == x["aA"])),
         "control_vs_text": cmp(rows, lambda x: float(x["Rc"] == x["aA"]), lambda x: float(x["txt"] == x["aA"])),
-        "control_vs_text_Dsub": cmp(Dsub, lambda x: float(x["Rc"] == x["aA"]),
-                                    lambda x: float(x["txt"] == x["aA"])) if Dsub else None,
+        "K4a_vs_control": cmp(D, k4a_contrast, lambda x: float(x["Rc"] == x["aS"]) - float(x["Rc"] == x["aA"])),
         "dose": {"swap_L1_mean": rate(rows, lambda x: x["dose_swap"]), "S_vs_A_L1_mean_D": rate(D, lambda x: x["dose_SA"])},
         "rates": {
             "all": {k: rate(rows, f) for k, f in [
                 ("schema_R_eq_A", lambda x: x["R"] == x["aA"]), ("schema_R_eq_S", lambda x: x["R"] == x["aS"]),
                 ("control_R_eq_A", lambda x: x["Rc"] == x["aA"]), ("habit_eq_A", lambda x: HABIT == x["aA"]),
                 ("text_eq_A", lambda x: x["txt"] == x["aA"]), ("map_eq_A", lambda x: x["aS"] == x["aA"]),
-                ("manip_R_eq_j", lambda x: x["Rm"] == x["j"]), ("true_R_eq_j", lambda x: x["R"] == x["j"])]},
+                ("manip_R_eq_j", lambda x: x["Rm"] == x["j"]), ("true_R_eq_j", lambda x: x["R"] == x["j"]),
+                ("donor_R_eq_A", lambda x: x["Rd"] == x["aA"]), ("comb_noS_eq_A", lambda x: x["Kn"] == x["aA"]),
+                ("comb_S_eq_A", lambda x: x["Ks"] == x["aA"])]},
             "D": {k: rate(D, f) for k, f in [
                 ("schema_R_eq_S", lambda x: x["R"] == x["aS"]), ("schema_R_eq_A", lambda x: x["R"] == x["aA"]),
                 ("control_R_eq_S", lambda x: x["Rc"] == x["aS"]), ("control_R_eq_A", lambda x: x["Rc"] == x["aA"]),
                 ("S_is_4", lambda x: x["aS"] == HABIT), ("S_is_text", lambda x: x["aS"] == x["txt"])]},
             "D_where_control_right": {"n": sum(x["Rc"] == x["aA"] for x in D),
                                       "schema_R_eq_S": rate([x for x in D if x["Rc"] == x["aA"]],
-                                                            lambda x: x["R"] == x["aS"])},
+                                                            lambda x: x["R"] == x["aS"]),
+                                      "combiner_S_eq_S": rate([x for x in D if x["Rc"] == x["aA"]],
+                                                              lambda x: x["Ks"] == x["aS"])},
         },
         "lag_part2": {str(k): {"n": len(g), "S_eq_A": rate(g, lambda x: x["aS"] == x["aA"]),
                                "R_eq_S": rate(g, lambda x: x["R"] == x["aS"]),
@@ -142,6 +176,7 @@ def summarize(rows):
     res["K4a_pass"] = res["K4a"]["z"] > 2
     res["K4b_pass"] = res["K4b"]["z"] > 2
     res["K4c_pass"] = res["K4c"]["z"] > 2
+    res["inner_route_shown"] = res["inner_route"]["z"] > 2 and res["inner_route_AneT"]["z"] > 2
     res["grind4"] = res["K4a_pass"] and res["K4b_pass"] and res["K4c_pass"]
     return res
 
@@ -171,6 +206,7 @@ def cmd_run():
             if cond == "schema":
                 x["R"] = int(rep.logits(SYSTEM_PROMPT, x["user"], x["partial"], x["S"]).argmax())
                 x["Rm"] = int(rep.logits(SYSTEM_PROMPT, x["user"], x["partial"], x["Sm"]).argmax())
+                x["Rd"] = int(rep.logits(SYSTEM_PROMPT, x["user"], x["partial"], x["Sd"]).argmax())
             else:
                 x["Rc"] = int(rep.logits(SYSTEM_PROMPT, x["user"], x["partial"], uni).argmax())
             if (i + 1) % 100 == 0:
@@ -178,7 +214,8 @@ def cmd_run():
     res = summarize(rows)
     res["lock_sha256"] = sha(LOCK)
     OUT.write_text(json.dumps(res, indent=1, ensure_ascii=False), encoding="utf-8")
-    print(json.dumps({k: res[k] for k in ["K4a", "K4b", "K4c", "K4a_Dsub", "control_vs_habit", "control_vs_text",
+    print(json.dumps({k: res[k] for k in ["K4a", "K4b", "K4c", "K4a_Dsub", "inner_route", "inner_route_AneT",
+                                          "K4a_combiner_ref", "K4a_vs_combiner", "inner_route_shown",
                                           "K4a_pass", "K4b_pass", "K4c_pass", "grind4"]}, indent=1))
 
 
