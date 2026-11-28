@@ -322,3 +322,33 @@ ger exakt 0). Regeln "inre väg mot kombineraren utan S" ersätter den trivialt 
 1. R3-1: obetingad donor för K4c (blockerar).
 2. R3-2 och R3-3: kombinerarens egen donor-arm och villkoret "inte sämre än kombineraren" i regel 2 (tolkning, inte
    grind; rekommenderas före låsning eftersom texten låses).
+
+---
+
+# Fjärde omgången (28 nov 2026, efter commit 470975a)
+
+Kontrollerat: "Del 2b, tredje revisionen" och diffen i `report_eval.py`, `report_train.py` och
+`tests/test_report_eval.py`. `pytest tests`: 100 godkända, 1 överhoppad. Omsimulering på train4-rader (`/tmp/rev/r4.py`)
+med en ren S-följare (R = argmax S, Rd/Ru = donorns argmax) och textläsande kontroll:
+
+| Karta | K4a | K4c (obetingad donor) | K4a_vs_combiner | acc_vs_combiner | rule2 |
+| --- | --- | --- | --- | --- | --- |
+| verklig | +1,43 (z 108) | +0,11 (z 9,0) | +1,31 (z 55) | −0,26 (z −18,9) | nej |
+| oinformativ | +1,42 (z 113) | −0,01 (z −0,6) | +1,17 (z 52) | −0,27 (z −20,8) | nej |
+
+## Slutsats: **låsbar med anmärkningar**
+
+- **R3-1 är rätt åtgärdad.** `Su` dras med eget frö (4244) och villkoret är bara "annan text". K4c använder `Ru`. En
+  oinformativ karta klarar inte längre K4c, medan den verkliga gör det. Det nya testet täcker fallet.
+- **R3-2 är rätt åtgärdad.** `Ksd` = kombineraren med samma betingade donor-S, och `K4a_combiner_ref` och
+  `K4a_vs_combiner` jämför nu donorjusterade effekter inom respektive modell.
+- **R3-3 är rätt åtgärdad.** `rule2` kräver också att schemamodellen inte är sämre än kombineraren (`acc_vs_combiner`,
+  z > −2). En ren S-följare utan textväg underkänns nu (z ≈ −19). `text_use_donor_vs_control` redovisas.
+- **R3-5 är rätt åtgärdad.** Token jämförs styck för styck mot de genererade, med gräns 95 % och stopp före träning.
+
+Kvarstående anmärkningar, inga blockerande:
+1. Omtokeniseringen prövas på det kapade svaret ensamt, inte inuti chattmallen efter `<|im_start|>assistant\n`. Risken
+   för sammanslagning över gränsen är liten, eftersom raden slutar med radbrytning.
+2. Med `K4a_vs_combiner` blir en följsamhet på ca +1,3 för en ren S-följare redan z ≈ 55 på train4-skala, så regel 2 bärs
+   i praktiken av `acc_vs_combiner`. Det är avsiktligt, men det bör stå så i tolkningen.
+3. Kom ihåg att checka in `results/report_train.log` och omtokeniseringsutfallet före `lock`, som prereg säger.

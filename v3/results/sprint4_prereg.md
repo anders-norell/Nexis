@@ -143,3 +143,6 @@ Träningsloggen `results/report_train.log` checkas in före låsning.
   (z > −2). Redovisas: textanvändning (R = T) med donor-S, schemamodellen mot kontrollen.
 - **Omtokenisering (R3-5):** det kapade svaret ska ge identiska token som modellen skrev i ≥ 95 % av träningsexemplen;
   annars stopp före träning.
+- **Not (granskning omgång 4, anm. 2):** `K4a_vs_combiner` är stort redan för en ren S-följare; regel 2 avgörs i praktiken
+  av villkoret att schemamodellen inte är sämre än kombineraren med S på R = A. Avsiktligt.
+- Före låsning checkas `results/report_train.log` (med omtokeniseringsutfallet) in.
