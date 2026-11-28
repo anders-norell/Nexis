@@ -71,4 +71,17 @@ if ($step -eq "extract4") {
   & $py extract_v4.py --split test4  | Tee-Object -Append results\extract_v4.log
   & $py extract_v4.py --split train4 | Tee-Object -Append results\extract_v4.log
 }
+if ($step -eq "report_time") {
+  # Sprint 4 steg 4: mät LoRA-träningstid på 20 exempel (bara train4)
+  & $py report_train.py time | Tee-Object -Append results\report_train.log
+}
+if ($step -eq "report_train") {
+  # Sprint 4 steg 4: rapportmodell med karta, sedan kontrollmodell (S likformig). Bara train4.
+  & $py report_train.py train --cond schema  | Tee-Object -Append results\report_train.log
+  & $py report_train.py train --cond control | Tee-Object -Append results\report_train.log
+}
+if ($step -eq "report_test") {
+  # Sprint 4 steg 6: kärntestet K4 på test4, en gång, efter låsning
+  & $py report_eval.py run | Tee-Object -Append results\report_test.log
+}
 if ($step -eq "chat") { & $py chat.py }
