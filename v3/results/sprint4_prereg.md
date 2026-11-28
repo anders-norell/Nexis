@@ -24,3 +24,18 @@ strängare än kärntestet behöver (K4 jämför token för token). **F1c** (`f1
 texter, träningsämnen; base4 och base4b används inte igen för bedömning): per del, bland delar med rätt delsvar, ska
 argmax av medelandelen per mening över svarsordets token vara rätt målmening i minst 70 % av delarna. Klaras F1c
 fortsätter insamlingen (test4, train4) direkt; annars stopp. Övrigt i planen oförändrat.
+
+## Del 2a: kartan och förutsättning F2 (28 nov 2026, före all träning av kartan; test4 ej hämtad till arbetsytan)
+Allt nedan är [Claudes förslag] inom den godkända planen (observation var fjärde token).
+
+**Observation:** o_t = handvald andel per mening (lager 9–17) vid svarstoken t, bara när t mod 4 = 0.
+**Kartan** (`nexis3/kmap.py`): S_t som log-fördelning över de fyra meningarna. Mellan observationer
+Ŝ_t = Ŝ_{t−1} + G(Ŝ_{t−1}, q8, t, tid sedan observation); vid observation S_t = Ŝ_t + k·(log o_t − Ŝ_t), förstärkningen
+k ∈ (0,1) inlärd ur (Ŝ_t, log o_t). q8 = linjär projektion av frågans läge (lager 13). Kartan ser aldrig texten eller
+svarsorden. Förlust: KL(A_t ‖ S_t) över alla svarstoken. Ett frö (0).
+**Validering:** sex undanhållna träningsämnen (frö 31); träning = texter utan något av dem; validering = texter vars
+ämne A är ett av dem.
+**F2** (på validering, alla svarstoken utan observation): medel per text av L1(S_t, A_t) ska vara lägre än för var och en av
+(i) senaste observation, (ii) drift per position (träningens medel-A per svarsposition), (iii) konstant (träningens medel-A),
+parat per text, > 2 SE mot alla tre. Klaras F2 inte stannar vi och diskuterar.
+Redovisas: samma på innehållstoken, och eftersläpningen efter del 2:s start.
