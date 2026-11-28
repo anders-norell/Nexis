@@ -73,3 +73,37 @@ Antal epoker kan sättas ned till följd av tidsmätningen, men bara före trän
 
 **Låsning:** `report_eval.py lock` skriver sha256 av koden, kartan och denna fil, efter fristående granskning och före
 test4. Testet körs en gång på Anders dator; rapportmodellernas sha256 skrivs i resultatet.
+
+## Del 2b, reviderad efter granskning före låsning (28 nov 2026; ersätter K4-definitionerna ovan) [Claudes förslag]
+Granskningen (`sprint4_prelock_review.md`): ej låsbar. K4a sammanföll med positionsvanan och med en textväg (svarsordet står
+bara i målmeningen; "målmeningen" = A vid 65 % av oobserverade innehållstoken i train4), K4c var nära sant per
+konstruktion via observerade token, K4b hade fel jämförelse och för stor dos. Ändringar, alla före träning och före test4:
+
+**Rapportmodellen:** prefixet (samtalet fram till de mjuka token) räknas med LoRA avstängd och utan gradient, så rapporten
+läser samma inre tillstånd som gav attentionen; LoRA verkar bara på de mjuka token och frågan. LoRA-vikter i float32.
+**Korsanpassning:** rapporten tränas på S från två kartor tränade på var sin halva av train4 (idx % 2, `kmap_crossfit.py`,
+`sprint4_kmap_crossfit.json`: argmax S = argmax A 62 / 61 % på oobserverade token i den osedda halvan), så S i träningen är
+av samma slag som på test4. Vid test används `models/kmap.pt` (har inte sett test4:s texter eller ämnen). Var tredje
+träningsexempel är en annan token än innehållstoken; behålls och redovisas.
+
+**Alla K4-mått på oobserverade innehållstoken** (t % 4 ≠ 0), parat per text (medel per text, SE över texter), n texter redovisas.
+Beteckningar: S = argmax av kartan, A = argmax av faktisk attention, T = textvägen (meningen som innehåller svarsordet),
+V = vanan (mening 4). R = schemamodellens rapport, Rc = kontrollmodellens.
+- **K4a** (D = token där S ≠ A): [1(R = S) − 1(R = A)] − [1(Rc = S) − 1(Rc = A)] > 2 SE. Kontrollmodellen ser samma text och
+  har samma träning utom kartan; den bär därmed vanan och textvägen och är nollmodellen.
+- **K4b:** inom schemamodellen, S ersatt med S där toppen och mening j byter plats (dos: medel L1 0,36 mot L1(S, A) 0,48 i D,
+  på train4), j slumpad bland meningar ≠ S, A och T (frö 4242): 1(R(manipulerad) = j) − 1(R(sann S) = j) > 2 SE.
+- **K4c:** 1(R = A) − 1(V = A) > 2 SE (rapporten säger något sant oftare än vanan). Mot kontroll och mot T redovisas; att
+  kräva dem vore motsägelsefullt (en rapport som följer en karta med 61 % träff kan inte slå textvägens 65 %).
+- **Grind 4:** K4a och K4b och K4c, var för sig > 2 SE, ingen sammanvägning i efterhand.
+
+**Tolkning, bestämd i förväg:**
+- Kontroll mot vana och mot T (även i D där A ≠ T) visar om Qwen har en inre väg till sitt fokus utöver ordmatchning. Klarar
+  kontrollen inte T där A ≠ T finns ingen påvisad inre väg; K4a visar då att rapporten följer kartan framför texten och vanan,
+  inte framför introspektion.
+- K4a i D där A ≠ T (ca 35 % av D, grovt 100 token på test4) redovisas; det är där en introspektiv väg skulle synas.
+  Andelen R = S där kontrollen har rätt redovisas också.
+- K4b men inte K4a: kartan används men vägs mot annat. K4a men inte K4b: följsamheten är inte kausal på dosnivån.
+
+**Låsning efter träning:** `report_eval.py lock` hashar kod (inkl. compress, textgen, topics_v3, attention), alla tre
+kartorna, båda rapportmodellerna och denna fil. Därefter körs testet en gång på Anders dator.

@@ -1,0 +1,12 @@
+{
+ "fold0": {
+  "val_KL": 0.08044517040252686,
+  "n_fit": 750,
+  "heldout_argmax_agree_unobserved": 0.6229375169055992
+ },
+ "fold1": {
+  "val_KL": 0.08092141151428223,
+  "n_fit": 750,
+  "heldout_argmax_agree_unobserved": 0.6084147041929925
+ }
+}

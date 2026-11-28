@@ -31,7 +31,7 @@ class LoRALinear(nn.Module):
     def forward(self, x):
         y = self.base(x)
         if self.enabled:
-            y = y + (x @ self.A.t() @ self.B.t()) * self.scale
+            y = y + ((x.to(self.A.dtype) @ self.A.t() @ self.B.t()) * self.scale).to(y.dtype)
         return y
 
 
@@ -47,9 +47,13 @@ def add_lora(model):
             if isinstance(lin, LoRALinear):
                 mods.append(lin)
                 continue
-            w = LoRALinear(lin).to(lin.weight.device, dtype=lin.weight.dtype)
+            w = LoRALinear(lin)
+            w.A.data = w.A.data.to(lin.weight.device, torch.float32)   # LoRA i float32 (granskning anm. 11)
+            w.B.data = w.B.data.to(lin.weight.device, torch.float32)
             setattr(att, name, w)
             mods.append(w)
+    for m in mods:
+        m.A.requires_grad_(True); m.B.requires_grad_(True)
     return mods
 
 
@@ -65,6 +69,7 @@ class SoftProj(nn.Module):
         self.lin = nn.Linear(4, N_SOFT * d)
         nn.init.normal_(self.lin.weight, std=0.02)
         nn.init.zeros_(self.lin.bias)
+        self.float()
         self.d = d
 
     def forward(self, s):
@@ -83,8 +88,11 @@ def load_lora_state(mods, proj, st):
 
 class Reporter:
     """Bygger rapportprompten och ger sannolikheter över svaren 1–4."""
-    def __init__(self, meas, proj):
-        self.meas, self.proj = meas, proj
+    def __init__(self, meas, proj, mods=None):
+        """mods: LoRA-modulerna. Prefixet (samtalet fram till de mjuka token) räknas då med LoRA avstängd och utan
+        gradient, så rapporten läser samma inre tillstånd som gav attentionen (granskning anm. 9); LoRA verkar bara på
+        de mjuka token och frågan."""
+        self.meas, self.proj, self.mods = meas, proj, mods
         tok = meas.tok
         self.digit_ids = [tok(d, add_special_tokens=False)["input_ids"][0] for d in DIGITS]
 
@@ -104,7 +112,18 @@ class Reporter:
         emb = model.get_input_embeddings()
         pre, suf = self.parts(system, user, partial_answer)
         dev = emb.weight.device
-        e = torch.cat([emb(torch.tensor(pre, device=dev)), self.proj(s.to(dev)).to(emb.weight.dtype),
-                       emb(torch.tensor(suf, device=dev))])[None]
-        out = model(inputs_embeds=e, attention_mask=torch.ones(e.shape[:2], device=dev), use_cache=False)
+        tail = torch.cat([self.proj(s.to(dev).float()).to(emb.weight.dtype), emb(torch.tensor(suf, device=dev))])[None]
+        if self.mods is None:
+            e = torch.cat([emb(torch.tensor(pre, device=dev))[None], tail], 1)
+            out = model(inputs_embeds=e, attention_mask=torch.ones(e.shape[:2], device=dev), use_cache=False)
+            return out.logits[0, -1, self.digit_ids].float()
+        was = [m.enabled for m in self.mods]
+        set_lora(self.mods, False)
+        with torch.no_grad():
+            pkv = model(input_ids=torch.tensor([pre], device=dev), use_cache=True).past_key_values
+        for m, w in zip(self.mods, was):
+            m.enabled = w
+        n = len(pre) + tail.shape[1]
+        out = model(inputs_embeds=tail, past_key_values=pkv, attention_mask=torch.ones((1, n), device=dev),
+                    use_cache=False)
         return out.logits[0, -1, self.digit_ids].float()

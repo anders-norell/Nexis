@@ -3,7 +3,7 @@
     python report_train.py time                 # 20 exempel: sekunder per exempel och uppskattad total tid
     python report_train.py train --cond schema  # LoRA + projektor med kartans S
     python report_train.py train --cond control # samma exempel, S = likformig
-Data: results/v4_data/train4_*.pt (aldrig test4). Exempel: per text två innehållstoken (en per del, slumpvis) och en
+Data: results/v4_data/train4_*.pt (aldrig test4). S från korsanpassade kartor (models/kmap_fold{0,1}.pt). Exempel: per text två innehållstoken (en per del, slumpvis) och en
 annan svarstoken; facit = argmax av faktisk A vid token t. Modeller: models/report_<cond>.pt.
 """
 from __future__ import annotations
@@ -30,8 +30,8 @@ import os
 DATA = Path(os.environ.get("NEXIS_V4_DATA", "results/v4_data"))
 
 
-def load_kmap():
-    ck = torch.load("models/kmap.pt", weights_only=False)
+def load_kmap(path="models/kmap.pt"):
+    ck = torch.load(path, weights_only=False)
     m = KMap()
     m.load_state_dict(ck["state_dict"]); m.eval()
     return m
@@ -42,14 +42,15 @@ def examples(split, seed=0):
     recs = load(sorted(DATA.glob(f"{split}_*.pt")))
     s0, n, pool = SPLITS[split]
     items = {it.idx: it for it in make_items_v4(n, s0, pool)}
-    km = load_kmap()
+    # korsanpassning (granskning anm. 7): varje text får S från en karta som inte tränats på den
+    km = {f: load_kmap(f"models/kmap_fold{f}.pt") for f in (0, 1)}
     rng = random.Random(seed)
     out = []
     for r in recs:
         it = items[r["idx"]]
         H, q = seq(r)
         with torch.no_grad():
-            S = km.run(H, q).exp()
+            S = km[r["idx"] % 2].run(H, q).exp()
         T = len(r["answer_tokens"])
         k = r["part2_start"]
         c1 = content_rows(r["answer_tokens"], r["answer_a"], 0, k)
@@ -77,7 +78,7 @@ def setup(model_name, dtype):
 def train(meas, mods, proj, exs, cond, epochs=1, lr=1e-4, log=None):
     params = [p for m in mods for p in (m.A, m.B)] + list(proj.parameters())
     opt = torch.optim.AdamW(params, lr=lr, weight_decay=0.0)
-    rep = Reporter(meas, proj)
+    rep = Reporter(meas, proj, mods)
     uni = torch.full((4,), 0.25)
     meas.model.train()
     t0, run = time.time(), 0.0
