@@ -33,6 +33,7 @@ LOCKED = ["report_eval.py", "report_train.py", "kmap_crossfit.py", "nexis3/repor
 HABIT = 3          # vanligaste facit i träningen (mening 4), förregistrerad positionsvana
 SEED = 4242
 DONOR_SEED = 4243
+DONOR_U_SEED = 4244
 
 
 def sha(p):
@@ -87,6 +88,14 @@ def add_donors(rows, seed=DONOR_SEED):
             if d["idx"] != x["idx"] and d["aS"] != x["aS"]:
                 break
         x["Sd"], x["aSd"] = d["S"], d["aS"]
+    # obetingad donor för K4c (R3-1): bara annan text, ingen betingning på argmax
+    g = random.Random(DONOR_U_SEED)
+    for x in rows:
+        while True:
+            d = rows[g.randrange(len(rows))]
+            if d["idx"] != x["idx"]:
+                break
+        x["Su"] = d["S"]
 
 
 def per_text(rows, f):
@@ -115,10 +124,20 @@ def k4a_null(x):
     return float(x["Rd"] == x["aS"]) - float(x["Rd"] == x["aA"])
 
 
+def comb_contrast(x):
+    return float(x["Ks"] == x["aS"]) - float(x["Ks"] == x["aA"])
+
+
+def comb_null(x):
+    return float(x["Ksd"] == x["aS"]) - float(x["Ksd"] == x["aA"])
+
+
 def add_combiner(rows):
     p = json.loads(Path("results/sprint4_combiner.json").read_text(encoding="utf-8"))
-    for x, a, b in zip(rows, cf.predict(p["no_s"], rows, False), cf.predict(p["with_s"], rows, True)):
-        x["Kn"], x["Ks"] = a, b
+    donor = [{**x, "S": x["Sd"]} for x in rows]
+    for x, a, b, c in zip(rows, cf.predict(p["no_s"], rows, False), cf.predict(p["with_s"], rows, True),
+                          cf.predict(p["with_s"], donor, True)):
+        x["Kn"], x["Ks"], x["Ksd"] = a, b, c
 
 
 def summarize(rows):
@@ -132,14 +151,17 @@ def summarize(rows):
         # grind
         "K4a": cmp(D, k4a_contrast, k4a_null),
         "K4b": cmp(rows, lambda x: float(x["Rm"] == x["j"]), lambda x: float(x["R"] == x["j"])),
-        "K4c": cmp(rows, lambda x: float(x["R"] == x["aA"]), lambda x: float(x["Rd"] == x["aA"])),
+        "K4c": cmp(rows, lambda x: float(x["R"] == x["aA"]), lambda x: float(x["Ru"] == x["aA"])),
         # villkor för tolkning: inre väg = kontrollen slår den låsta kombineraren utan S (text + position)
         "inner_route": cmp(rows, lambda x: float(x["Rc"] == x["aA"]), lambda x: float(x["Kn"] == x["aA"])),
         "inner_route_AneT": cmp([x for x in rows if x["aA"] != x["txt"]], lambda x: float(x["Rc"] == x["aA"]),
                                 lambda x: float(x["Kn"] == x["aA"])),
         # rationell referens: kombineraren med S, samma mått som K4a mot samma donor-nollmodell
-        "K4a_combiner_ref": cmp(D, lambda x: float(x["Ks"] == x["aS"]) - float(x["Ks"] == x["aA"]), k4a_null),
-        "K4a_vs_combiner": cmp(D, k4a_contrast, lambda x: float(x["Ks"] == x["aS"]) - float(x["Ks"] == x["aA"])),
+        # rationell referens med egen donor-arm (R3-2): donorjusterad effekt, schemamodellen mot kombineraren
+        "K4a_combiner_ref": cmp(D, comb_contrast, comb_null),
+        "K4a_vs_combiner": cmp(D, lambda x: k4a_contrast(x) - k4a_null(x), lambda x: comb_contrast(x) - comb_null(x)),
+        "acc_vs_combiner": cmp(rows, lambda x: float(x["R"] == x["aA"]), lambda x: float(x["Ks"] == x["aA"])),
+        "text_use_donor_vs_control": cmp(rows, lambda x: float(x["Rd"] == x["txt"]), lambda x: float(x["Rc"] == x["txt"])),
         "K4c_vs_habit": cmp(rows, lambda x: float(x["R"] == x["aA"]), lambda x: float(HABIT == x["aA"])),
         # redovisas
         "K4a_Dsub": cmp(Dsub, k4a_contrast, k4a_null) if Dsub else None,
@@ -176,6 +198,7 @@ def summarize(rows):
     res["K4a_pass"] = res["K4a"]["z"] > 2
     res["K4b_pass"] = res["K4b"]["z"] > 2
     res["K4c_pass"] = res["K4c"]["z"] > 2
+    res["rule2"] = res["K4a_vs_combiner"]["z"] > 2 and res["acc_vs_combiner"]["z"] > -2
     res["inner_route_shown"] = res["inner_route"]["z"] > 2 and res["inner_route_AneT"]["z"] > 2
     res["grind4"] = res["K4a_pass"] and res["K4b_pass"] and res["K4c_pass"]
     return res
@@ -207,6 +230,7 @@ def cmd_run():
                 x["R"] = int(rep.logits(SYSTEM_PROMPT, x["user"], x["partial"], x["S"]).argmax())
                 x["Rm"] = int(rep.logits(SYSTEM_PROMPT, x["user"], x["partial"], x["Sm"]).argmax())
                 x["Rd"] = int(rep.logits(SYSTEM_PROMPT, x["user"], x["partial"], x["Sd"]).argmax())
+                x["Ru"] = int(rep.logits(SYSTEM_PROMPT, x["user"], x["partial"], x["Su"]).argmax())
             else:
                 x["Rc"] = int(rep.logits(SYSTEM_PROMPT, x["user"], x["partial"], uni).argmax())
             if (i + 1) % 100 == 0:
@@ -215,7 +239,8 @@ def cmd_run():
     res["lock_sha256"] = sha(LOCK)
     OUT.write_text(json.dumps(res, indent=1, ensure_ascii=False), encoding="utf-8")
     print(json.dumps({k: res[k] for k in ["K4a", "K4b", "K4c", "K4a_Dsub", "inner_route", "inner_route_AneT",
-                                          "K4a_combiner_ref", "K4a_vs_combiner", "inner_route_shown",
+                                          "K4a_combiner_ref", "K4a_vs_combiner", "acc_vs_combiner",
+                                          "inner_route_shown", "rule2",
                                           "K4a_pass", "K4b_pass", "K4c_pass", "grind4"]}, indent=1))
 
 

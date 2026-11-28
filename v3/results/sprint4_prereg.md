@@ -133,3 +133,13 @@ Detta är tolkningsregler, inte grind; grind 4 bedöms på K4a–c.
 
 Omtokeniseringen av det kapade svaret kontrolleras och loggas i tidsmätningen (`report_train.py time`).
 Träningsloggen `results/report_train.log` checkas in före låsning.
+
+## Del 2b, tredje revisionen (28 nov 2026, granskning omgång 3) [Claudes förslag]
+- **K4c:** jämförs mot en **obetingad** donor-S (slumpad token i annan text, frö 4244). Den betingade donorn gjorde K4c
+  klarbar med oinformativ karta (R3-1). K4a behåller den betingade donorn (frö 4243).
+- **Rationell referens (R3-2):** kombineraren med S får samma betingade donor-S; `K4a_combiner_ref` och `K4a_vs_combiner`
+  jämför donorjusterade effekter.
+- **Tolkningsregel 2 (R3-3):** `K4a_vs_combiner` > 2 SE **och** schemamodellen inte sämre än kombineraren med S på R = A
+  (z > −2). Redovisas: textanvändning (R = T) med donor-S, schemamodellen mot kontrollen.
+- **Omtokenisering (R3-5):** det kapade svaret ska ge identiska token som modellen skrev i ≥ 95 % av träningsexemplen;
+  annars stopp före träning.

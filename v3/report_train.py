@@ -111,11 +111,16 @@ def main():
     meas, mods, proj, ck0 = setup(a.model, a.dtype)
     if a.cmd == "time":
         # omtokenisering (granskning anm. 9): ger det kapade svaret samma token som modellen skrev?
+        recs = {r["idx"]: r for r in load(sorted(DATA.glob("train4_*.pt")))}
         same = 0
         for sy, us, pa, S, A, y, meta in exs:
-            r_tok = meas.tok(pa, add_special_tokens=False)["input_ids"]
-            same += len(r_tok) == meta["t"] + 1
-        log(f"omtokenisering: samma antal token i {same}/{len(exs)} kapade svar")
+            ids = meas.tok(pa, add_special_tokens=False)["input_ids"]
+            pieces = [meas.tok.decode([i]) for i in ids]
+            same += pieces == recs[meta["idx"]]["answer_tokens"][:meta["t"] + 1]
+        share = same / len(exs)
+        log(f"omtokenisering: identiska token i {same}/{len(exs)} kapade svar ({share:.1%}; krav ≥ 95 %)")
+        if share < 0.95:
+            log("OMTOKENISERING UNDER GRÄNSEN - stanna och rapportera")
         t0 = time.time()
         train(meas, mods, proj, exs[:20], "schema")
         per = (time.time() - t0) / 20

@@ -9,7 +9,7 @@ import report_eval as re_
 
 def _comb(rows):
     for x in rows:
-        x["Kn"] = x["txt"]; x["Ks"] = x["txt"]
+        x["Kn"] = x["txt"]; x["Ks"] = x["txt"]; x["Ksd"] = x["txt"]
 
 
 re_.add_combiner = _comb
@@ -30,9 +30,10 @@ def rows(n_texts=60, seed=0):
     return out
 
 
-def fill(rs, R, Rm, Rc, Rd):
+def fill(rs, R, Rm, Rc, Rd, Ru=None):
     for x in rs:
         x["R"], x["Rm"], x["Rc"], x["Rd"] = R(x), Rm(x), Rc(x), Rd(x)
+        x["Ru"] = Ru(x) if Ru else Rd(x)
     return re_.summarize(rs)
 
 
@@ -46,3 +47,15 @@ def test_follow_S_passes_text_reader_fails():
     assert not (r["K4a_pass"] or r["K4b_pass"] or r["K4c_pass"])
     # textläsande kontroll ger ingen inre väg
     assert not r["inner_route_shown"]
+
+
+def test_k4c_not_passed_by_uninformative_map():
+    """R3-1: en S-följare vars S är oinformativ (donor-S som 'sann') klarar inte K4c mot obetingad donor."""
+    rs = rows(n_texts=200, seed=3)
+    g = random.Random(9)
+    for x in rs:                       # oinformativ karta: argmax oberoende av A
+        x["aS"] = g.randrange(4)
+    re_.add_donors(rs)
+    r = fill(rs, lambda x: x["aS"], lambda x: x["j"], lambda x: x["txt"], lambda x: x["aSd"],
+             lambda x: int(x["Su"].argmax()))
+    assert not r["K4c_pass"]

@@ -262,3 +262,63 @@ träningsloggarna (förlustkurvor, `base_weights_unchanged`) tillsammans med lå
 2. Villkoret för inre väg mot en extern T + position-kombinerare, låst ur train4, inte mot T i A ≠ T (R2-2).
 3. Tolkningen kompletteras: grinden visar användning av S som ledtråd. Kombineraren med S redovisas som rationell referens
    (R2-3). Siffran 61 % rättas och K4c omformuleras (R2-4).
+
+---
+
+# Tredje omgången (28 nov 2026, efter commit 866cb3f)
+
+Granskat: "Del 2b, andra revisionen", `combiner_fit.py`, `sprint4_combiner.json`, `report_eval.py` (donorer, kombinerare,
+nya mått), omtokeniseringskontrollen. Blint, inga test4-data. Simuleringar på train4-rader (oobserverade innehållstoken,
+korsanpassad S) genom `report_eval.add_donors` och `summarize`; skript `/tmp/rev/r3.py`. z-värden på train4-skala
+(ca 1 266 texter); på test4 (300 texter) blir de ungefär hälften.
+
+## Slutsats: **ej låsbar** – en sak blockerar (R3-1, en rad kod). Med den rättad: låsbar med anmärkningar.
+
+## Anmärkningar
+
+R3-1. **Stor. K4c klaras utan att kartan är informativ, på grund av att donorn betingas.** `add_donors` drar om tills
+donorns argmax ≠ argmax S. Då kan donorn aldrig träffa A i E (där S = A), så donor-armen förlorar mekaniskt.
+Fördelningen blir också skev: när S = 4 får donorn aldrig 4 (0: 1 122, 1: 452, 2: 432); när S ≠ 4 är donorn 4 i 81 %.
+Simulering med en ren S-följare:
+
+| S | S = A | donor = A | K4c, betingad donor | K4c, obetingad donor |
+| --- | --- | --- | --- | --- |
+| verklig karta | 44 % | 24 % | +0,20 (z 12) | +0,10 (z 8,1) |
+| **oinformativ** (S från slumpad annan token) | 34 % | 27 % | **+0,06 (z 3,5)** | −0,01 (z −0,5) |
+
+En karta utan information om A ger alltså "kartan gör rapporten sannare". *Förslag:* använd en separat, obetingad donor
+för K4c: annan text, samma fördelning som S, eget frö. Behåll den betingade donorn för K4a. Där är betingningen rätt,
+eftersom en rapport som inte beror på S ger K4a = 0 exakt (R = Rd), så K4a kan inte klaras per konstruktion. Att den
+betingade donorn sällan är 4 när S = 4 är för K4a just den kontrast som ska mätas.
+
+R3-2. **Medel. `K4a_combiner_ref` blandar två modeller.** Kombinerarens arm med sann S jämförs med schemamodellens
+donor-arm (`k4a_null` använder Rd). `K4a_vs_combiner` jämför råa kontraster med olika vana och textvikt i de två
+modellerna. *Förslag:* låt kombineraren få samma donor-S (Ksd = `cf.predict(p["with_s"], …)` med Sd) och jämför
+donorjusterade effekter: [K4a för schemamodellen] − [K4a för kombineraren mot dess egen donor-arm].
+
+R3-3. **Medel. Tolkningsregel 2 klaras av en rapport som bara saknar textvägen.** En ren S-följare som aldrig läser
+texten får `K4a_vs_combiner` +1,41 (z 60). Regel 1 prövar den inre vägen i *kontrollmodellen*, inte i schemamodellen.
+Följer schemamodellen S mer än kombineraren kan det alltså lika gärna vara genvägsinlärning (med S tillgänglig lärde
+LoRA sig aldrig textuppslaget, en epok, 3 600 exempel) som "schemat prioriteras framför egen tillgång". *Förslag:* lägg
+till i regel 2 att schemamodellen inte är sämre än kombineraren med S på R = A (totalt, och redovisa R = A i D där
+kontrollen har rätt). Övervikt på S som kostar träffar är underanpassning, inte AST. Redovisa också schemamodellens
+R = T med donor-S mot kontrollens, som mått på om den har kvar textvägen.
+
+R3-4. **Bra: kombineraren predikterar likadant i fit och predict.** Samma särdrag (`feats`: S klämd vid 1e-6 och
+log, one-hot T, del 2), samma formel i `closure` och `logits`, och `with_s = False` ger wS = 0. Ingen läcka: den
+tränas bara på train4 med foldkartornas S och används på test4 med `kmap.pt`:s S, vars fördelning är likvärdig (omgång
+2, R2-7). Den låses via `sprint4_combiner.json` och `combiner_fit.py`.
+
+R3-5. **Liten. Omtokeniseringskontrollen jämför bara antal token,** och bara för det kapade svaret ensamt, inte i
+chattmallen där gränsen mot `<|im_start|>assistant\n` kan slå ihop token. Den loggar men har ingen gräns. *Förslag:*
+jämför `parts()`-prefixet mot omtokeniseringen av original-prompten + svaret på ett par texter, och skriv i prereg vad
+som händer under t.ex. 99 % överensstämmelse.
+
+R3-6. **Bra:** K4a med betingad donor i samma modell gör att vana och textväg tar ut varandra (en S-okänslig rapport
+ger exakt 0). Regeln "inre väg mot kombineraren utan S" ersätter den trivialt klarade jämförelsen mot T. 44 %-siffran
+är rättad, och tolkningstexten säger nu uttryckligen att grinden inte skiljer AST från rationell vägning.
+
+## Att göra före låsning
+1. R3-1: obetingad donor för K4c (blockerar).
+2. R3-2 och R3-3: kombinerarens egen donor-arm och villkoret "inte sämre än kombineraren" i regel 2 (tolkning, inte
+   grind; rekommenderas före låsning eftersom texten låses).
