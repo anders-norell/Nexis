@@ -39,3 +39,37 @@ svarsorden. Förlust: KL(A_t ‖ S_t) över alla svarstoken. Ett frö (0).
 (i) senaste observation, (ii) drift per position (träningens medel-A per svarsposition), (iii) konstant (träningens medel-A),
 parat per text, > 2 SE mot alla tre. Klaras F2 inte stannar vi och diskuterar.
 Redovisas: samma på innehållstoken, och eftersläpningen efter del 2:s start.
+
+## Del 2b: rapportmodellen och kärntestet K4 (28 nov 2026, före all rapportträning och före test4 i arbetsytan)
+Allt nedan är [Claudes förslag] inom planen (facit = faktisk attention, godkänt av Anders 26 nov 08:42).
+
+**Validering av F2 klarad** (`sprint4_f2.json`): karta 0,366 mot senaste observation 0,420, drift 0,428, konstant 0,484
+(z 8,4 / 11,0 / 24,4).
+
+**Rapportmodellen** (`nexis3/report.py`, `report_train.py`): Qwen fryst, egen LoRA (rang 8, alfa 16) på q_proj och v_proj i
+alla lager, projektor S → 4 mjuka token. Rapportfrågan ställs i en ny användarvända efter att svaret kapats efter token t.
+Facit = argmax av faktisk A_t (handvald andel per mening, lager 9–17). Exempel ur train4 (aldrig test4): per text en
+slumpad innehållstoken per del och en annan svarstoken (frö 0), 3 606 exempel; i 42 % av innehållsexemplen skiljer sig
+kartan från attentionen. En epok, AdamW, lr 1e-4. **Kontrollmodellen:** samma exempel, samma ordning, S = likformig.
+Antal epoker kan sättas ned till följd av tidsmätningen, men bara före träning och lika för båda.
+
+**Kärntestet** (`report_eval.py`, test4, alla innehållstoken i alla texter, parat per text):
+- **K4a:** där argmax S ≠ argmax A: andel rapport = argmax S minus andel rapport = argmax A, > 2 SE.
+- **K4b:** S ersätts med en manipulerad karta (0,85 på en slumpad annan mening än argmax S, frö 4242): andel rapport =
+  den meningen, minus kontrollmodellens andel för samma mening, > 2 SE.
+- **K4c:** där argmax S = argmax A: rapportens träffar på A minus kontrollmodellens, > 2 SE, och minus positionsvanan
+  (alltid mening 4, träningens vanligaste facit), > 2 SE.
+- Grind 4: K4a och K4b och K4c.
+
+**Tolkning, bestämd i förväg:**
+- Kontrollmodellen visar om Qwen kan rapportera sitt fokus inifrån utan karta (kontroll mot vana, redovisas). Är den inte
+  bättre än vanan finns ingen inre väg att tävla med, och då visar K4a bara att rapporten använder den enda källa den har.
+  Det redovisas så och räknas inte som stöd för AST utöver det.
+- Är kontrollen bättre än vanan och K4a klaras: rapporten följer kartan trots att en inre väg finns och trots att facit
+  belönar sanningen. Det är AST:s förutsägelse.
+- K4b men inte K4a: modellen använder kartan men rättar den med egen tillgång.
+- Redovisas: eftersläpning token för token efter del 2:s start (S = A, rapport = S, rapport = A), observerade och
+  oobserverade token var för sig.
+
+**Låsning:** `report_eval.py lock` skriver sha256 av koden, kartan och denna fil, efter fristående granskning och före
+test4. Testet körs en gång på Anders dator; rapportmodellernas sha256 skrivs i resultatet.
